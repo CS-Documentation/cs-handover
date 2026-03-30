@@ -1,0 +1,2574 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Connected Stars Handover Notes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --brand: #1446a0;
+    --brand-dark: #0d3278;
+    --brand-light: #e8eef8;
+    --brand-mid: #2d5bbf;
+    --alert-red: #c0392b;
+    --alert-red-bg: #fdf0ef;
+    --alert-amber: #e67e22;
+    --alert-amber-bg: #fef9f0;
+    --reminder-blue: #2980b9;
+    --reminder-blue-bg: #eef6fb;
+    --adhoc-purple: #7b2d8b;
+    --adhoc-purple-bg: #f5eef8;
+    --success: #27ae60;
+    --success-bg: #eafaf1;
+    --text: #1a1a2e;
+    --text-muted: #6b7280;
+    --border: #dde3ef;
+    --bg: #f4f6fb;
+    --white: #ffffff;
+    --card: #ffffff;
+    --shadow: 0 2px 12px rgba(20,70,160,0.08);
+    --shadow-lg: 0 8px 32px rgba(20,70,160,0.13);
+    --radius: 12px;
+    --radius-sm: 8px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    font-size: 15px;
+    line-height: 1.6;
+  }
+
+  /* ── LOGIN ── */
+  #loginScreen {
+    min-height: 100vh;
+    background: linear-gradient(135deg, var(--brand-dark) 0%, var(--brand) 50%, var(--brand-mid) 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+
+  .login-card {
+    background: var(--white);
+    border-radius: 20px;
+    padding: 48px 40px;
+    width: 100%;
+    max-width: 420px;
+    box-shadow: 0 24px 64px rgba(0,0,0,0.25);
+    text-align: center;
+  }
+
+  .login-logo {
+    width: 100%;
+    max-width: 280px;
+    margin: 0 auto 32px;
+    display: block;
+    background: var(--brand);
+    border-radius: 10px;
+    padding: 14px 20px;
+  }
+
+  .login-title {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--brand);
+    margin-bottom: 6px;
+  }
+
+  .login-sub {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-bottom: 32px;
+  }
+
+  .form-group {
+    margin-bottom: 18px;
+    text-align: left;
+  }
+
+  .form-group label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 6px;
+  }
+
+  .form-group input, .form-group select, .form-group textarea {
+    width: 100%;
+    padding: 12px 14px;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    color: var(--text);
+    background: var(--white);
+    transition: border-color 0.2s;
+    outline: none;
+  }
+
+  .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+    border-color: var(--brand);
+    box-shadow: 0 0 0 3px rgba(20,70,160,0.1);
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 22px;
+    border-radius: var(--radius-sm);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    transition: all 0.2s;
+    text-decoration: none;
+  }
+
+  .btn-primary {
+    background: var(--brand);
+    color: white;
+    width: 100%;
+    justify-content: center;
+    padding: 14px;
+    font-size: 15px;
+  }
+
+  .btn-primary:hover { background: var(--brand-dark); transform: translateY(-1px); box-shadow: var(--shadow); }
+
+  .btn-secondary {
+    background: var(--brand-light);
+    color: var(--brand);
+  }
+
+  .btn-secondary:hover { background: #d0dcf4; }
+
+  .btn-danger { background: var(--alert-red); color: white; }
+  .btn-danger:hover { background: #a93226; }
+
+  .btn-success { background: var(--success); color: white; }
+  .btn-success:hover { background: #219a52; }
+
+  .btn-ghost { background: transparent; color: var(--text-muted); border: 1.5px solid var(--border); }
+  .btn-ghost:hover { border-color: var(--brand); color: var(--brand); }
+
+  .btn-sm { padding: 7px 14px; font-size: 12px; }
+
+  .error-msg {
+    background: var(--alert-red-bg);
+    color: var(--alert-red);
+    border: 1px solid #f5c6c2;
+    border-radius: var(--radius-sm);
+    padding: 10px 14px;
+    font-size: 13px;
+    margin-bottom: 16px;
+    display: none;
+  }
+
+  /* ── APP SHELL ── */
+  #app { display: none; }
+
+  .topbar {
+    background: var(--brand);
+    color: white;
+    padding: 0 24px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 2px 12px rgba(20,70,160,0.3);
+  }
+
+  .topbar-logo {
+    height: 36px;
+  }
+
+  .topbar-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .user-badge {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(255,255,255,0.15);
+    border-radius: 20px;
+    padding: 6px 14px 6px 8px;
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  .user-avatar {
+    width: 28px;
+    height: 28px;
+    background: white;
+    color: var(--brand);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 700;
+    font-family: 'DM Mono', monospace;
+  }
+
+  .observer-banner {
+    background: #f39c12;
+    color: white;
+    text-align: center;
+    padding: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    display: none;
+  }
+
+  .mode-toggle {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(255,255,255,0.15);
+    border: 1.5px solid rgba(255,255,255,0.3);
+    color: white;
+    border-radius: 20px;
+    padding: 5px 12px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .mode-toggle:hover { background: rgba(255,255,255,0.25); }
+  .mode-toggle.observing { background: #f39c12; border-color: #f39c12; }
+
+  /* ── NAV TABS ── */
+  .nav-tabs {
+    background: var(--white);
+    border-bottom: 2px solid var(--border);
+    padding: 0 24px;
+    display: flex;
+    gap: 4px;
+    overflow-x: auto;
+  }
+
+  .nav-tab {
+    padding: 14px 18px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-muted);
+    cursor: pointer;
+    border-bottom: 3px solid transparent;
+    margin-bottom: -2px;
+    white-space: nowrap;
+    transition: all 0.2s;
+  }
+
+  .nav-tab:hover { color: var(--brand); }
+  .nav-tab.active { color: var(--brand); border-bottom-color: var(--brand); }
+
+  /* ── MAIN CONTENT ── */
+  .main-content {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 24px 20px;
+  }
+
+  /* ── HANDOVER CONTROLS ── */
+  .handover-controls {
+    background: var(--white);
+    border-radius: var(--radius);
+    padding: 20px 24px;
+    margin-bottom: 20px;
+    box-shadow: var(--shadow);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    align-items: flex-end;
+  }
+
+  .control-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    flex: 1;
+    min-width: 160px;
+  }
+
+  .control-group label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .control-group select, .control-group input[type="date"] {
+    padding: 10px 12px;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    color: var(--text);
+    background: var(--white);
+    outline: none;
+    cursor: pointer;
+    transition: border-color 0.2s;
+  }
+
+  .control-group select:focus, .control-group input[type="date"]:focus {
+    border-color: var(--brand);
+  }
+
+  /* ── HANDOVER DATE HEADER ── */
+  .handover-header {
+    background: linear-gradient(135deg, var(--brand) 0%, var(--brand-mid) 100%);
+    color: white;
+    border-radius: var(--radius);
+    padding: 20px 24px;
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .handover-header h2 {
+    font-size: 20px;
+    font-weight: 700;
+  }
+
+  .handover-header p {
+    font-size: 13px;
+    opacity: 0.85;
+    margin-top: 3px;
+  }
+
+  .handover-header-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .btn-white {
+    background: white;
+    color: var(--brand);
+    font-weight: 700;
+  }
+
+  .btn-white:hover { background: var(--brand-light); }
+
+  /* ── SECTION CARDS ── */
+  .section-card {
+    background: var(--white);
+    border-radius: var(--radius);
+    margin-bottom: 16px;
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+
+  .section-header {
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    user-select: none;
+    border-bottom: 1.5px solid var(--border);
+  }
+
+  .section-header-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .section-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 9px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    flex-shrink: 0;
+  }
+
+  .section-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text);
+  }
+
+  .section-count {
+    background: var(--brand-light);
+    color: var(--brand);
+    border-radius: 10px;
+    padding: 2px 8px;
+    font-size: 12px;
+    font-weight: 700;
+    font-family: 'DM Mono', monospace;
+  }
+
+  .section-body {
+    padding: 20px;
+  }
+
+  .chevron {
+    color: var(--text-muted);
+    font-size: 18px;
+    transition: transform 0.2s;
+  }
+
+  .section-card.collapsed .chevron { transform: rotate(-90deg); }
+  .section-card.collapsed .section-body { display: none; }
+
+  /* ── ALERT ITEMS ── */
+  .alert-item {
+    background: var(--alert-red-bg);
+    border: 1.5px solid #f5c6c2;
+    border-left: 4px solid var(--alert-red);
+    border-radius: var(--radius-sm);
+    padding: 14px 16px;
+    margin-bottom: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .alert-item .alert-text { font-size: 14px; font-weight: 500; flex: 1; }
+  .alert-item .alert-meta { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
+  .alert-item .alert-expiry {
+    font-size: 11px;
+    background: var(--alert-red);
+    color: white;
+    padding: 2px 8px;
+    border-radius: 10px;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  /* ── REMINDER ITEMS ── */
+  .reminder-item {
+    background: var(--reminder-blue-bg);
+    border: 1.5px solid #c5dff0;
+    border-left: 4px solid var(--reminder-blue);
+    border-radius: var(--radius-sm);
+    padding: 14px 16px;
+    margin-bottom: 10px;
+  }
+
+  .reminder-item.carried-forward {
+    border-left-color: var(--adhoc-purple);
+    background: var(--adhoc-purple-bg);
+    border-color: #d7b8e0;
+  }
+
+  .reminder-title { font-size: 14px; font-weight: 600; }
+  .reminder-notes { font-size: 13px; color: var(--text-muted); margin-top: 4px; }
+  .carried-tag {
+    display: inline-block;
+    background: var(--adhoc-purple);
+    color: white;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 10px;
+    margin-bottom: 6px;
+    letter-spacing: 0.3px;
+  }
+
+  /* ── AD HOC TASK ITEMS ── */
+  .adhoc-item {
+    background: var(--adhoc-purple-bg);
+    border: 1.5px solid #d7b8e0;
+    border-left: 4px solid var(--adhoc-purple);
+    border-radius: var(--radius-sm);
+    padding: 14px 16px;
+    margin-bottom: 10px;
+  }
+
+  .adhoc-item.priority-high { border-left-color: var(--alert-red); background: var(--alert-red-bg); border-color: #f5c6c2; }
+  .adhoc-item.priority-medium { border-left-color: var(--alert-amber); background: var(--alert-amber-bg); border-color: #fad7a0; }
+  .adhoc-item.priority-low { border-left-color: var(--success); background: var(--success-bg); border-color: #a9dfbf; }
+  .adhoc-item.completed { opacity: 0.6; }
+
+  .adhoc-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 8px;
+  }
+
+  .priority-badge {
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 10px;
+    letter-spacing: 0.5px;
+    flex-shrink: 0;
+  }
+
+  .priority-badge.high { background: var(--alert-red); color: white; }
+  .priority-badge.medium { background: var(--alert-amber); color: white; }
+  .priority-badge.low { background: var(--success); color: white; }
+
+  .adhoc-title { font-size: 14px; font-weight: 600; flex: 1; }
+  .adhoc-meta { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+
+  .completion-note {
+    background: rgba(255,255,255,0.7);
+    border-radius: var(--radius-sm);
+    padding: 8px 12px;
+    font-size: 12px;
+    margin-top: 8px;
+    border: 1px solid rgba(0,0,0,0.06);
+  }
+
+  /* ── ROUTINE TASK ITEMS ── */
+  .shift-section {
+    margin-bottom: 20px;
+  }
+
+  .shift-label {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-muted);
+    padding: 6px 0;
+    border-bottom: 1px dashed var(--border);
+    margin-bottom: 12px;
+  }
+
+  .task-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 12px 14px;
+    border-radius: var(--radius-sm);
+    border: 1.5px solid var(--border);
+    margin-bottom: 8px;
+    background: var(--white);
+    transition: all 0.2s;
+  }
+
+  .task-item:hover { border-color: var(--brand); }
+  .task-item.completed { background: var(--success-bg); border-color: #a9dfbf; }
+
+  .task-checkbox {
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+    margin-top: 1px;
+    accent-color: var(--brand);
+    cursor: pointer;
+  }
+
+  .task-content { flex: 1; }
+
+  .task-label {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text);
+  }
+
+  .task-item.completed .task-label {
+    text-decoration: line-through;
+    color: var(--text-muted);
+  }
+
+  .task-stamp {
+    font-size: 11px;
+    color: var(--success);
+    font-weight: 600;
+    margin-top: 3px;
+    font-family: 'DM Mono', monospace;
+  }
+
+  .task-note-field {
+    margin-top: 8px;
+    width: 100%;
+    padding: 8px 10px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    resize: vertical;
+    min-height: 60px;
+    outline: none;
+  }
+
+  .task-note-field:focus { border-color: var(--brand); }
+
+  .task-yn {
+    display: flex;
+    gap: 8px;
+    margin-top: 6px;
+  }
+
+  .yn-btn {
+    padding: 5px 16px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    border: 1.5px solid var(--border);
+    background: var(--white);
+    transition: all 0.15s;
+  }
+
+  .yn-btn.yes.active { background: var(--success); color: white; border-color: var(--success); }
+  .yn-btn.no.active { background: var(--alert-red); color: white; border-color: var(--alert-red); }
+  .yn-btn:hover { border-color: var(--brand); }
+
+  /* ── ACTIVITY / NOTE LOG ── */
+  .log-entry {
+    border-left: 3px solid var(--brand-light);
+    padding: 10px 14px;
+    margin-bottom: 10px;
+    background: var(--bg);
+    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+    position: relative;
+  }
+
+  .log-entry.activity { border-left-color: var(--brand); }
+  .log-entry.note { border-left-color: var(--alert-amber); }
+
+  .log-text { font-size: 14px; line-height: 1.5; }
+
+  .log-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 6px;
+    flex-wrap: wrap;
+  }
+
+  .log-stamp {
+    font-size: 11px;
+    font-family: 'DM Mono', monospace;
+    color: var(--text-muted);
+  }
+
+  .log-author {
+    font-size: 11px;
+    font-weight: 700;
+    background: var(--brand);
+    color: white;
+    padding: 1px 7px;
+    border-radius: 8px;
+    font-family: 'DM Mono', monospace;
+  }
+
+  .carry-forward-btn {
+    font-size: 11px;
+    color: var(--adhoc-purple);
+    background: none;
+    border: 1px solid var(--adhoc-purple);
+    border-radius: 6px;
+    padding: 1px 8px;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 600;
+    margin-left: auto;
+    transition: all 0.15s;
+  }
+
+  .carry-forward-btn:hover { background: var(--adhoc-purple); color: white; }
+
+  /* ── ADD ENTRY AREA ── */
+  .add-entry-area {
+    background: var(--bg);
+    border-radius: var(--radius-sm);
+    padding: 14px;
+    margin-top: 10px;
+    border: 1.5px dashed var(--border);
+  }
+
+  .add-entry-area textarea {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    resize: vertical;
+    min-height: 70px;
+    outline: none;
+    margin-bottom: 10px;
+    transition: border-color 0.2s;
+  }
+
+  .add-entry-area textarea:focus { border-color: var(--brand); }
+
+  /* ── MODAL ── */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 200;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    display: none;
+  }
+
+  .modal-overlay.open { display: flex; }
+
+  .modal {
+    background: var(--white);
+    border-radius: 16px;
+    width: 100%;
+    max-width: 520px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: var(--shadow-lg);
+  }
+
+  .modal-header {
+    padding: 20px 24px;
+    border-bottom: 1.5px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .modal-header h3 { font-size: 17px; font-weight: 700; color: var(--brand); }
+
+  .modal-close {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    border: none;
+    background: var(--bg);
+    color: var(--text-muted);
+    font-size: 18px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
+  }
+
+  .modal-close:hover { background: var(--alert-red-bg); color: var(--alert-red); }
+
+  .modal-body { padding: 24px; }
+  .modal-footer {
+    padding: 16px 24px;
+    border-top: 1.5px solid var(--border);
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+  }
+
+  /* ── ADMIN PANEL ── */
+  .admin-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+
+  .admin-card {
+    background: var(--white);
+    border-radius: var(--radius);
+    padding: 20px;
+    box-shadow: var(--shadow);
+    cursor: pointer;
+    transition: all 0.2s;
+    border: 2px solid transparent;
+    text-align: center;
+  }
+
+  .admin-card:hover { border-color: var(--brand); transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+
+  .admin-card-icon { font-size: 32px; margin-bottom: 10px; }
+  .admin-card-title { font-size: 15px; font-weight: 700; color: var(--brand); }
+  .admin-card-desc { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+
+  .admin-section {
+    background: var(--white);
+    border-radius: var(--radius);
+    padding: 24px;
+    box-shadow: var(--shadow);
+    margin-bottom: 20px;
+    display: none;
+  }
+
+  .admin-section.open { display: block; }
+
+  .admin-section h3 {
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--brand);
+    margin-bottom: 18px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid var(--brand-light);
+  }
+
+  .data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+
+  .data-table th {
+    text-align: left;
+    padding: 10px 12px;
+    background: var(--brand-light);
+    color: var(--brand);
+    font-weight: 700;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .data-table td {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: middle;
+  }
+
+  .data-table tr:hover td { background: var(--bg); }
+
+  .status-badge {
+    font-size: 11px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 8px;
+  }
+
+  .status-active { background: var(--success-bg); color: var(--success); }
+  .status-inactive { background: var(--alert-red-bg); color: var(--alert-red); }
+
+  .role-badge {
+    font-size: 11px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 8px;
+    background: var(--brand-light);
+    color: var(--brand);
+  }
+
+  /* ── PRINT MODAL ── */
+  .print-option {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .print-option:last-child { border-bottom: none; }
+
+  .print-option input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--brand);
+    cursor: pointer;
+  }
+
+  .print-option label {
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+  }
+
+  /* ── EMPTY STATE ── */
+  .empty-state {
+    text-align: center;
+    padding: 30px 20px;
+    color: var(--text-muted);
+  }
+
+  .empty-state .empty-icon { font-size: 36px; margin-bottom: 10px; }
+  .empty-state p { font-size: 13px; }
+
+  /* ── TOAST ── */
+  .toast-container {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    z-index: 300;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .toast {
+    background: var(--text);
+    color: white;
+    padding: 12px 18px;
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    font-weight: 500;
+    box-shadow: var(--shadow-lg);
+    animation: slideIn 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    max-width: 320px;
+  }
+
+  .toast.success { background: var(--success); }
+  .toast.error { background: var(--alert-red); }
+
+  @keyframes slideIn {
+    from { transform: translateX(100%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+  }
+
+  /* ── PRINT STYLES ── */
+  @media print {
+    .topbar, .nav-tabs, .handover-controls, .handover-header-actions,
+    .add-entry-area, .modal-overlay, .toast-container,
+    .carry-forward-btn, .btn, .mode-toggle,
+    [data-no-print] { display: none !important; }
+
+    body { background: white; font-size: 12px; }
+
+    .section-card { box-shadow: none; border: 1px solid #ddd; break-inside: avoid; }
+    .section-card.collapsed .section-body { display: block !important; }
+
+    .main-content { max-width: 100%; padding: 10px; }
+
+    .print-header {
+      display: flex !important;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 0;
+      margin-bottom: 16px;
+      border-bottom: 2px solid var(--brand);
+    }
+
+    .no-staff-print .log-author,
+    .no-staff-print .task-stamp,
+    .no-staff-print .log-stamp { display: none !important; }
+  }
+
+  .print-header { display: none; }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 600px) {
+    .topbar { padding: 0 14px; }
+    .main-content { padding: 14px 12px; }
+    .handover-controls { flex-direction: column; }
+    .control-group { min-width: unset; width: 100%; }
+    .handover-header { flex-direction: column; }
+    .admin-grid { grid-template-columns: 1fr 1fr; }
+    .modal { margin: 10px; max-height: 85vh; }
+  }
+
+  .inline-flex { display: inline-flex; align-items: center; gap: 6px; }
+  .mt-10 { margin-top: 10px; }
+  .mt-16 { margin-top: 16px; }
+  .flex-between { display: flex; justify-content: space-between; align-items: center; }
+  .text-muted { color: var(--text-muted); font-size: 12px; }
+  .divider { height: 1px; background: var(--border); margin: 16px 0; }
+  .tag { display: inline-block; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 8px; }
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════
+     LOGIN SCREEN
+══════════════════════════════════════════════ -->
+<div id="loginScreen">
+  <div class="login-card">
+    <img src="https://raw.githubusercontent.com/CS-Documentation/invoice/refs/heads/main/front%20page%20header.png"
+         alt="Connected Stars" class="login-logo" onerror="this.style.display='none'">
+    <div class="login-title">Handover Notes</div>
+    <div class="login-sub">Sign in to access the handover system</div>
+    <div id="loginError" class="error-msg">Incorrect email or password. Please try again.</div>
+    <div class="form-group">
+      <label>Email Address</label>
+      <input type="email" id="loginEmail" placeholder="your@email.com" autocomplete="email">
+    </div>
+    <div class="form-group">
+      <label>Password</label>
+      <input type="password" id="loginPassword" placeholder="••••••••" autocomplete="current-password">
+    </div>
+    <button class="btn btn-primary" onclick="handleLogin()">Sign In</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     MAIN APP
+══════════════════════════════════════════════ -->
+<div id="app">
+
+  <!-- Observer Banner -->
+  <div class="observer-banner" id="observerBanner">
+    👁 OBSERVER MODE — View Only. No changes can be made.
+  </div>
+
+  <!-- Top Bar -->
+  <div class="topbar">
+    <img src="https://raw.githubusercontent.com/CS-Documentation/invoice/refs/heads/main/front%20page%20header.png"
+         alt="Connected Stars" class="topbar-logo" onerror="this.style.display='none'; document.querySelector('.topbar-fallback').style.display='block'">
+    <span class="topbar-fallback" style="display:none;color:white;font-weight:700;font-size:16px;">Connected Stars</span>
+    <div class="topbar-right">
+      <button class="mode-toggle" id="modeToggleBtn" onclick="toggleObserverMode()" style="display:none">
+        👁 Observer Mode
+      </button>
+      <div class="user-badge">
+        <div class="user-avatar" id="userAvatarTop">DJ</div>
+        <span id="userNameTop">DJ</span>
+      </div>
+      <button class="btn btn-sm" style="background:rgba(255,255,255,0.15);color:white;border:none;" onclick="handleLogout()">Sign Out</button>
+    </div>
+  </div>
+
+  <!-- Nav Tabs -->
+  <div class="nav-tabs">
+    <div class="nav-tab active" onclick="switchTab('handover', this)">📋 Handover</div>
+    <div class="nav-tab" id="adminTabBtn" onclick="switchTab('admin', this)" style="display:none">⚙️ Admin Panel</div>
+  </div>
+
+  <!-- ── HANDOVER TAB ── -->
+  <div id="tabHandover" class="main-content">
+
+    <!-- Print Header (shows when printing) -->
+    <div class="print-header" id="printHeader">
+      <div>
+        <strong>Connected Stars Handover Notes</strong><br>
+        <span id="printMeta"></span>
+      </div>
+      <div style="text-align:right;font-size:11px;color:#666">
+        Printed: <span id="printDate"></span>
+      </div>
+    </div>
+
+    <!-- Controls -->
+    <div class="handover-controls">
+      <div class="control-group">
+        <label>Unit</label>
+        <select id="unitSelect" onchange="loadServiceUsers()">
+          <option value="">Select unit...</option>
+        </select>
+      </div>
+      <div class="control-group">
+        <label>Service User</label>
+        <select id="serviceUserSelect" onchange="loadHandover()">
+          <option value="">Select service user...</option>
+        </select>
+      </div>
+      <div class="control-group">
+        <label>Handover Date</label>
+        <input type="date" id="handoverDate" onchange="loadHandover()">
+      </div>
+    </div>
+
+    <!-- Handover Date Header -->
+    <div class="handover-header" id="handoverHeader" style="display:none">
+      <div>
+        <h2 id="handoverTitle">Tom — Monday 26 March 2026</h2>
+        <p id="handoverSubtitle">06:00 Mon 26 Mar → 05:59 Tue 27 Mar · Hounslow</p>
+      </div>
+      <div class="handover-header-actions" data-no-print>
+        <button class="btn btn-white btn-sm" onclick="openPrintModal()">🖨️ Print</button>
+        <button class="btn btn-white btn-sm" id="addAlertBtn" onclick="openModal('alertModal')">🚨 Add Alert</button>
+        <button class="btn btn-white btn-sm" onclick="openModal('reminderModal')">🔔 Add Reminder</button>
+        <button class="btn btn-white btn-sm" onclick="openModal('adhocModal')">➕ Add Task</button>
+      </div>
+    </div>
+
+    <!-- Placeholder when nothing selected -->
+    <div id="handoverPlaceholder" style="text-align:center;padding:60px 20px;color:var(--text-muted)">
+      <div style="font-size:48px;margin-bottom:16px">📋</div>
+      <div style="font-size:17px;font-weight:600;margin-bottom:8px">Select a service user to begin</div>
+      <div style="font-size:13px">Choose a unit, service user, and date above to load the handover form.</div>
+    </div>
+
+    <!-- HANDOVER CONTENT -->
+    <div id="handoverContent" style="display:none">
+
+      <!-- ALERTS -->
+      <div class="section-card" id="alertsSection">
+        <div class="section-header" onclick="toggleSection('alertsSection')">
+          <div class="section-header-left">
+            <div class="section-icon" style="background:#fdf0ef;color:var(--alert-red)">🚨</div>
+            <span class="section-title">Alerts</span>
+            <span class="section-count" id="alertsCount">0</span>
+          </div>
+          <span class="chevron">›</span>
+        </div>
+        <div class="section-body" id="alertsBody">
+          <div class="empty-state" id="alertsEmpty">
+            <div class="empty-icon">🚨</div>
+            <p>No active alerts for this handover period.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- REMINDERS -->
+      <div class="section-card" id="remindersSection">
+        <div class="section-header" onclick="toggleSection('remindersSection')">
+          <div class="section-header-left">
+            <div class="section-icon" style="background:var(--reminder-blue-bg);color:var(--reminder-blue)">🔔</div>
+            <span class="section-title">Reminders</span>
+            <span class="section-count" id="remindersCount">0</span>
+          </div>
+          <span class="chevron">›</span>
+        </div>
+        <div class="section-body" id="remindersBody">
+          <div class="empty-state" id="remindersEmpty">
+            <div class="empty-icon">🔔</div>
+            <p>No reminders for this date.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- AD HOC TASKS -->
+      <div class="section-card" id="adhocSection">
+        <div class="section-header" onclick="toggleSection('adhocSection')">
+          <div class="section-header-left">
+            <div class="section-icon" style="background:var(--adhoc-purple-bg);color:var(--adhoc-purple)">⚡</div>
+            <span class="section-title">Ad Hoc Tasks</span>
+            <span class="section-count" id="adhocCount">0</span>
+          </div>
+          <span class="chevron">›</span>
+        </div>
+        <div class="section-body" id="adhocBody">
+          <div class="empty-state" id="adhocEmpty">
+            <div class="empty-icon">⚡</div>
+            <p>No ad hoc tasks for this handover.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- ROUTINE TASKS -->
+      <div class="section-card" id="tasksSection">
+        <div class="section-header" onclick="toggleSection('tasksSection')">
+          <div class="section-header-left">
+            <div class="section-icon" style="background:var(--brand-light);color:var(--brand)">✅</div>
+            <span class="section-title">Routine Tasks</span>
+            <span class="section-count" id="tasksCount">0</span>
+          </div>
+          <span class="chevron">›</span>
+        </div>
+        <div class="section-body" id="tasksBody">
+          <div class="empty-state" id="tasksEmpty">
+            <div class="empty-icon">✅</div>
+            <p>No routine tasks set up. Admin can add tasks from the Admin Panel.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- ACTIVITIES LOG -->
+      <div class="section-card" id="activitiesSection">
+        <div class="section-header" onclick="toggleSection('activitiesSection')">
+          <div class="section-header-left">
+            <div class="section-icon" style="background:#eef6fb;color:var(--reminder-blue)">🏃</div>
+            <span class="section-title">Activities Log</span>
+            <span class="section-count" id="activitiesCount">0</span>
+          </div>
+          <span class="chevron">›</span>
+        </div>
+        <div class="section-body" id="activitiesBody">
+          <div class="empty-state" id="activitiesEmpty">
+            <div class="empty-icon">🏃</div>
+            <p>No activities logged yet today.</p>
+          </div>
+          <div class="add-entry-area" id="addActivityArea" data-no-print>
+            <textarea id="activityInput" placeholder="Log an activity — what did this person do today?"></textarea>
+            <button class="btn btn-primary btn-sm" onclick="addLogEntry('activity')">Add Activity</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- NOTES -->
+      <div class="section-card" id="notesSection">
+        <div class="section-header" onclick="toggleSection('notesSection')">
+          <div class="section-header-left">
+            <div class="section-icon" style="background:var(--alert-amber-bg);color:var(--alert-amber)">📝</div>
+            <span class="section-title">Notes</span>
+            <span class="section-count" id="notesCount">0</span>
+          </div>
+          <span class="chevron">›</span>
+        </div>
+        <div class="section-body" id="notesBody">
+          <div class="empty-state" id="notesEmpty">
+            <div class="empty-icon">📝</div>
+            <p>No notes added yet.</p>
+          </div>
+          <div class="add-entry-area" id="addNoteArea" data-no-print>
+            <textarea id="noteInput" placeholder="Add a note or observation..."></textarea>
+            <button class="btn btn-primary btn-sm" onclick="addLogEntry('note')">Add Note</button>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /handoverContent -->
+  </div><!-- /tabHandover -->
+
+  <!-- ── ADMIN TAB ── -->
+  <div id="tabAdmin" class="main-content" style="display:none">
+    <div class="admin-grid">
+      <div class="admin-card" onclick="openAdminSection('adminServiceUsers')">
+        <div class="admin-card-icon">👥</div>
+        <div class="admin-card-title">Service Users</div>
+        <div class="admin-card-desc">Add, edit or archive service users</div>
+      </div>
+      <div class="admin-card" onclick="openAdminSection('adminUnits')">
+        <div class="admin-card-icon">🏠</div>
+        <div class="admin-card-title">Units</div>
+        <div class="admin-card-desc">Manage your care units</div>
+      </div>
+      <div class="admin-card" onclick="openAdminSection('adminTasks')">
+        <div class="admin-card-icon">✅</div>
+        <div class="admin-card-title">Routine Tasks</div>
+        <div class="admin-card-desc">Set up daily task templates</div>
+      </div>
+      <div class="admin-card" onclick="openAdminSection('adminStaff')">
+        <div class="admin-card-icon">👤</div>
+        <div class="admin-card-title">Staff Accounts</div>
+        <div class="admin-card-desc">Manage staff and roles</div>
+      </div>
+    </div>
+
+    <!-- SERVICE USERS ADMIN -->
+    <div class="admin-section" id="adminServiceUsers">
+      <div class="flex-between">
+        <h3>👥 Service Users</h3>
+        <button class="btn btn-primary btn-sm" onclick="openModal('addSUModal')">+ Add Service User</button>
+      </div>
+      <div style="overflow-x:auto;margin-top:16px">
+        <table class="data-table" id="suTable">
+          <thead>
+            <tr><th>Name</th><th>Unit</th><th>Status</th><th>Actions</th></tr>
+          </thead>
+          <tbody id="suTableBody">
+            <tr><td colspan="4" style="text-align:center;color:var(--text-muted);padding:20px">Loading...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- UNITS ADMIN -->
+    <div class="admin-section" id="adminUnits">
+      <div class="flex-between">
+        <h3>🏠 Units</h3>
+        <button class="btn btn-primary btn-sm" onclick="openModal('addUnitModal')">+ Add Unit</button>
+      </div>
+      <div style="overflow-x:auto;margin-top:16px">
+        <table class="data-table">
+          <thead>
+            <tr><th>Unit Name</th><th>Status</th><th>Actions</th></tr>
+          </thead>
+          <tbody id="unitsTableBody">
+            <tr><td colspan="3" style="text-align:center;color:var(--text-muted);padding:20px">Loading...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- TASKS ADMIN -->
+    <div class="admin-section" id="adminTasks">
+      <div class="flex-between">
+        <h3>✅ Routine Tasks</h3>
+        <button class="btn btn-primary btn-sm" onclick="openModal('addTaskModal')">+ Add Task</button>
+      </div>
+      <p class="text-muted mt-10">Tasks can apply to all service users, a specific unit, or a specific service user.</p>
+      <div style="overflow-x:auto;margin-top:16px">
+        <table class="data-table">
+          <thead>
+            <tr><th>Task</th><th>Type</th><th>Applies To</th><th>Shift</th><th>Status</th><th>Actions</th></tr>
+          </thead>
+          <tbody id="tasksTableBody">
+            <tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:20px">Loading...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- STAFF ADMIN -->
+    <div class="admin-section" id="adminStaff">
+      <div class="flex-between">
+        <h3>👤 Staff Accounts</h3>
+        <button class="btn btn-primary btn-sm" onclick="openModal('addStaffModal')">+ Add Staff</button>
+      </div>
+      <div style="overflow-x:auto;margin-top:16px">
+        <table class="data-table">
+          <thead>
+            <tr><th>Name</th><th>Initials</th><th>Role</th><th>Status</th><th>Actions</th></tr>
+          </thead>
+          <tbody id="staffTableBody">
+            <tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:20px">Loading...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div><!-- /tabAdmin -->
+
+</div><!-- /app -->
+
+<!-- ══════════════════════════════════════════════
+     MODALS
+══════════════════════════════════════════════ -->
+
+<!-- ALERT MODAL -->
+<div class="modal-overlay" id="alertModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>🚨 Add Alert</h3>
+      <button class="modal-close" onclick="closeModal('alertModal')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>Alert Message</label>
+        <textarea id="alertText" style="width:100%;padding:10px;border:1.5px solid var(--border);border-radius:8px;font-family:DM Sans,sans-serif;font-size:14px;min-height:80px;outline:none;resize:vertical" placeholder="e.g. Tom has a tender stomach this week — avoid spicy food"></textarea>
+      </div>
+      <div class="form-group">
+        <label>Duration</label>
+        <select id="alertDuration">
+          <option value="day">This handover day only (default)</option>
+          <option value="custom">Custom end date</option>
+        </select>
+      </div>
+      <div class="form-group" id="alertEndDateGroup" style="display:none">
+        <label>Alert ends on</label>
+        <input type="datetime-local" id="alertEndDate">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost btn-sm" onclick="closeModal('alertModal')">Cancel</button>
+      <button class="btn btn-danger btn-sm" onclick="saveAlert()">Add Alert</button>
+    </div>
+  </div>
+</div>
+
+<!-- REMINDER MODAL -->
+<div class="modal-overlay" id="reminderModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>🔔 Add Reminder</h3>
+      <button class="modal-close" onclick="closeModal('reminderModal')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>Reminder Title</label>
+        <input type="text" id="reminderTitle" placeholder="e.g. DJ dentist appointment">
+      </div>
+      <div class="form-group">
+        <label>Appointment / Event Date</label>
+        <input type="date" id="reminderEventDate">
+      </div>
+      <div class="form-group">
+        <label>Show reminder on</label>
+        <div style="display:flex;flex-direction:column;gap:8px;margin-top:6px">
+          <label style="display:flex;align-items:center;gap:8px;font-weight:400;font-size:14px">
+            <input type="checkbox" id="reminderOnDay" checked style="width:16px;height:16px;accent-color:var(--brand)"> On the day
+          </label>
+          <label style="display:flex;align-items:center;gap:8px;font-weight:400;font-size:14px">
+            <input type="checkbox" id="reminderDayBefore" style="width:16px;height:16px;accent-color:var(--brand)"> One day before
+          </label>
+        </div>
+      </div>
+      <div class="form-group" id="dayBeforeNotesGroup" style="display:none">
+        <label>Day-before notes (shown the day before)</label>
+        <textarea id="reminderDayBeforeNotes" style="width:100%;padding:10px;border:1.5px solid var(--border);border-radius:8px;font-family:DM Sans,sans-serif;font-size:14px;min-height:70px;outline:none;resize:vertical" placeholder="e.g. Remember to give pre-appointment medication tonight"></textarea>
+      </div>
+      <div class="form-group">
+        <label>On-the-day notes (optional)</label>
+        <textarea id="reminderOnDayNotes" style="width:100%;padding:10px;border:1.5px solid var(--border);border-radius:8px;font-family:DM Sans,sans-serif;font-size:14px;min-height:70px;outline:none;resize:vertical" placeholder="e.g. Appointment at 2pm, Staines dental clinic. Bring insurance card."></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost btn-sm" onclick="closeModal('reminderModal')">Cancel</button>
+      <button class="btn btn-primary btn-sm" onclick="saveReminder()">Add Reminder</button>
+    </div>
+  </div>
+</div>
+
+<!-- AD HOC TASK MODAL -->
+<div class="modal-overlay" id="adhocModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>⚡ Add Ad Hoc Task</h3>
+      <button class="modal-close" onclick="closeModal('adhocModal')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>Task Description</label>
+        <textarea id="adhocTitle" style="width:100%;padding:10px;border:1.5px solid var(--border);border-radius:8px;font-family:DM Sans,sans-serif;font-size:14px;min-height:70px;outline:none;resize:vertical" placeholder="Describe the task to be completed..."></textarea>
+      </div>
+      <div class="form-group">
+        <label>Priority</label>
+        <select id="adhocPriority">
+          <option value="high">🔴 High — urgent, must be seen first</option>
+          <option value="medium" selected>🟡 Medium</option>
+          <option value="low">🟢 Low</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>When does this task apply?</label>
+        <select id="adhocRecurrence" onchange="updateAdhocRecurrenceFields()">
+          <option value="today">Today only</option>
+          <option value="tomorrow">Tomorrow only</option>
+          <option value="range">Date range (admin only)</option>
+          <option value="recurring">Recurring on specific days (admin only)</option>
+        </select>
+      </div>
+      <div class="form-group" id="adhocRangeFields" style="display:none">
+        <label>From date</label>
+        <input type="date" id="adhocFromDate" style="margin-bottom:8px">
+        <label>To date</label>
+        <input type="date" id="adhocToDate">
+      </div>
+      <div class="form-group" id="adhocRecurringFields" style="display:none">
+        <label>Repeat on</label>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:6px">
+          <label style="display:flex;align-items:center;gap:5px;font-size:13px;font-weight:400"><input type="checkbox" value="1" class="recur-day"> Mon</label>
+          <label style="display:flex;align-items:center;gap:5px;font-size:13px;font-weight:400"><input type="checkbox" value="2" class="recur-day"> Tue</label>
+          <label style="display:flex;align-items:center;gap:5px;font-size:13px;font-weight:400"><input type="checkbox" value="3" class="recur-day"> Wed</label>
+          <label style="display:flex;align-items:center;gap:5px;font-size:13px;font-weight:400"><input type="checkbox" value="4" class="recur-day"> Thu</label>
+          <label style="display:flex;align-items:center;gap:5px;font-size:13px;font-weight:400"><input type="checkbox" value="5" class="recur-day"> Fri</label>
+          <label style="display:flex;align-items:center;gap:5px;font-size:13px;font-weight:400"><input type="checkbox" value="6" class="recur-day"> Sat</label>
+          <label style="display:flex;align-items:center;gap:5px;font-size:13px;font-weight:400"><input type="checkbox" value="0" class="recur-day"> Sun</label>
+        </div>
+        <div style="margin-top:10px">
+          <label style="font-size:13px;font-weight:600">Within date range (optional)</label>
+          <div style="display:flex;gap:8px;margin-top:6px">
+            <input type="date" id="adhocRecurFrom" placeholder="From" style="flex:1;padding:8px;border:1.5px solid var(--border);border-radius:6px;font-size:13px">
+            <input type="date" id="adhocRecurTo" placeholder="To" style="flex:1;padding:8px;border:1.5px solid var(--border);border-radius:6px;font-size:13px">
+          </div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label style="display:flex;align-items:center;gap:8px;font-weight:500;cursor:pointer">
+          <input type="checkbox" id="adhocMustComplete" style="width:16px;height:16px;accent-color:var(--brand)">
+          Must be completed — carry forward if not done by end of day
+        </label>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost btn-sm" onclick="closeModal('adhocModal')">Cancel</button>
+      <button class="btn btn-primary btn-sm" onclick="saveAdhocTask()">Add Task</button>
+    </div>
+  </div>
+</div>
+
+<!-- COMPLETE ADHOC MODAL -->
+<div class="modal-overlay" id="completeAdhocModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>✅ Complete Task</h3>
+      <button class="modal-close" onclick="closeModal('completeAdhocModal')">×</button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:14px;color:var(--text-muted);margin-bottom:16px">Add a note about how this task was completed (optional).</p>
+      <div class="form-group">
+        <label>Completion Note</label>
+        <textarea id="completionNote" style="width:100%;padding:10px;border:1.5px solid var(--border);border-radius:8px;font-family:DM Sans,sans-serif;font-size:14px;min-height:80px;outline:none;resize:vertical" placeholder="e.g. Task completed at 9pm. Young person was happy and settled."></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost btn-sm" onclick="closeModal('completeAdhocModal')">Cancel</button>
+      <button class="btn btn-success btn-sm" onclick="confirmCompleteAdhoc()">Mark Complete</button>
+    </div>
+  </div>
+</div>
+
+<!-- CARRY FORWARD MODAL -->
+<div class="modal-overlay" id="carryForwardModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>📌 Carry Forward to Today</h3>
+      <button class="modal-close" onclick="closeModal('carryForwardModal')">×</button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:14px;margin-bottom:16px">This note will be carried forward to today's handover as a reminder.</p>
+      <div style="background:var(--bg);padding:12px;border-radius:8px;font-size:14px;margin-bottom:16px;border-left:3px solid var(--brand)" id="carryForwardPreview"></div>
+      <div class="form-group">
+        <label>Add context for today's shift (optional)</label>
+        <textarea id="carryForwardNote" style="width:100%;padding:10px;border:1.5px solid var(--border);border-radius:8px;font-family:DM Sans,sans-serif;font-size:14px;min-height:70px;outline:none;resize:vertical" placeholder="Any extra context for today's team..."></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost btn-sm" onclick="closeModal('carryForwardModal')">Cancel</button>
+      <button class="btn btn-primary btn-sm" onclick="confirmCarryForward()">Carry Forward</button>
+    </div>
+  </div>
+</div>
+
+<!-- PRINT MODAL -->
+<div class="modal-overlay" id="printModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>🖨️ Print Options</h3>
+      <button class="modal-close" onclick="closeModal('printModal')">×</button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:13px;color:var(--text-muted);margin-bottom:16px">Choose what to include in the printed handover.</p>
+      <div class="print-option">
+        <input type="checkbox" id="printAttribution" checked>
+        <label for="printAttribution"><strong>Include staff attribution</strong> — names, initials, and timestamps on all entries</label>
+      </div>
+      <div class="divider"></div>
+      <p style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-muted);margin-bottom:10px">Sections to include</p>
+      <div class="print-option"><input type="checkbox" id="printAlerts" checked><label for="printAlerts">Alerts</label></div>
+      <div class="print-option"><input type="checkbox" id="printReminders" checked><label for="printReminders">Reminders</label></div>
+      <div class="print-option"><input type="checkbox" id="printAdhoc" checked><label for="printAdhoc">Ad Hoc Tasks</label></div>
+      <div class="print-option"><input type="checkbox" id="printTasks" checked><label for="printTasks">Routine Tasks</label></div>
+      <div class="print-option"><input type="checkbox" id="printActivities" checked><label for="printActivities">Activities Log</label></div>
+      <div class="print-option"><input type="checkbox" id="printNotes" checked><label for="printNotes">Notes</label></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost btn-sm" onclick="closeModal('printModal')">Cancel</button>
+      <button class="btn btn-primary btn-sm" onclick="executePrint()">Print</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD SERVICE USER MODAL -->
+<div class="modal-overlay" id="addSUModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>👥 Add Service User</h3>
+      <button class="modal-close" onclick="closeModal('addSUModal')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group"><label>First Name</label><input type="text" id="suName" placeholder="First name only"></div>
+      <div class="form-group">
+        <label>Unit</label>
+        <select id="suUnit"></select>
+      </div>
+      <div class="form-group"><label>Date of Birth (optional)</label><input type="date" id="suDob"></div>
+      <div class="form-group"><label>Key Notes (optional)</label><textarea id="suNotes" style="width:100%;padding:10px;border:1.5px solid var(--border);border-radius:8px;font-family:DM Sans,sans-serif;font-size:14px;min-height:70px;outline:none;resize:vertical" placeholder="Any key information about this person..."></textarea></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost btn-sm" onclick="closeModal('addSUModal')">Cancel</button>
+      <button class="btn btn-primary btn-sm" onclick="saveServiceUser()">Add Service User</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD UNIT MODAL -->
+<div class="modal-overlay" id="addUnitModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>🏠 Add Unit</h3>
+      <button class="modal-close" onclick="closeModal('addUnitModal')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group"><label>Unit Name</label><input type="text" id="unitName" placeholder="e.g. Hounslow, Staines, Egham"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost btn-sm" onclick="closeModal('addUnitModal')">Cancel</button>
+      <button class="btn btn-primary btn-sm" onclick="saveUnit()">Add Unit</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD TASK MODAL -->
+<div class="modal-overlay" id="addTaskModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>✅ Add Routine Task</h3>
+      <button class="modal-close" onclick="closeModal('addTaskModal')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group"><label>Task Name</label><input type="text" id="taskName" placeholder="e.g. Morning medication given"></div>
+      <div class="form-group">
+        <label>Task Type</label>
+        <select id="taskType">
+          <option value="checkbox">Checkbox — tick when done</option>
+          <option value="yesno">Yes / No</option>
+          <option value="paragraph">Paragraph — requires written explanation</option>
+          <option value="time">Time entry</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Shift</label>
+        <select id="taskShift">
+          <option value="morning">Morning (06:00–12:00)</option>
+          <option value="afternoon">Afternoon (12:00–18:00)</option>
+          <option value="evening">Evening (18:00–22:00)</option>
+          <option value="night">Night (22:00–06:00)</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Applies to</label>
+        <select id="taskLevel" onchange="updateTaskLevelFields()">
+          <option value="global">All service users (global)</option>
+          <option value="unit">Specific unit</option>
+          <option value="serviceuser">Specific service user</option>
+        </select>
+      </div>
+      <div class="form-group" id="taskUnitField" style="display:none">
+        <label>Unit</label>
+        <select id="taskUnit"></select>
+      </div>
+      <div class="form-group" id="taskSUField" style="display:none">
+        <label>Service User</label>
+        <select id="taskSU"></select>
+      </div>
+      <div class="form-group">
+        <label style="display:flex;align-items:center;gap:8px;font-weight:500;cursor:pointer">
+          <input type="checkbox" id="taskMustComplete" style="width:16px;height:16px;accent-color:var(--brand)">
+          Must be completed — carry forward if not done
+        </label>
+      </div>
+      <div class="form-group">
+        <label>Time-sensitive (optional) — task appears until this date</label>
+        <input type="date" id="taskExpiry">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost btn-sm" onclick="closeModal('addTaskModal')">Cancel</button>
+      <button class="btn btn-primary btn-sm" onclick="saveTask()">Add Task</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD STAFF MODAL -->
+<div class="modal-overlay" id="addStaffModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>👤 Add Staff Member</h3>
+      <button class="modal-close" onclick="closeModal('addStaffModal')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group"><label>Full Name</label><input type="text" id="staffName" placeholder="e.g. Max Brown"></div>
+      <div class="form-group"><label>Initials (2–4 letters)</label><input type="text" id="staffInitials" placeholder="e.g. MB" maxlength="4" style="text-transform:uppercase"></div>
+      <div class="form-group">
+        <label>Role</label>
+        <select id="staffRole">
+          <option value="support">Support Staff</option>
+          <option value="admin">Admin</option>
+          <option value="observer">Observer</option>
+        </select>
+      </div>
+      <div class="form-group"><label>Email Address</label><input type="email" id="staffEmail" placeholder="staff@connectedstars.com"></div>
+      <p style="font-size:12px;color:var(--text-muted);margin-top:-8px">Note: You also need to create this person's login in Firebase Authentication separately.</p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost btn-sm" onclick="closeModal('addStaffModal')">Cancel</button>
+      <button class="btn btn-primary btn-sm" onclick="saveStaff()">Add Staff Member</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast Container -->
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- ══════════════════════════════════════════════
+     FIREBASE + APP LOGIC
+══════════════════════════════════════════════ -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged }
+  from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getFirestore, collection, doc, getDoc, getDocs, addDoc, updateDoc,
+  query, where, orderBy, serverTimestamp, Timestamp }
+  from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCwHzZFibrc9SNP8vAV6Jr_NmQr4fVCEto",
+  authDomain: "connected-stars-handover.firebaseapp.com",
+  projectId: "connected-stars-handover",
+  storageBucket: "connected-stars-handover.firebasestorage.app",
+  messagingSenderId: "606134396217",
+  appId: "1:606134396217:web:6636e2fbe9b73b7723b4e8"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+// ── STATE ──
+let currentUser = null;
+let currentStaffProfile = null;
+let isObserverMode = false;
+let currentHandover = { unitId: null, serviceUserId: null, date: null, serviceUserName: null, unitName: null };
+let unitsCache = [];
+let serviceUsersCache = [];
+let pendingAdhocId = null;
+let pendingCarryForward = null;
+
+// ── EXPOSE TO WINDOW ──
+window.handleLogin = handleLogin;
+window.handleLogout = handleLogout;
+window.switchTab = switchTab;
+window.toggleSection = toggleSection;
+window.openModal = openModal;
+window.closeModal = closeModal;
+window.toggleObserverMode = toggleObserverMode;
+window.loadServiceUsers = loadServiceUsers;
+window.loadHandover = loadHandover;
+window.saveAlert = saveAlert;
+window.saveReminder = saveReminder;
+window.saveAdhocTask = saveAdhocTask;
+window.confirmCompleteAdhoc = confirmCompleteAdhoc;
+window.confirmCarryForward = confirmCarryForward;
+window.addLogEntry = addLogEntry;
+window.openPrintModal = openPrintModal;
+window.executePrint = executePrint;
+window.openAdminSection = openAdminSection;
+window.saveServiceUser = saveServiceUser;
+window.saveUnit = saveUnit;
+window.saveTask = saveTask;
+window.saveStaff = saveStaff;
+window.updateAdhocRecurrenceFields = updateAdhocRecurrenceFields;
+window.updateTaskLevelFields = updateTaskLevelFields;
+
+// ── AUTH ──
+onAuthStateChanged(auth, async (user) => {
+  if (user) {
+    currentUser = user;
+    await loadStaffProfile(user.uid);
+    showApp();
+  } else {
+    showLogin();
+  }
+});
+
+async function loadStaffProfile(uid) {
+  try {
+    const ref = doc(db, 'staffProfiles', uid);
+    const snap = await getDoc(ref);
+    if (snap.exists()) {
+      currentStaffProfile = { id: snap.id, ...snap.data() };
+    } else {
+      currentStaffProfile = { name: currentUser.email, initials: '??', role: 'support' };
+    }
+  } catch(e) {
+    currentStaffProfile = { name: currentUser.email, initials: '??', role: 'support' };
+  }
+}
+
+async function handleLogin() {
+  const email = document.getElementById('loginEmail').value.trim();
+  const password = document.getElementById('loginPassword').value;
+  const errEl = document.getElementById('loginError');
+  errEl.style.display = 'none';
+  if (!email || !password) { errEl.textContent = 'Please enter your email and password.'; errEl.style.display = 'block'; return; }
+  try {
+    await signInWithEmailAndPassword(auth, email, password);
+  } catch(e) {
+    errEl.style.display = 'block';
+  }
+}
+
+async function handleLogout() {
+  await signOut(auth);
+}
+
+function showLogin() {
+  document.getElementById('loginScreen').style.display = 'flex';
+  document.getElementById('app').style.display = 'none';
+}
+
+function showApp() {
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  const role = currentStaffProfile?.role || 'support';
+  const name = currentStaffProfile?.name || '';
+  const initials = currentStaffProfile?.initials || '??';
+  document.getElementById('userNameTop').textContent = name;
+  document.getElementById('userAvatarTop').textContent = initials;
+  if (role === 'admin') {
+    document.getElementById('adminTabBtn').style.display = 'block';
+    document.getElementById('modeToggleBtn').style.display = 'flex';
+  }
+  if (role === 'observer') {
+    isObserverMode = true;
+    applyObserverMode();
+  }
+  setTodaysDate();
+  loadUnits();
+}
+
+function setTodaysDate() {
+  const today = new Date();
+  const y = today.getFullYear();
+  const m = String(today.getMonth()+1).padStart(2,'0');
+  const d = String(today.getDate()).padStart(2,'0');
+  document.getElementById('handoverDate').value = `${y}-${m}-${d}`;
+}
+
+// ── OBSERVER MODE ──
+function toggleObserverMode() {
+  isObserverMode = !isObserverMode;
+  applyObserverMode();
+}
+
+function applyObserverMode() {
+  const btn = document.getElementById('modeToggleBtn');
+  const banner = document.getElementById('observerBanner');
+  if (isObserverMode) {
+    btn.textContent = '✏️ Edit Mode';
+    btn.classList.add('observing');
+    banner.style.display = 'block';
+    document.querySelectorAll('.add-entry-area, [data-no-print]').forEach(el => {
+      if (!el.closest('.topbar')) el.style.display = 'none';
+    });
+  } else {
+    btn.textContent = '👁 Observer Mode';
+    btn.classList.remove('observing');
+    banner.style.display = 'none';
+    document.querySelectorAll('.add-entry-area').forEach(el => el.style.display = 'block');
+    document.querySelectorAll('[data-no-print]').forEach(el => el.style.display = '');
+  }
+}
+
+// ── TABS ──
+function switchTab(tab, el) {
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('tabHandover').style.display = tab === 'handover' ? 'block' : 'none';
+  document.getElementById('tabAdmin').style.display = tab === 'admin' ? 'block' : 'none';
+  if (tab === 'admin') loadAdminData();
+}
+
+// ── SECTION COLLAPSE ──
+function toggleSection(id) {
+  document.getElementById(id).classList.toggle('collapsed');
+}
+
+// ── MODALS ──
+function openModal(id) {
+  document.getElementById(id).classList.add('open');
+  if (id === 'addSUModal') populateSUUnitSelect();
+  if (id === 'addTaskModal') { populateTaskUnitSelect(); populateTaskSUSelect(); }
+  if (id === 'alertModal') document.getElementById('alertDuration').onchange = function() {
+    document.getElementById('alertEndDateGroup').style.display = this.value === 'custom' ? 'block' : 'none';
+  };
+  if (id === 'reminderModal') document.getElementById('reminderDayBefore').onchange = function() {
+    document.getElementById('dayBeforeNotesGroup').style.display = this.checked ? 'block' : 'none';
+  };
+}
+
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+// ── UNITS ──
+async function loadUnits() {
+  try {
+    const snap = await getDocs(query(collection(db,'units'), where('status','==','active')));
+    unitsCache = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    const sel = document.getElementById('unitSelect');
+    sel.innerHTML = '<option value="">Select unit...</option>';
+    unitsCache.forEach(u => { sel.innerHTML += `<option value="${u.id}">${u.name}</option>`; });
+  } catch(e) { showToast('Could not load units', 'error'); }
+}
+
+async function loadServiceUsers() {
+  const unitId = document.getElementById('unitSelect').value;
+  currentHandover.unitId = unitId;
+  const sel = document.getElementById('serviceUserSelect');
+  sel.innerHTML = '<option value="">Select service user...</option>';
+  if (!unitId) return;
+  const unit = unitsCache.find(u => u.id === unitId);
+  currentHandover.unitName = unit?.name || '';
+  try {
+    const snap = await getDocs(query(collection(db,'serviceUsers'),
+      where('unitId','==',unitId), where('status','==','active')));
+    serviceUsersCache = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    serviceUsersCache.forEach(su => { sel.innerHTML += `<option value="${su.id}">${su.name}</option>`; });
+  } catch(e) { showToast('Could not load service users', 'error'); }
+}
+
+// ── LOAD HANDOVER ──
+async function loadHandover() {
+  const suId = document.getElementById('serviceUserSelect').value;
+  const date = document.getElementById('handoverDate').value;
+  if (!suId || !date) { document.getElementById('handoverHeader').style.display='none'; document.getElementById('handoverContent').style.display='none'; document.getElementById('handoverPlaceholder').style.display='block'; return; }
+  const su = serviceUsersCache.find(s => s.id === suId);
+  currentHandover.serviceUserId = suId;
+  currentHandover.date = date;
+  currentHandover.serviceUserName = su?.name || '';
+  const dateObj = new Date(date);
+  const dayNames = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  const monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const formatted = `${dayNames[dateObj.getDay()]} ${dateObj.getDate()} ${monthNames[dateObj.getMonth()]} ${dateObj.getFullYear()}`;
+  const nextDay = new Date(dateObj); nextDay.setDate(nextDay.getDate()+1);
+  document.getElementById('handoverTitle').textContent = `${su?.name || ''} — ${formatted}`;
+  document.getElementById('handoverSubtitle').textContent = `06:00 ${formatted} → 05:59 ${nextDay.getDate()} ${monthNames[nextDay.getMonth()]} · ${currentHandover.unitName}`;
+  document.getElementById('handoverPlaceholder').style.display = 'none';
+  document.getElementById('handoverHeader').style.display = 'flex';
+  document.getElementById('handoverContent').style.display = 'block';
+  await Promise.all([
+    renderAlerts(suId, date),
+    renderReminders(suId, date),
+    renderAdhocTasks(suId, date),
+    renderRoutineTasks(suId, date),
+    renderLogEntries('activity', suId, date),
+    renderLogEntries('note', suId, date)
+  ]);
+  if (isObserverMode) applyObserverMode();
+}
+
+// ── ALERTS ──
+async function renderAlerts(suId, date) {
+  const body = document.getElementById('alertsBody');
+  const empty = document.getElementById('alertsEmpty');
+  const count = document.getElementById('alertsCount');
+  try {
+    const snap = await getDocs(query(collection(db,'alerts'),
+      where('serviceUserId','==',suId), where('status','==','active')));
+    const dateObj = new Date(date + 'T06:00:00');
+    const endObj = new Date(date + 'T05:59:59'); endObj.setDate(endObj.getDate()+1);
+    const active = snap.docs.map(d => ({id:d.id,...d.data()})).filter(a => {
+      if (a.duration === 'day') {
+        return a.handoverDate === date;
+      }
+      const expiry = a.endDate?.toDate ? a.endDate.toDate() : new Date(a.endDate);
+      return expiry >= dateObj;
+    });
+    count.textContent = active.length;
+    body.querySelectorAll('.alert-item').forEach(el => el.remove());
+    empty.style.display = active.length ? 'none' : 'block';
+    active.forEach(a => {
+      const el = document.createElement('div');
+      el.className = 'alert-item';
+      const expiry = a.duration === 'day' ? 'Today only' : formatExpiry(a.endDate);
+      el.innerHTML = `<div><div class="alert-text">⚠️ ${a.text}</div><div class="alert-meta">Added by ${a.addedBy} · ${formatTs(a.createdAt)}</div></div><span class="alert-expiry">${expiry}</span>`;
+      body.insertBefore(el, empty);
+    });
+  } catch(e) { console.error(e); }
+}
+
+async function saveAlert() {
+  const text = document.getElementById('alertText').value.trim();
+  if (!text) { showToast('Please enter an alert message', 'error'); return; }
+  const duration = document.getElementById('alertDuration').value;
+  const data = {
+    serviceUserId: currentHandover.serviceUserId,
+    unitId: currentHandover.unitId,
+    text, duration,
+    handoverDate: currentHandover.date,
+    addedBy: currentStaffProfile?.initials || '??',
+    addedByName: currentStaffProfile?.name || '',
+    status: 'active',
+    createdAt: serverTimestamp()
+  };
+  if (duration === 'custom') {
+    data.endDate = new Date(document.getElementById('alertEndDate').value);
+  }
+  await addDoc(collection(db,'alerts'), data);
+  document.getElementById('alertText').value = '';
+  closeModal('alertModal');
+  showToast('Alert added', 'success');
+  renderAlerts(currentHandover.serviceUserId, currentHandover.date);
+}
+
+// ── REMINDERS ──
+async function renderReminders(suId, date) {
+  const body = document.getElementById('remindersBody');
+  const empty = document.getElementById('remindersEmpty');
+  const count = document.getElementById('remindersCount');
+  try {
+    const snap = await getDocs(query(collection(db,'reminders'), where('serviceUserId','==',suId)));
+    const items = snap.docs.map(d => ({id:d.id,...d.data()})).filter(r => {
+      if (r.type === 'carryforward') return r.targetDate === date;
+      const eventDate = r.eventDate;
+      if (r.showOnDay && eventDate === date) return true;
+      if (r.showDayBefore) {
+        const dayBefore = new Date(eventDate + 'T00:00:00');
+        dayBefore.setDate(dayBefore.getDate()-1);
+        const dbStr = dayBefore.toISOString().slice(0,10);
+        if (dbStr === date) return true;
+      }
+      return false;
+    });
+    count.textContent = items.length;
+    body.querySelectorAll('.reminder-item').forEach(el => el.remove());
+    empty.style.display = items.length ? 'none' : 'block';
+    items.forEach(r => {
+      const el = document.createElement('div');
+      el.className = r.type === 'carryforward' ? 'reminder-item carried-forward' : 'reminder-item';
+      let content = '';
+      if (r.type === 'carryforward') {
+        content = `<div class="carried-tag">📌 CARRIED FORWARD from ${r.sourceDate}</div>
+          <div class="reminder-title">${r.text}</div>
+          ${r.extraNote ? `<div class="reminder-notes">${r.extraNote}</div>` : ''}
+          <div class="text-muted" style="margin-top:6px">Carried by ${r.addedBy}</div>`;
+      } else {
+        const isDayBefore = r.eventDate !== date;
+        const notes = isDayBefore ? (r.dayBeforeNotes || '') : (r.onDayNotes || '');
+        content = `<div class="reminder-title">🔔 ${r.title}</div>
+          ${isDayBefore ? `<div class="tag" style="background:var(--alert-amber-bg);color:var(--alert-amber);margin:4px 0">Tomorrow: ${r.eventDate}</div>` : `<div class="tag" style="background:var(--success-bg);color:var(--success);margin:4px 0">Today</div>`}
+          ${notes ? `<div class="reminder-notes">${notes}</div>` : ''}`;
+      }
+      el.innerHTML = content;
+      body.insertBefore(el, empty);
+    });
+  } catch(e) { console.error(e); }
+}
+
+async function saveReminder() {
+  const title = document.getElementById('reminderTitle').value.trim();
+  const eventDate = document.getElementById('reminderEventDate').value;
+  if (!title || !eventDate) { showToast('Please fill in title and date', 'error'); return; }
+  const role = currentStaffProfile?.role;
+  if (role !== 'admin') {
+    const tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate()+1);
+    const tomorrowStr = tomorrow.toISOString().slice(0,10);
+    if (eventDate !== tomorrowStr) { showToast('Support staff can only add reminders for tomorrow', 'error'); return; }
+  }
+  await addDoc(collection(db,'reminders'), {
+    serviceUserId: currentHandover.serviceUserId,
+    unitId: currentHandover.unitId,
+    title,
+    eventDate,
+    showOnDay: document.getElementById('reminderOnDay').checked,
+    showDayBefore: document.getElementById('reminderDayBefore').checked,
+    onDayNotes: document.getElementById('reminderOnDayNotes').value.trim(),
+    dayBeforeNotes: document.getElementById('reminderDayBeforeNotes').value.trim(),
+    addedBy: currentStaffProfile?.initials || '??',
+    createdAt: serverTimestamp()
+  });
+  closeModal('reminderModal');
+  showToast('Reminder added', 'success');
+  renderReminders(currentHandover.serviceUserId, currentHandover.date);
+}
+
+// ── AD HOC TASKS ──
+async function renderAdhocTasks(suId, date) {
+  const body = document.getElementById('adhocBody');
+  const empty = document.getElementById('adhocEmpty');
+  const count = document.getElementById('adhocCount');
+  try {
+    const snap = await getDocs(query(collection(db,'adhocTasks'), where('serviceUserId','==',suId)));
+    const dateObj = new Date(date);
+    const dayOfWeek = dateObj.getDay();
+    const items = snap.docs.map(d => ({id:d.id,...d.data()})).filter(t => {
+      if (t.recurrence === 'today' || t.recurrence === 'once') return t.targetDate === date;
+      if (t.recurrence === 'tomorrow') return t.targetDate === date;
+      if (t.recurrence === 'range') return date >= t.fromDate && date <= t.toDate;
+      if (t.recurrence === 'recurring') {
+        const days = t.recurDays || [];
+        if (!days.map(String).includes(String(dayOfWeek))) return false;
+        if (t.recurFrom && date < t.recurFrom) return false;
+        if (t.recurTo && date > t.recurTo) return false;
+        return true;
+      }
+      if (t.carriedFrom) return t.targetDate === date;
+      return false;
+    });
+    const sorted = items.sort((a,b) => { const order = {high:0,medium:1,low:2}; return order[a.priority]-order[b.priority]; });
+    count.textContent = sorted.length;
+    body.querySelectorAll('.adhoc-item').forEach(el => el.remove());
+    empty.style.display = sorted.length ? 'none' : 'block';
+    sorted.forEach(t => {
+      const el = document.createElement('div');
+      el.className = `adhoc-item priority-${t.priority}${t.completed ? ' completed' : ''}`;
+      el.innerHTML = `
+        <div class="adhoc-top">
+          <div>
+            <div class="adhoc-title">${t.completed ? '✅ ' : ''}${t.title}</div>
+            <div class="adhoc-meta">Added by ${t.addedBy}${t.carriedFrom ? ` · Carried from ${t.carriedFrom}` : ''}${t.mustComplete ? ' · <strong>Must complete</strong>' : ''}</div>
+          </div>
+          <span class="priority-badge ${t.priority}">${t.priority.toUpperCase()}</span>
+        </div>
+        ${t.completed && t.completionNote ? `<div class="completion-note">✅ ${t.completionNote} <span style="font-weight:700">— ${t.completedBy}</span> · ${formatTs(t.completedAt)}</div>` : ''}
+        ${!t.completed && !isObserverMode ? `<button class="btn btn-success btn-sm" style="margin-top:8px" onclick="openCompleteAdhoc('${t.id}')">Mark Complete</button>` : ''}
+      `;
+      body.insertBefore(el, empty);
+    });
+  } catch(e) { console.error(e); }
+}
+
+window.openCompleteAdhoc = function(id) {
+  pendingAdhocId = id;
+  document.getElementById('completionNote').value = '';
+  openModal('completeAdhocModal');
+};
+
+async function confirmCompleteAdhoc() {
+  if (!pendingAdhocId) return;
+  const note = document.getElementById('completionNote').value.trim();
+  await updateDoc(doc(db,'adhocTasks',pendingAdhocId), {
+    completed: true,
+    completionNote: note,
+    completedBy: currentStaffProfile?.initials || '??',
+    completedByName: currentStaffProfile?.name || '',
+    completedAt: serverTimestamp()
+  });
+  closeModal('completeAdhocModal');
+  showToast('Task marked complete', 'success');
+  renderAdhocTasks(currentHandover.serviceUserId, currentHandover.date);
+}
+
+async function saveAdhocTask() {
+  const title = document.getElementById('adhocTitle').value.trim();
+  if (!title) { showToast('Please describe the task', 'error'); return; }
+  const recurrence = document.getElementById('adhocRecurrence').value;
+  const role = currentStaffProfile?.role;
+  const today = new Date().toISOString().slice(0,10);
+  const tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate()+1);
+  const tomorrowStr = tomorrow.toISOString().slice(0,10);
+  if (role !== 'admin' && (recurrence === 'range' || recurrence === 'recurring')) {
+    showToast('Only admin can set recurring or date range tasks', 'error'); return;
+  }
+  let targetDate = currentHandover.date;
+  if (recurrence === 'tomorrow') targetDate = tomorrowStr;
+  const data = {
+    serviceUserId: currentHandover.serviceUserId,
+    unitId: currentHandover.unitId,
+    title,
+    priority: document.getElementById('adhocPriority').value,
+    recurrence,
+    targetDate,
+    mustComplete: document.getElementById('adhocMustComplete').checked,
+    addedBy: currentStaffProfile?.initials || '??',
+    addedByName: currentStaffProfile?.name || '',
+    completed: false,
+    createdAt: serverTimestamp()
+  };
+  if (recurrence === 'range') {
+    data.fromDate = document.getElementById('adhocFromDate').value;
+    data.toDate = document.getElementById('adhocToDate').value;
+  }
+  if (recurrence === 'recurring') {
+    data.recurDays = [...document.querySelectorAll('.recur-day:checked')].map(c => Number(c.value));
+    data.recurFrom = document.getElementById('adhocRecurFrom').value;
+    data.recurTo = document.getElementById('adhocRecurTo').value;
+  }
+  await addDoc(collection(db,'adhocTasks'), data);
+  document.getElementById('adhocTitle').value = '';
+  closeModal('adhocModal');
+  showToast('Task added', 'success');
+  renderAdhocTasks(currentHandover.serviceUserId, currentHandover.date);
+}
+
+function updateAdhocRecurrenceFields() {
+  const val = document.getElementById('adhocRecurrence').value;
+  document.getElementById('adhocRangeFields').style.display = val === 'range' ? 'block' : 'none';
+  document.getElementById('adhocRecurringFields').style.display = val === 'recurring' ? 'block' : 'none';
+}
+
+// ── ROUTINE TASKS ──
+async function renderRoutineTasks(suId, date) {
+  const body = document.getElementById('tasksBody');
+  const empty = document.getElementById('tasksEmpty');
+  const count = document.getElementById('tasksCount');
+  try {
+    const [globalSnap, unitSnap, suSnap] = await Promise.all([
+      getDocs(query(collection(db,'taskTemplates'), where('level','==','global'), where('status','==','active'))),
+      getDocs(query(collection(db,'taskTemplates'), where('level','==','unit'), where('unitId','==',currentHandover.unitId), where('status','==','active'))),
+      getDocs(query(collection(db,'taskTemplates'), where('level','==','serviceuser'), where('serviceUserId','==',suId), where('status','==','active')))
+    ]);
+    let tasks = [
+      ...globalSnap.docs.map(d => ({id:d.id,...d.data()})),
+      ...unitSnap.docs.map(d => ({id:d.id,...d.data()})),
+      ...suSnap.docs.map(d => ({id:d.id,...d.data()}))
+    ].filter(t => !t.expiryDate || t.expiryDate >= date);
+    const recordId = `${suId}_${date}`;
+    let completions = {};
+    try {
+      const recSnap = await getDoc(doc(db,'dailyRecords',recordId));
+      if (recSnap.exists()) completions = recSnap.data().tasks || {};
+    } catch(e) {}
+    count.textContent = tasks.length;
+    body.querySelectorAll('.shift-section').forEach(el => el.remove());
+    empty.style.display = tasks.length ? 'none' : 'block';
+    const shifts = ['morning','afternoon','evening','night'];
+    const shiftLabels = { morning:'🌅 Morning', afternoon:'☀️ Afternoon', evening:'🌆 Evening', night:'🌙 Night' };
+    shifts.forEach(shift => {
+      const shiftTasks = tasks.filter(t => t.shift === shift);
+      if (!shiftTasks.length) return;
+      const section = document.createElement('div');
+      section.className = 'shift-section';
+      section.innerHTML = `<div class="shift-label">${shiftLabels[shift]}</div>`;
+      shiftTasks.forEach(t => {
+        const comp = completions[t.id];
+        const item = document.createElement('div');
+        item.className = `task-item${comp ? ' completed' : ''}`;
+        let inner = '';
+        if (t.type === 'checkbox') {
+          inner = `<input type="checkbox" class="task-checkbox" ${comp ? 'checked' : ''} ${isObserverMode ? 'disabled' : ''} onchange="completeRoutineTask('${t.id}','checkbox',this)">
+            <div class="task-content">
+              <div class="task-label">${t.name}</div>
+              ${comp ? `<div class="task-stamp">✓ ${comp.by} · ${comp.time}</div>` : ''}
+              ${!comp && !isObserverMode ? `<textarea class="task-note-field" placeholder="Optional note..." id="tn_${t.id}"></textarea>` : ''}
+              ${comp?.note ? `<div class="text-muted" style="margin-top:4px;font-size:12px">Note: ${comp.note}</div>` : ''}
+            </div>`;
+        } else if (t.type === 'yesno') {
+          inner = `<div class="task-content">
+            <div class="task-label">${t.name}</div>
+            ${!isObserverMode ? `<div class="task-yn">
+              <button class="yn-btn yes ${comp?.value==='yes'?'active':''}" onclick="completeRoutineTask('${t.id}','yesno',this,'yes')">Yes</button>
+              <button class="yn-btn no ${comp?.value==='no'?'active':''}" onclick="completeRoutineTask('${t.id}','yesno',this,'no')">No</button>
+            </div>` : `<div class="task-stamp">${comp ? (comp.value==='yes'?'✅ Yes':'❌ No') : 'Not answered'}</div>`}
+            ${comp ? `<div class="task-stamp">— ${comp.by} · ${comp.time}</div>` : ''}
+          </div>`;
+        } else if (t.type === 'paragraph') {
+          inner = `<div class="task-content">
+            <div class="task-label">${t.name}</div>
+            ${comp ? `<div style="font-size:13px;margin-top:6px;padding:8px;background:var(--bg);border-radius:6px">${comp.note}</div><div class="task-stamp">— ${comp.by} · ${comp.time}</div>` :
+              (!isObserverMode ? `<textarea class="task-note-field" placeholder="Required — please describe..." id="tn_${t.id}" style="min-height:80px"></textarea>
+              <button class="btn btn-primary btn-sm" style="margin-top:6px" onclick="completeRoutineTask('${t.id}','paragraph',null)">Submit</button>` : '<div class="text-muted">Not completed</div>')}
+          </div>`;
+        } else if (t.type === 'time') {
+          inner = `<div class="task-content">
+            <div class="task-label">${t.name}</div>
+            ${comp ? `<div class="task-stamp">⏰ ${comp.value} — ${comp.by} · ${comp.time}</div>` :
+              (!isObserverMode ? `<input type="time" id="tn_${t.id}" style="margin-top:6px;padding:6px 10px;border:1.5px solid var(--border);border-radius:6px;font-size:14px">
+              <button class="btn btn-primary btn-sm" style="margin-top:6px;margin-left:8px" onclick="completeRoutineTask('${t.id}','time',null)">Save</button>` : '<div class="text-muted">Not recorded</div>')}
+          </div>`;
+        }
+        item.innerHTML = inner;
+        section.appendChild(item);
+      });
+      body.insertBefore(section, empty);
+    });
+  } catch(e) { console.error(e); }
+}
+
+window.completeRoutineTask = async function(taskId, type, el, value) {
+  if (isObserverMode) return;
+  const recordId = `${currentHandover.serviceUserId}_${currentHandover.date}`;
+  const noteEl = document.getElementById(`tn_${taskId}`);
+  const note = noteEl?.value?.trim() || '';
+  const now = new Date();
+  const timeStr = now.toLocaleTimeString('en-GB', {hour:'2-digit',minute:'2-digit'});
+  const comp = {
+    by: currentStaffProfile?.initials || '??',
+    byName: currentStaffProfile?.name || '',
+    time: timeStr,
+    note
+  };
+  if (type === 'yesno') comp.value = value;
+  if (type === 'time') { comp.value = noteEl?.value || ''; }
+  const recRef = doc(db, 'dailyRecords', recordId);
+  const recSnap = await getDoc(recRef);
+  if (recSnap.exists()) {
+    await updateDoc(recRef, { [`tasks.${taskId}`]: comp });
+  } else {
+    const { setDoc } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
+    await setDoc(recRef, {
+      serviceUserId: currentHandover.serviceUserId,
+      unitId: currentHandover.unitId,
+      date: currentHandover.date,
+      tasks: { [taskId]: comp }
+    });
+  }
+  showToast('Task saved', 'success');
+  renderRoutineTasks(currentHandover.serviceUserId, currentHandover.date);
+};
+
+// ── LOG ENTRIES ──
+async function renderLogEntries(type, suId, date) {
+  const bodyId = type === 'activity' ? 'activitiesBody' : 'notesBody';
+  const emptyId = type === 'activity' ? 'activitiesEmpty' : 'notesEmpty';
+  const countId = type === 'activity' ? 'activitiesCount' : 'notesCount';
+  const addAreaId = type === 'activity' ? 'addActivityArea' : 'addNoteArea';
+  const body = document.getElementById(bodyId);
+  const empty = document.getElementById(emptyId);
+  const count = document.getElementById(countId);
+  try {
+    const snap = await getDocs(query(collection(db,'logEntries'),
+      where('serviceUserId','==',suId), where('date','==',date), where('type','==',type)));
+    const items = snap.docs.map(d => ({id:d.id,...d.data()}))
+      .sort((a,b) => (a.createdAt?.seconds||0)-(b.createdAt?.seconds||0));
+    count.textContent = items.length;
+    body.querySelectorAll('.log-entry').forEach(el => el.remove());
+    empty.style.display = items.length ? 'none' : 'block';
+    const addArea = document.getElementById(addAreaId);
+    items.forEach(entry => {
+      const el = document.createElement('div');
+      el.className = `log-entry ${type}`;
+      el.innerHTML = `<div class="log-text">${entry.text}</div>
+        <div class="log-meta">
+          <span class="log-author">${entry.addedBy}</span>
+          <span class="log-stamp">${formatTs(entry.createdAt)}</span>
+          ${type === 'note' && !isObserverMode ? `<button class="carry-forward-btn" onclick="openCarryForward('${entry.id}','${entry.text.replace(/'/g,"\\'")}')">📌 Carry Forward</button>` : ''}
+        </div>`;
+      body.insertBefore(el, addArea);
+    });
+  } catch(e) { console.error(e); }
+}
+
+async function addLogEntry(type) {
+  if (isObserverMode) return;
+  const inputId = type === 'activity' ? 'activityInput' : 'noteInput';
+  const text = document.getElementById(inputId).value.trim();
+  if (!text) { showToast('Please enter some text first', 'error'); return; }
+  await addDoc(collection(db,'logEntries'), {
+    serviceUserId: currentHandover.serviceUserId,
+    unitId: currentHandover.unitId,
+    date: currentHandover.date,
+    type, text,
+    addedBy: currentStaffProfile?.initials || '??',
+    addedByName: currentStaffProfile?.name || '',
+    createdAt: serverTimestamp()
+  });
+  document.getElementById(inputId).value = '';
+  showToast(type === 'activity' ? 'Activity logged' : 'Note added', 'success');
+  renderLogEntries(type, currentHandover.serviceUserId, currentHandover.date);
+}
+
+// ── CARRY FORWARD ──
+window.openCarryForward = function(id, text) {
+  pendingCarryForward = { id, text };
+  document.getElementById('carryForwardPreview').textContent = text;
+  document.getElementById('carryForwardNote').value = '';
+  openModal('carryForwardModal');
+};
+
+async function confirmCarryForward() {
+  if (!pendingCarryForward) return;
+  const today = new Date().toISOString().slice(0,10);
+  await addDoc(collection(db,'reminders'), {
+    serviceUserId: currentHandover.serviceUserId,
+    unitId: currentHandover.unitId,
+    type: 'carryforward',
+    text: pendingCarryForward.text,
+    extraNote: document.getElementById('carryForwardNote').value.trim(),
+    sourceDate: currentHandover.date,
+    targetDate: today,
+    addedBy: currentStaffProfile?.initials || '??',
+    createdAt: serverTimestamp()
+  });
+  closeModal('carryForwardModal');
+  showToast('Carried forward to today', 'success');
+}
+
+// ── PRINT ──
+function openPrintModal() { openModal('printModal'); }
+
+function executePrint() {
+  const noAttrib = !document.getElementById('printAttribution').checked;
+  const sections = {
+    alertsSection: document.getElementById('printAlerts').checked,
+    remindersSection: document.getElementById('printReminders').checked,
+    adhocSection: document.getElementById('printAdhoc').checked,
+    tasksSection: document.getElementById('printTasks').checked,
+    activitiesSection: document.getElementById('printActivities').checked,
+    notesSection: document.getElementById('printNotes').checked
+  };
+  Object.entries(sections).forEach(([id, show]) => {
+    document.getElementById(id).style.display = show ? '' : 'none';
+  });
+  if (noAttrib) document.getElementById('handoverContent').classList.add('no-staff-print');
+  document.getElementById('printMeta').textContent = `${currentHandover.serviceUserName} · ${currentHandover.date} · ${currentHandover.unitName}`;
+  document.getElementById('printDate').textContent = new Date().toLocaleString('en-GB');
+  closeModal('printModal');
+  setTimeout(() => {
+    window.print();
+    Object.keys(sections).forEach(id => document.getElementById(id).style.display = '');
+    document.getElementById('handoverContent').classList.remove('no-staff-print');
+  }, 200);
+}
+
+// ── ADMIN DATA ──
+async function loadAdminData() {
+  loadSUTable(); loadUnitsTable(); loadTasksTable(); loadStaffTable();
+}
+
+async function loadSUTable() {
+  const tbody = document.getElementById('suTableBody');
+  try {
+    const snap = await getDocs(collection(db,'serviceUsers'));
+    tbody.innerHTML = snap.empty ? '<tr><td colspan="4" style="text-align:center;color:var(--text-muted);padding:20px">No service users yet</td></tr>' : '';
+    snap.docs.forEach(d => {
+      const su = {id:d.id,...d.data()};
+      const unit = unitsCache.find(u => u.id === su.unitId);
+      tbody.innerHTML += `<tr><td><strong>${su.name}</strong></td><td>${unit?.name||su.unitId||'—'}</td><td><span class="status-badge ${su.status==='active'?'status-active':'status-inactive'}">${su.status}</span></td><td><button class="btn btn-ghost btn-sm" onclick="archiveSU('${su.id}','${su.status}')">Archive</button></td></tr>`;
+    });
+  } catch(e) { tbody.innerHTML = '<tr><td colspan="4">Error loading</td></tr>'; }
+}
+
+async function loadUnitsTable() {
+  const tbody = document.getElementById('unitsTableBody');
+  try {
+    const snap = await getDocs(collection(db,'units'));
+    tbody.innerHTML = snap.empty ? '<tr><td colspan="3" style="text-align:center;color:var(--text-muted);padding:20px">No units yet</td></tr>' : '';
+    snap.docs.forEach(d => {
+      const u = {id:d.id,...d.data()};
+      tbody.innerHTML += `<tr><td><strong>${u.name}</strong></td><td><span class="status-badge ${u.status==='active'?'status-active':'status-inactive'}">${u.status}</span></td><td><button class="btn btn-ghost btn-sm">Edit</button></td></tr>`;
+    });
+  } catch(e) {}
+}
+
+async function loadTasksTable() {
+  const tbody = document.getElementById('tasksTableBody');
+  try {
+    const snap = await getDocs(collection(db,'taskTemplates'));
+    tbody.innerHTML = snap.empty ? '<tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:20px">No routine tasks yet</td></tr>' : '';
+    snap.docs.forEach(d => {
+      const t = {id:d.id,...d.data()};
+      let appliesTo = 'All service users';
+      if (t.level === 'unit') { const u = unitsCache.find(u => u.id === t.unitId); appliesTo = u?.name || 'Unit'; }
+      if (t.level === 'serviceuser') appliesTo = 'Specific person';
+      tbody.innerHTML += `<tr><td><strong>${t.name}</strong></td><td>${t.type}</td><td>${appliesTo}</td><td>${t.shift}</td><td><span class="status-badge ${t.status==='active'?'status-active':'status-inactive'}">${t.status}</span></td><td><button class="btn btn-ghost btn-sm" onclick="deactivateTask('${t.id}','${t.status}')">Deactivate</button></td></tr>`;
+    });
+  } catch(e) {}
+}
+
+async function loadStaffTable() {
+  const tbody = document.getElementById('staffTableBody');
+  try {
+    const snap = await getDocs(collection(db,'staffProfiles'));
+    tbody.innerHTML = snap.empty ? '<tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:20px">No staff profiles yet</td></tr>' : '';
+    snap.docs.forEach(d => {
+      const s = {id:d.id,...d.data()};
+      tbody.innerHTML += `<tr><td><strong>${s.name}</strong></td><td><span style="font-family:DM Mono,monospace;font-size:12px">${s.initials}</span></td><td><span class="role-badge">${s.role}</span></td><td><span class="status-badge ${s.status==='active'?'status-active':'status-inactive'}">${s.status||'active'}</span></td><td><button class="btn btn-ghost btn-sm">Edit</button></td></tr>`;
+    });
+  } catch(e) {}
+}
+
+function openAdminSection(id) {
+  document.querySelectorAll('.admin-section').forEach(s => s.classList.remove('open'));
+  document.getElementById(id).classList.add('open');
+  document.getElementById(id).scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+function populateSUUnitSelect() {
+  const sel = document.getElementById('suUnit');
+  sel.innerHTML = '';
+  unitsCache.forEach(u => sel.innerHTML += `<option value="${u.id}">${u.name}</option>`);
+}
+
+function populateTaskUnitSelect() {
+  const sel = document.getElementById('taskUnit');
+  sel.innerHTML = '';
+  unitsCache.forEach(u => sel.innerHTML += `<option value="${u.id}">${u.name}</option>`);
+}
+
+async function populateTaskSUSelect() {
+  const sel = document.getElementById('taskSU');
+  sel.innerHTML = '';
+  try {
+    const snap = await getDocs(query(collection(db,'serviceUsers'), where('status','==','active')));
+    snap.docs.forEach(d => { const s = {id:d.id,...d.data()}; sel.innerHTML += `<option value="${s.id}">${s.name}</option>`; });
+  } catch(e) {}
+}
+
+function updateTaskLevelFields() {
+  const val = document.getElementById('taskLevel').value;
+  document.getElementById('taskUnitField').style.display = val === 'unit' ? 'block' : 'none';
+  document.getElementById('taskSUField').style.display = val === 'serviceuser' ? 'block' : 'none';
+}
+
+async function saveServiceUser() {
+  const name = document.getElementById('suName').value.trim();
+  const unitId = document.getElementById('suUnit').value;
+  if (!name || !unitId) { showToast('Please fill in name and unit', 'error'); return; }
+  await addDoc(collection(db,'serviceUsers'), {
+    name, unitId,
+    dob: document.getElementById('suDob').value || null,
+    notes: document.getElementById('suNotes').value.trim(),
+    status: 'active',
+    createdAt: serverTimestamp()
+  });
+  closeModal('addSUModal');
+  showToast(`${name} added`, 'success');
+  loadSUTable();
+  loadServiceUsers();
+}
+
+async function saveUnit() {
+  const name = document.getElementById('unitName').value.trim();
+  if (!name) { showToast('Please enter a unit name', 'error'); return; }
+  await addDoc(collection(db,'units'), { name, status: 'active', createdAt: serverTimestamp() });
+  document.getElementById('unitName').value = '';
+  closeModal('addUnitModal');
+  showToast(`${name} unit added`, 'success');
+  loadUnits(); loadUnitsTable();
+}
+
+async function saveTask() {
+  const name = document.getElementById('taskName').value.trim();
+  if (!name) { showToast('Please enter a task name', 'error'); return; }
+  const level = document.getElementById('taskLevel').value;
+  const data = {
+    name,
+    type: document.getElementById('taskType').value,
+    shift: document.getElementById('taskShift').value,
+    level, status: 'active',
+    mustComplete: document.getElementById('taskMustComplete').checked,
+    expiryDate: document.getElementById('taskExpiry').value || null,
+    createdAt: serverTimestamp()
+  };
+  if (level === 'unit') data.unitId = document.getElementById('taskUnit').value;
+  if (level === 'serviceuser') data.serviceUserId = document.getElementById('taskSU').value;
+  await addDoc(collection(db,'taskTemplates'), data);
+  closeModal('addTaskModal');
+  showToast('Task added', 'success');
+  loadTasksTable();
+}
+
+async function saveStaff() {
+  const name = document.getElementById('staffName').value.trim();
+  const initials = document.getElementById('staffInitials').value.trim().toUpperCase();
+  if (!name || !initials) { showToast('Please fill in name and initials', 'error'); return; }
+  await addDoc(collection(db,'staffProfiles'), {
+    name, initials,
+    role: document.getElementById('staffRole').value,
+    email: document.getElementById('staffEmail').value.trim(),
+    status: 'active',
+    createdAt: serverTimestamp()
+  });
+  closeModal('addStaffModal');
+  showToast(`${name} added`, 'success');
+  loadStaffTable();
+}
+
+window.archiveSU = async function(id, currentStatus) {
+  const newStatus = currentStatus === 'active' ? 'archived' : 'active';
+  await updateDoc(doc(db,'serviceUsers',id), { status: newStatus });
+  showToast('Updated', 'success'); loadSUTable();
+};
+
+window.deactivateTask = async function(id, currentStatus) {
+  const newStatus = currentStatus === 'active' ? 'inactive' : 'active';
+  await updateDoc(doc(db,'taskTemplates',id), { status: newStatus });
+  showToast('Updated', 'success'); loadTasksTable();
+};
+
+// ── HELPERS ──
+function formatTs(ts) {
+  if (!ts) return '';
+  const d = ts?.toDate ? ts.toDate() : new Date(ts);
+  return d.toLocaleString('en-GB', {day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'});
+}
+
+function formatExpiry(val) {
+  if (!val) return '';
+  const d = val?.toDate ? val.toDate() : new Date(val);
+  return `Until ${d.toLocaleDateString('en-GB',{day:'2-digit',month:'short'})}`;
+}
+
+function showToast(message, type = 'default') {
+  const container = document.getElementById('toastContainer');
+  const toast = document.createElement('div');
+  toast.className = `toast ${type}`;
+  toast.textContent = type === 'success' ? `✓ ${message}` : message;
+  container.appendChild(toast);
+  setTimeout(() => toast.remove(), 3000);
+}
+
+// Close modals on overlay click
+document.querySelectorAll('.modal-overlay').forEach(overlay => {
+  overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.classList.remove('open'); });
+});
+
+// Enter key on login
+document.getElementById('loginPassword').addEventListener('keydown', e => {
+  if (e.key === 'Enter') handleLogin();
+});
+</script>
+</body>
+</html>
