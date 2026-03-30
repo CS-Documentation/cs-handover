@@ -1679,7 +1679,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged }
   from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { getFirestore, collection, doc, getDoc, getDocs, addDoc, updateDoc,
+import { getFirestore, collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteField,
   query, where, orderBy, serverTimestamp, Timestamp }
   from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
@@ -2240,6 +2240,17 @@ window.completeRoutineTask = async function(taskId, type, el, value) {
   if (isObserverMode) return;
   const recordId = `${currentHandover.serviceUserId}_${currentHandover.date}`;
   const noteEl = document.getElementById(`tn_${taskId}`);
+  const recRef = doc(db, 'dailyRecords', recordId);
+  // If unchecking a checkbox, remove the completion record
+  if (type === 'checkbox' && !el.checked) {
+    const recSnap = await getDoc(recRef);
+    if (recSnap.exists()) {
+      await updateDoc(recRef, { [`tasks.${taskId}`]: deleteField() });
+    }
+    showToast('Task unchecked', 'success');
+    renderRoutineTasks(currentHandover.serviceUserId, currentHandover.date);
+    return;
+  }
   const note = noteEl?.value?.trim() || '';
   const now = new Date();
   const timeStr = now.toLocaleTimeString('en-GB', {hour:'2-digit',minute:'2-digit'});
@@ -2251,7 +2262,6 @@ window.completeRoutineTask = async function(taskId, type, el, value) {
   };
   if (type === 'yesno') comp.value = value;
   if (type === 'time') { comp.value = noteEl?.value || ''; }
-  const recRef = doc(db, 'dailyRecords', recordId);
   const recSnap = await getDoc(recRef);
   if (recSnap.exists()) {
     await updateDoc(recRef, { [`tasks.${taskId}`]: comp });
@@ -2329,7 +2339,8 @@ window.openCarryForward = function(id, text) {
 
 async function confirmCarryForward() {
   if (!pendingCarryForward) return;
-  const today = new Date().toISOString().slice(0,10);
+  const tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate() + 1);
+  const tomorrowStr = tomorrow.toISOString().slice(0,10);
   await addDoc(collection(db,'reminders'), {
     serviceUserId: currentHandover.serviceUserId,
     unitId: currentHandover.unitId,
@@ -2337,12 +2348,12 @@ async function confirmCarryForward() {
     text: pendingCarryForward.text,
     extraNote: document.getElementById('carryForwardNote').value.trim(),
     sourceDate: currentHandover.date,
-    targetDate: today,
+    targetDate: tomorrowStr,
     addedBy: currentStaffProfile?.initials || '??',
     createdAt: serverTimestamp()
   });
   closeModal('carryForwardModal');
-  showToast('Carried forward to today', 'success');
+  showToast('Carried forward to tomorrow', 'success');
 }
 
 // ── PRINT ──
