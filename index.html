@@ -2671,7 +2671,8 @@ async function renderRoutineTasks(suId, date) {
     const shifts = ['morning','afternoon','evening','night'];
     const shiftLabels = { morning:'🌅 Morning', afternoon:'☀️ Afternoon', evening:'🌆 Evening', night:'🌙 Night' };
     shifts.forEach(shift => {
-      const shiftTasks = tasks.filter(t => t.shift === shift);
+      const shiftTasks = tasks.filter(t => t.shift === shift)
+        .sort((a, b) => (a.order ?? 999999) - (b.order ?? 999999));
       if (!shiftTasks.length) return;
       const section = document.createElement('div');
       section.className = 'shift-section';
@@ -3111,14 +3112,23 @@ async function loadTasksHierarchy() {
 function renderAdminTaskList(containerId, tasks) {
   const container = document.getElementById(containerId);
   if (!container) return;
-  if (tasks.length === 0) {
+  const sorted = [...tasks].sort((a, b) => (a.order ?? 999999) - (b.order ?? 999999));
+  if (sorted.length === 0) {
     container.innerHTML = '<div style="color:var(--text-muted);font-size:13px;padding:6px 4px">No tasks yet</div>';
     return;
   }
-  container.innerHTML = tasks.map(t => {
+  container.innerHTML = sorted.map((t, i) => {
     const eName = t.name.replace(/'/g,"\\'");
     const statusStyle = t.status !== 'active' ? 'opacity:0.55' : '';
+    const myOrder = t.order ?? (i * 100);
+    const upBtn = i === 0
+      ? `<button class="btn btn-ghost btn-sm" style="padding:2px 8px;font-size:13px;opacity:0.25" disabled>↑</button>`
+      : `<button class="btn btn-ghost btn-sm" style="padding:2px 8px;font-size:13px" onclick="swapTaskOrder('${t.id}',${myOrder},'${sorted[i-1].id}',${sorted[i-1].order ?? ((i-1)*100)})">↑</button>`;
+    const downBtn = i === sorted.length - 1
+      ? `<button class="btn btn-ghost btn-sm" style="padding:2px 8px;font-size:13px;opacity:0.25" disabled>↓</button>`
+      : `<button class="btn btn-ghost btn-sm" style="padding:2px 8px;font-size:13px" onclick="swapTaskOrder('${t.id}',${myOrder},'${sorted[i+1].id}',${sorted[i+1].order ?? ((i+1)*100)})">↓</button>`;
     return `<div class="task-row" style="${statusStyle}">
+      <div style="display:flex;flex-direction:column;gap:2px;flex-shrink:0;margin-right:4px">${upBtn}${downBtn}</div>
       <div class="task-row-info">
         <div class="task-row-name">${t.name}${t.status !== 'active' ? ' <span class="status-badge status-inactive">inactive</span>' : ''}</div>
         <div class="task-row-meta">${t.type} · ${t.shift}${t.mustComplete ? ' · Must complete' : ''}${t.expiryDate ? ` · Until ${t.expiryDate}` : ''}</div>
@@ -3347,6 +3357,7 @@ async function saveTask() {
     level, status: 'active',
     mustComplete: document.getElementById('taskMustComplete').checked,
     expiryDate: document.getElementById('taskExpiry').value || null,
+    order: Date.now(),
     createdAt: serverTimestamp()
   };
   if (level === 'unit') data.unitId = document.getElementById('taskUnit').value;
@@ -3691,6 +3702,14 @@ window.updateTaskCategoryFields = updateTaskCategoryFields;
 window.saveEditTask = saveEditTask;
 window.openEditTask = openEditTask;
 window.populateAdhocSUSelect = populateAdhocSUSelect;
+
+window.swapTaskOrder = async function(id1, o1, id2, o2) {
+  await Promise.all([
+    updateDoc(doc(db,'taskTemplates', id1), { order: Number(o2) }),
+    updateDoc(doc(db,'taskTemplates', id2), { order: Number(o1) })
+  ]);
+  loadTasksHierarchy();
+};
 
 // Enter key on login
 document.getElementById('loginPassword').addEventListener('keydown', e => {
