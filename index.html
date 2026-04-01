@@ -2682,8 +2682,8 @@ async function renderRoutineTasks(suId, date) {
         const item = document.createElement('div');
         item.className = `task-item${comp ? ' completed' : ''}`;
         let inner = '';
+        const canEditNote = comp && !isObserverMode && (currentStaffProfile?.initials === comp.by || currentStaffProfile?.role === 'admin');
         if (t.type === 'checkbox') {
-          const canEditNote = comp && !isObserverMode && (currentStaffProfile?.initials === comp.by || currentStaffProfile?.role === 'admin');
           inner = `<input type="checkbox" class="task-checkbox" ${comp ? 'checked' : ''} ${isObserverMode ? 'disabled' : ''} onchange="completeRoutineTask('${t.id}','checkbox',this)">
             <div class="task-content">
               <div class="task-label">${t.name}</div>
