@@ -364,6 +364,58 @@
     flex-wrap: wrap;
   }
 
+  /* ── CTRL WIDGET (collapsible sticky controls) ── */
+  .ctrl-widget {
+    background: var(--white);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    margin-bottom: 20px;
+    position: sticky;
+    top: 60px;
+    z-index: 50;
+    overflow: hidden;
+  }
+  .ctrl-widget-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 20px;
+    cursor: pointer;
+    user-select: none;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .ctrl-widget-summary {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text);
+    flex: 1;
+    min-width: 0;
+  }
+  .ctrl-widget-btns {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  .ctrl-widget-body {
+    border-top: 1px solid var(--border);
+    padding: 16px 20px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    align-items: flex-end;
+  }
+  .ctrl-widget.collapsed .ctrl-widget-body { display: none; }
+  .ctrl-chevron {
+    font-size: 14px;
+    color: var(--text-muted);
+    transition: transform 0.2s;
+    flex-shrink: 0;
+    padding: 4px;
+  }
+  .ctrl-widget.collapsed .ctrl-chevron { transform: rotate(180deg); }
+
   .btn-white {
     background: white;
     color: var(--brand);
@@ -1059,37 +1111,43 @@
       </div>
     </div>
 
-    <!-- Controls -->
-    <div class="handover-controls">
-      <div class="control-group">
-        <label>Unit</label>
-        <select id="unitSelect" onchange="loadServiceUsers()">
-          <option value="">Select unit...</option>
-        </select>
+    <!-- Controls Widget (sticky, collapsible) -->
+    <div class="ctrl-widget" id="hwWidget">
+      <div class="ctrl-widget-top" onclick="toggleCtrlWidget('hwWidget')">
+        <div class="ctrl-widget-summary" id="hwSummary">📋 Select a service user to begin</div>
+        <div class="ctrl-widget-btns" id="hwBtns" style="display:none" data-no-print>
+          <button class="btn btn-secondary btn-sm" id="addAlertBtn" onclick="openModal('alertModal');event.stopPropagation()">🚨 Alert</button>
+          <button class="btn btn-secondary btn-sm" onclick="openModal('reminderModal');event.stopPropagation()">🔔 Reminder</button>
+          <button class="btn btn-secondary btn-sm" onclick="openModal('adhocModal');event.stopPropagation()">➕ Task</button>
+          <button class="btn btn-secondary btn-sm" onclick="openPrintModal();event.stopPropagation()">🖨️ Print</button>
+        </div>
+        <span class="ctrl-chevron">▲</span>
       </div>
-      <div class="control-group">
-        <label>Service User</label>
-        <select id="serviceUserSelect" onchange="loadHandover()">
-          <option value="">Select service user...</option>
-        </select>
-      </div>
-      <div class="control-group">
-        <label>Handover Date</label>
-        <input type="date" id="handoverDate" onchange="loadHandover()">
+      <div class="ctrl-widget-body">
+        <div class="control-group">
+          <label>Unit</label>
+          <select id="unitSelect" onchange="loadServiceUsers()">
+            <option value="">Select unit...</option>
+          </select>
+        </div>
+        <div class="control-group">
+          <label>Service User</label>
+          <select id="serviceUserSelect" onchange="loadHandover()">
+            <option value="">Select service user...</option>
+          </select>
+        </div>
+        <div class="control-group">
+          <label>Handover Date</label>
+          <input type="date" id="handoverDate" onchange="loadHandover()">
+        </div>
       </div>
     </div>
 
-    <!-- Handover Date Header -->
+    <!-- Handover Title Bar -->
     <div class="handover-header" id="handoverHeader" style="display:none">
       <div>
         <h2 id="handoverTitle">Tom — Monday 26 March 2026</h2>
         <p id="handoverSubtitle">06:00 Mon 26 Mar → 05:59 Tue 27 Mar · Hounslow</p>
-      </div>
-      <div class="handover-header-actions" data-no-print>
-        <button class="btn btn-white btn-sm" onclick="openPrintModal()">🖨️ Print</button>
-        <button class="btn btn-white btn-sm" id="addAlertBtn" onclick="openModal('alertModal')">🚨 Add Alert</button>
-        <button class="btn btn-white btn-sm" onclick="openModal('reminderModal')">🔔 Add Reminder</button>
-        <button class="btn btn-white btn-sm" onclick="openModal('adhocModal')">➕ Add Task</button>
       </div>
     </div>
 
@@ -1324,15 +1382,28 @@
 
   <!-- ── NOTICE BOARD TAB ── -->
   <div id="tabNoticeboard" class="main-content" style="display:none">
-    <div class="handover-controls">
-      <div class="control-group">
-        <label>Unit</label>
-        <select id="nbUnitSelect" onchange="loadNoticeBoard()">
-          <option value="">Select unit...</option>
-        </select>
+
+    <!-- Notice Board Controls Widget (sticky, collapsible) -->
+    <div class="ctrl-widget" id="nbWidget">
+      <div class="ctrl-widget-top" onclick="toggleCtrlWidget('nbWidget')">
+        <div class="ctrl-widget-summary" id="nbSummary">📌 Select a unit to view the notice board</div>
+        <div class="ctrl-widget-btns" id="nbBtns" style="display:none" data-no-print>
+          <button class="btn btn-secondary btn-sm" onclick="openModal('nbAlertModal');event.stopPropagation()">🚨 Alert</button>
+          <button class="btn btn-secondary btn-sm" onclick="openModal('nbReminderModal');event.stopPropagation()">🔔 Reminder</button>
+          <button class="btn btn-secondary btn-sm" onclick="openModal('nbTaskModal');event.stopPropagation()">➕ Task</button>
+        </div>
+        <span class="ctrl-chevron">▲</span>
       </div>
-      <div class="control-group" style="padding-top:18px">
-        <small style="color:var(--text-muted);font-size:12px">Unit-wide alerts, reminders &amp; tasks visible to all staff</small>
+      <div class="ctrl-widget-body">
+        <div class="control-group">
+          <label>Unit</label>
+          <select id="nbUnitSelect" onchange="loadNoticeBoard()">
+            <option value="">Select unit...</option>
+          </select>
+        </div>
+        <div class="control-group" style="padding-top:18px">
+          <small style="color:var(--text-muted);font-size:12px">Unit-wide alerts, reminders &amp; tasks visible to all staff</small>
+        </div>
       </div>
     </div>
 
@@ -1347,11 +1418,6 @@
         <div>
           <h2 id="nbTitle">Notice Board</h2>
           <p id="nbSubtitle">Visible to all staff in this unit</p>
-        </div>
-        <div class="handover-header-actions" data-no-print>
-          <button class="btn btn-white btn-sm" onclick="openModal('nbAlertModal')">🚨 Add Alert</button>
-          <button class="btn btn-white btn-sm" onclick="openModal('nbReminderModal')">🔔 Add Reminder</button>
-          <button class="btn btn-white btn-sm" onclick="openModal('nbTaskModal')">➕ Add Task</button>
         </div>
       </div>
 
@@ -2004,6 +2070,11 @@ function switchTab(tab, el) {
   if (tab === 'admin') loadAdminData();
 }
 
+// ── CTRL WIDGET TOGGLE ──
+function toggleCtrlWidget(id) {
+  document.getElementById(id).classList.toggle('collapsed');
+}
+
 // ── SECTION COLLAPSE ──
 function toggleSection(id) {
   document.getElementById(id).classList.toggle('collapsed');
@@ -2035,6 +2106,14 @@ async function loadUnits() {
     const nbSel = document.getElementById('nbUnitSelect');
     nbSel.innerHTML = '<option value="">Select unit...</option>';
     unitsCache.forEach(u => { nbSel.innerHTML += `<option value="${u.id}">${u.name}</option>`; });
+    // Auto-select Hounslow as default unit
+    const hounslow = unitsCache.find(u => u.name.toLowerCase().includes('hounslow'));
+    if (hounslow) {
+      sel.value = hounslow.id;
+      nbSel.value = hounslow.id;
+      loadServiceUsers();
+      loadNoticeBoard();
+    }
   } catch(e) { showToast('Could not load units', 'error'); }
 }
 
@@ -2072,6 +2151,10 @@ async function loadHandover() {
   document.getElementById('handoverSubtitle').textContent = `06:00 ${formatted} → 05:59 ${nextDay.getDate()} ${monthNames[nextDay.getMonth()]} · ${currentHandover.unitName}`;
   document.getElementById('handoverPlaceholder').style.display = 'none';
   document.getElementById('handoverHeader').style.display = 'flex';
+  // Update widget summary and collapse it
+  document.getElementById('hwSummary').textContent = `📋 ${su?.name || ''} · ${currentHandover.unitName} · ${dateObj.getDate()} ${monthNames[dateObj.getMonth()]} ${dateObj.getFullYear()}`;
+  document.getElementById('hwBtns').style.display = 'flex';
+  document.getElementById('hwWidget').classList.add('collapsed');
   document.getElementById('handoverContent').style.display = 'block';
   await Promise.all([
     renderAlerts(suId, date),
@@ -2882,6 +2965,9 @@ async function loadNoticeBoard() {
   document.getElementById('nbSubtitle').textContent = 'Visible to all staff in this unit';
   document.getElementById('nbPlaceholder').style.display = 'none';
   document.getElementById('nbContent').style.display = 'block';
+  document.getElementById('nbSummary').textContent = `📌 ${unit?.name || ''} — Notice Board`;
+  document.getElementById('nbBtns').style.display = 'flex';
+  document.getElementById('nbWidget').classList.add('collapsed');
   renderNBAlerts(unitId);
   renderNBReminders(unitId);
   renderNBTasks(unitId);
