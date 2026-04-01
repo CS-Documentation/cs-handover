@@ -997,10 +997,11 @@
          alt="Connected Stars" class="login-logo" onerror="this.style.display='none'">
     <div class="login-title">Handover Notes</div>
     <div class="login-sub">Sign in to access the handover system</div>
-    <div id="loginError" class="error-msg">Incorrect email or password. Please try again.</div>
+    <div id="loginError" class="error-msg">Incorrect username or password. Please try again.</div>
     <div class="form-group">
-      <label>Email Address</label>
-      <input type="email" id="loginEmail" placeholder="your@email.com" autocomplete="email">
+      <label>Username</label>
+      <input type="text" id="loginEmail" placeholder="e.g. sarah.jones" autocomplete="username" style="text-transform:lowercase">
+      <div style="font-size:11px;color:var(--text-muted);margin-top:4px">@connectedstars.co.uk will be added automatically</div>
     </div>
     <div class="form-group">
       <label>Password</label>
@@ -1040,6 +1041,7 @@
   <!-- Nav Tabs -->
   <div class="nav-tabs">
     <div class="nav-tab active" onclick="switchTab('handover', this)">📋 Handover</div>
+    <div class="nav-tab" onclick="switchTab('noticeboard', this)">📌 Notice Board</div>
     <div class="nav-tab" id="adminTabBtn" onclick="switchTab('admin', this)" style="display:none">⚙️ Admin Panel</div>
   </div>
 
@@ -1319,6 +1321,86 @@
     </div>
 
   </div><!-- /tabAdmin -->
+
+  <!-- ── NOTICE BOARD TAB ── -->
+  <div id="tabNoticeboard" class="main-content" style="display:none">
+    <div class="handover-controls">
+      <div class="control-group">
+        <label>Unit</label>
+        <select id="nbUnitSelect" onchange="loadNoticeBoard()">
+          <option value="">Select unit...</option>
+        </select>
+      </div>
+      <div class="control-group" style="padding-top:18px">
+        <small style="color:var(--text-muted);font-size:12px">Unit-wide alerts, reminders &amp; tasks visible to all staff</small>
+      </div>
+    </div>
+
+    <div id="nbPlaceholder" style="text-align:center;padding:60px 20px;color:var(--text-muted)">
+      <div style="font-size:48px;margin-bottom:16px">📌</div>
+      <div style="font-size:17px;font-weight:600;margin-bottom:8px">Select a unit to view the notice board</div>
+      <div style="font-size:13px">Alerts, reminders and tasks that apply to the whole unit.</div>
+    </div>
+
+    <div id="nbContent" style="display:none">
+      <div class="handover-header" id="nbHeader">
+        <div>
+          <h2 id="nbTitle">Notice Board</h2>
+          <p id="nbSubtitle">Visible to all staff in this unit</p>
+        </div>
+        <div class="handover-header-actions" data-no-print>
+          <button class="btn btn-white btn-sm" onclick="openModal('nbAlertModal')">🚨 Add Alert</button>
+          <button class="btn btn-white btn-sm" onclick="openModal('nbReminderModal')">🔔 Add Reminder</button>
+          <button class="btn btn-white btn-sm" onclick="openModal('nbTaskModal')">➕ Add Task</button>
+        </div>
+      </div>
+
+      <!-- NB ALERTS -->
+      <div class="section-card" id="nbAlertsSection">
+        <div class="section-header" onclick="toggleSection('nbAlertsSection')">
+          <div class="section-header-left">
+            <div class="section-icon" style="background:#fdf0ef;color:var(--alert-red)">🚨</div>
+            <span class="section-title">Alerts</span>
+            <span class="section-count" id="nbAlertsCount">0</span>
+          </div>
+          <span class="chevron">›</span>
+        </div>
+        <div class="section-body" id="nbAlertsBody">
+          <div class="empty-state" id="nbAlertsEmpty"><div class="empty-icon">🚨</div><p>No active unit alerts.</p></div>
+        </div>
+      </div>
+
+      <!-- NB REMINDERS -->
+      <div class="section-card" id="nbRemindersSection">
+        <div class="section-header" onclick="toggleSection('nbRemindersSection')">
+          <div class="section-header-left">
+            <div class="section-icon" style="background:var(--reminder-blue-bg);color:var(--reminder-blue)">🔔</div>
+            <span class="section-title">Upcoming Reminders</span>
+            <span class="section-count" id="nbRemindersCount">0</span>
+          </div>
+          <span class="chevron">›</span>
+        </div>
+        <div class="section-body" id="nbRemindersBody">
+          <div class="empty-state" id="nbRemindersEmpty"><div class="empty-icon">🔔</div><p>No upcoming reminders for this unit.</p></div>
+        </div>
+      </div>
+
+      <!-- NB TASKS -->
+      <div class="section-card" id="nbTasksSection">
+        <div class="section-header" onclick="toggleSection('nbTasksSection')">
+          <div class="section-header-left">
+            <div class="section-icon" style="background:var(--adhoc-purple-bg);color:var(--adhoc-purple)">📋</div>
+            <span class="section-title">Tasks</span>
+            <span class="section-count" id="nbTasksCount">0</span>
+          </div>
+          <span class="chevron">›</span>
+        </div>
+        <div class="section-body" id="nbTasksBody">
+          <div class="empty-state" id="nbTasksEmpty"><div class="empty-icon">📋</div><p>No tasks on the notice board.</p></div>
+        </div>
+      </div>
+    </div>
+  </div><!-- /tabNoticeboard -->
 
 </div><!-- /app -->
 
@@ -1676,6 +1758,81 @@
 <!-- Toast Container -->
 <div class="toast-container" id="toastContainer"></div>
 
+<!-- NB Alert Modal -->
+<div class="modal-overlay" id="nbAlertModal">
+  <div class="modal">
+    <div class="modal-header"><h3>🚨 Add Unit Alert</h3><button class="modal-close" onclick="closeModal('nbAlertModal')">×</button></div>
+    <div class="modal-body">
+      <div class="form-group"><label>Alert Message</label><textarea id="nbAlertText" rows="3" placeholder="e.g. Building inspection today at 2pm..."></textarea></div>
+      <div class="form-group">
+        <label>Duration</label>
+        <select id="nbAlertDuration" onchange="document.getElementById('nbAlertEndDateGroup').style.display=this.value==='custom'?'block':'none'">
+          <option value="ongoing">Ongoing (30 days)</option>
+          <option value="day">Today only</option>
+          <option value="custom">Custom end date</option>
+        </select>
+      </div>
+      <div class="form-group" id="nbAlertEndDateGroup" style="display:none"><label>End Date</label><input type="date" id="nbAlertEndDate"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost btn-sm" onclick="closeModal('nbAlertModal')">Cancel</button>
+      <button class="btn btn-primary btn-sm" onclick="saveNBAlert()">Add Alert</button>
+    </div>
+  </div>
+</div>
+
+<!-- NB Reminder Modal -->
+<div class="modal-overlay" id="nbReminderModal">
+  <div class="modal">
+    <div class="modal-header"><h3>🔔 Add Unit Reminder</h3><button class="modal-close" onclick="closeModal('nbReminderModal')">×</button></div>
+    <div class="modal-body">
+      <div class="form-group"><label>Title</label><input type="text" id="nbReminderTitle" placeholder="e.g. Staff Meeting, Training Day..."></div>
+      <div class="form-group"><label>Date <span style="font-weight:400;color:var(--text-muted)">(optional)</span></label><input type="date" id="nbReminderDate"></div>
+      <div class="form-group"><label>Notes <span style="font-weight:400;color:var(--text-muted)">(optional)</span></label><textarea id="nbReminderNotes" rows="2" placeholder="Any additional details..."></textarea></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost btn-sm" onclick="closeModal('nbReminderModal')">Cancel</button>
+      <button class="btn btn-primary btn-sm" onclick="saveNBReminder()">Add Reminder</button>
+    </div>
+  </div>
+</div>
+
+<!-- NB Task Modal -->
+<div class="modal-overlay" id="nbTaskModal">
+  <div class="modal">
+    <div class="modal-header"><h3>📋 Add Notice Board Task</h3><button class="modal-close" onclick="closeModal('nbTaskModal')">×</button></div>
+    <div class="modal-body">
+      <div class="form-group"><label>Task Description</label><input type="text" id="nbTaskTitle" placeholder="e.g. Order cleaning supplies, Fix kitchen tap..."></div>
+      <div class="form-group"><label>Priority</label>
+        <select id="nbTaskPriority">
+          <option value="high">High</option>
+          <option value="medium" selected>Medium</option>
+          <option value="low">Low</option>
+        </select>
+      </div>
+      <div class="form-group"><label>Due Date <span style="font-weight:400;color:var(--text-muted)">(optional)</span></label><input type="date" id="nbTaskDueDate"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost btn-sm" onclick="closeModal('nbTaskModal')">Cancel</button>
+      <button class="btn btn-primary btn-sm" onclick="saveNBTask()">Add Task</button>
+    </div>
+  </div>
+</div>
+
+<!-- NB Complete Task Modal -->
+<div class="modal-overlay" id="nbCompleteTaskModal">
+  <div class="modal">
+    <div class="modal-header"><h3>✅ Mark Task Complete</h3><button class="modal-close" onclick="closeModal('nbCompleteTaskModal')">×</button></div>
+    <div class="modal-body">
+      <div class="form-group"><label>Completion Note <span style="font-weight:400;color:var(--text-muted)">(optional)</span></label><textarea id="nbCompletionNote" rows="2" placeholder="Any notes about how it was completed..."></textarea></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost btn-sm" onclick="closeModal('nbCompleteTaskModal')">Cancel</button>
+      <button class="btn btn-success btn-sm" onclick="confirmNBCompleteTask()">Mark Complete</button>
+    </div>
+  </div>
+</div>
+
 <!-- ══════════════════════════════════════════════
      FIREBASE + APP LOGIC
 ══════════════════════════════════════════════ -->
@@ -1762,11 +1919,12 @@ async function loadStaffProfile(uid) {
 }
 
 async function handleLogin() {
-  const email = document.getElementById('loginEmail').value.trim();
+  const raw = document.getElementById('loginEmail').value.trim().toLowerCase();
   const password = document.getElementById('loginPassword').value;
   const errEl = document.getElementById('loginError');
   errEl.style.display = 'none';
-  if (!email || !password) { errEl.textContent = 'Please enter your email and password.'; errEl.style.display = 'block'; return; }
+  if (!raw || !password) { errEl.textContent = 'Please enter your username and password.'; errEl.style.display = 'block'; return; }
+  const email = raw.includes('@') ? raw : raw + '@connectedstars.co.uk';
   try {
     await signInWithEmailAndPassword(auth, email, password);
   } catch(e) {
@@ -1842,6 +2000,7 @@ function switchTab(tab, el) {
   el.classList.add('active');
   document.getElementById('tabHandover').style.display = tab === 'handover' ? 'block' : 'none';
   document.getElementById('tabAdmin').style.display = tab === 'admin' ? 'block' : 'none';
+  document.getElementById('tabNoticeboard').style.display = tab === 'noticeboard' ? 'block' : 'none';
   if (tab === 'admin') loadAdminData();
 }
 
@@ -1873,6 +2032,9 @@ async function loadUnits() {
     const sel = document.getElementById('unitSelect');
     sel.innerHTML = '<option value="">Select unit...</option>';
     unitsCache.forEach(u => { sel.innerHTML += `<option value="${u.id}">${u.name}</option>`; });
+    const nbSel = document.getElementById('nbUnitSelect');
+    nbSel.innerHTML = '<option value="">Select unit...</option>';
+    unitsCache.forEach(u => { nbSel.innerHTML += `<option value="${u.id}">${u.name}</option>`; });
   } catch(e) { showToast('Could not load units', 'error'); }
 }
 
@@ -2702,6 +2864,221 @@ function showToast(message, type = 'default') {
   container.appendChild(toast);
   setTimeout(() => toast.remove(), 3000);
 }
+
+// ── NOTICE BOARD ──────────────────────────────────────────────────────
+let currentNBUnit = null;
+let pendingNBTaskId = null;
+
+async function loadNoticeBoard() {
+  const unitId = document.getElementById('nbUnitSelect').value;
+  if (!unitId) {
+    document.getElementById('nbPlaceholder').style.display = 'block';
+    document.getElementById('nbContent').style.display = 'none';
+    return;
+  }
+  const unit = unitsCache.find(u => u.id === unitId);
+  currentNBUnit = { unitId, name: unit?.name || '' };
+  document.getElementById('nbTitle').textContent = `${unit?.name || ''} — Notice Board`;
+  document.getElementById('nbSubtitle').textContent = 'Visible to all staff in this unit';
+  document.getElementById('nbPlaceholder').style.display = 'none';
+  document.getElementById('nbContent').style.display = 'block';
+  renderNBAlerts(unitId);
+  renderNBReminders(unitId);
+  renderNBTasks(unitId);
+}
+
+async function renderNBAlerts(unitId) {
+  const body = document.getElementById('nbAlertsBody');
+  const empty = document.getElementById('nbAlertsEmpty');
+  const count = document.getElementById('nbAlertsCount');
+  const today = new Date().toISOString().slice(0,10);
+  const dateObj = new Date(today + 'T06:00:00');
+  try {
+    const snap = await getDocs(query(collection(db,'alerts'), where('unitId','==',unitId), where('scope','==','unit'), where('status','==','active')));
+    const active = snap.docs.map(d => ({id:d.id,...d.data()})).filter(a => {
+      if (a.duration === 'day') return a.handoverDate === today;
+      const expiry = a.endDate?.toDate ? a.endDate.toDate() : new Date(a.endDate);
+      return expiry >= dateObj;
+    });
+    count.textContent = active.length;
+    document.getElementById('nbAlertsSection').style.display = active.length ? '' : 'none';
+    body.querySelectorAll('.alert-item').forEach(el => el.remove());
+    empty.style.display = active.length ? 'none' : 'block';
+    active.forEach(a => {
+      const el = document.createElement('div');
+      el.className = 'alert-item';
+      const expiry = a.duration === 'day' ? 'Today only' : formatExpiry(a.endDate);
+      const canEdit = currentStaffProfile?.initials === a.addedBy || currentStaffProfile?.role === 'admin';
+      el.innerHTML = `<div style="flex:1"><div class="alert-text">⚠️ ${a.text}</div><div class="alert-meta">Added by ${a.addedBy}${a.editedBy ? ` · edited by ${a.editedBy}` : ''} · ${formatTs(a.createdAt)}</div>${canEdit && !isObserverMode ? `<div style="display:flex;gap:6px;margin-top:8px"><button class="btn btn-ghost btn-sm" onclick="editNBAlert('${a.id}','${a.text.replace(/'/g,"\\'").replace(/\n/g,' ')}')">Edit</button><button class="btn btn-danger btn-sm" onclick="deleteNBAlert('${a.id}')">Delete</button></div>` : ''}</div><span class="alert-expiry">${expiry}</span>`;
+      body.insertBefore(el, empty);
+    });
+  } catch(e) { console.error(e); }
+}
+
+async function renderNBReminders(unitId) {
+  const body = document.getElementById('nbRemindersBody');
+  const empty = document.getElementById('nbRemindersEmpty');
+  const count = document.getElementById('nbRemindersCount');
+  const today = new Date().toISOString().slice(0,10);
+  try {
+    const snap = await getDocs(query(collection(db,'reminders'), where('unitId','==',unitId), where('scope','==','unit')));
+    const items = snap.docs.map(d => ({id:d.id,...d.data()}))
+      .filter(r => !r.eventDate || r.eventDate >= today)
+      .sort((a,b) => (a.eventDate||'').localeCompare(b.eventDate||''));
+    count.textContent = items.length;
+    document.getElementById('nbRemindersSection').style.display = items.length ? '' : 'none';
+    body.querySelectorAll('.reminder-item').forEach(el => el.remove());
+    empty.style.display = items.length ? 'none' : 'block';
+    items.forEach(r => {
+      const el = document.createElement('div');
+      el.className = 'reminder-item';
+      const canEdit = currentStaffProfile?.initials === r.addedBy || currentStaffProfile?.role === 'admin';
+      el.innerHTML = `<div class="reminder-title">🔔 ${r.title}</div>
+        ${r.eventDate ? `<div class="tag" style="background:var(--brand-light);color:var(--brand);margin:4px 0">${r.eventDate}</div>` : ''}
+        ${r.notes ? `<div class="reminder-notes">${r.notes}</div>` : ''}
+        <div class="text-muted" style="font-size:12px;margin-top:4px">Added by ${r.addedBy}${r.editedBy ? ` · edited by ${r.editedBy}` : ''}</div>
+        ${canEdit && !isObserverMode ? `<div style="display:flex;gap:6px;margin-top:8px"><button class="btn btn-ghost btn-sm" onclick="editNBReminder('${r.id}','${r.title.replace(/'/g,"\\'")}')">Edit</button><button class="btn btn-danger btn-sm" onclick="deleteNBReminder('${r.id}')">Delete</button></div>` : ''}`;
+      body.insertBefore(el, empty);
+    });
+  } catch(e) { console.error(e); }
+}
+
+async function renderNBTasks(unitId) {
+  const body = document.getElementById('nbTasksBody');
+  const empty = document.getElementById('nbTasksEmpty');
+  const count = document.getElementById('nbTasksCount');
+  try {
+    const snap = await getDocs(query(collection(db,'adhocTasks'), where('unitId','==',unitId), where('scope','==','unit')));
+    const items = snap.docs.map(d => ({id:d.id,...d.data()}))
+      .sort((a,b) => { const o={high:0,medium:1,low:2}; return (o[a.priority]||1)-(o[b.priority]||1); });
+    count.textContent = items.length;
+    document.getElementById('nbTasksSection').style.display = items.length ? '' : 'none';
+    body.querySelectorAll('.adhoc-item').forEach(el => el.remove());
+    empty.style.display = items.length ? 'none' : 'block';
+    items.forEach(t => {
+      const el = document.createElement('div');
+      el.className = `adhoc-item priority-${t.priority}${t.completed ? ' completed' : ''}`;
+      const canEdit = currentStaffProfile?.initials === t.addedBy || currentStaffProfile?.role === 'admin';
+      el.innerHTML = `
+        <div class="adhoc-top">
+          <div>
+            <div class="adhoc-title">${t.completed ? '✅ ' : ''}${t.title}</div>
+            <div class="adhoc-meta">Added by ${t.addedBy}${t.dueDate ? ` · Due ${t.dueDate}` : ''}${t.editedBy ? ` · edited by ${t.editedBy}` : ''}</div>
+          </div>
+          <span class="priority-badge ${t.priority}">${t.priority.toUpperCase()}</span>
+        </div>
+        ${t.completed && t.completionNote ? `<div class="completion-note">✅ ${t.completionNote} <span style="font-weight:700">— ${t.completedBy}</span> · ${formatTs(t.completedAt)}</div>` : ''}
+        ${!t.completed && !isObserverMode ? `<button class="btn btn-success btn-sm" style="margin-top:8px" onclick="openNBCompleteTask('${t.id}')">Mark Complete</button>` : ''}
+        ${canEdit && !isObserverMode ? `<div style="display:flex;gap:6px;margin-top:8px"><button class="btn btn-ghost btn-sm" onclick="editNBTask('${t.id}','${t.title.replace(/'/g,"\\'")}')">Edit</button><button class="btn btn-danger btn-sm" onclick="deleteNBTask('${t.id}')">Delete</button></div>` : ''}`;
+      body.insertBefore(el, empty);
+    });
+  } catch(e) { console.error(e); }
+}
+
+async function saveNBAlert() {
+  if (!currentNBUnit) return;
+  const text = document.getElementById('nbAlertText').value.trim();
+  if (!text) { showToast('Please enter alert text', 'error'); return; }
+  const duration = document.getElementById('nbAlertDuration').value;
+  const today = new Date().toISOString().slice(0,10);
+  const data = { unitId:currentNBUnit.unitId, scope:'unit', text, duration, handoverDate:today, addedBy:currentStaffProfile?.initials||'??', addedByName:currentStaffProfile?.name||'', status:'active', createdAt:serverTimestamp() };
+  if (duration === 'custom') { data.endDate = new Date(document.getElementById('nbAlertEndDate').value); }
+  else { const d = new Date(); d.setDate(d.getDate()+30); data.endDate = d; }
+  await addDoc(collection(db,'alerts'), data);
+  document.getElementById('nbAlertText').value = '';
+  document.getElementById('nbAlertDuration').value = 'ongoing';
+  document.getElementById('nbAlertEndDateGroup').style.display = 'none';
+  closeModal('nbAlertModal');
+  showToast('Alert added', 'success');
+  renderNBAlerts(currentNBUnit.unitId);
+}
+
+async function saveNBReminder() {
+  if (!currentNBUnit) return;
+  const title = document.getElementById('nbReminderTitle').value.trim();
+  if (!title) { showToast('Please enter a title', 'error'); return; }
+  await addDoc(collection(db,'reminders'), {
+    unitId:currentNBUnit.unitId, scope:'unit', title,
+    eventDate: document.getElementById('nbReminderDate').value || null,
+    notes: document.getElementById('nbReminderNotes').value.trim(),
+    addedBy: currentStaffProfile?.initials||'??', createdAt: serverTimestamp()
+  });
+  document.getElementById('nbReminderTitle').value = '';
+  document.getElementById('nbReminderDate').value = '';
+  document.getElementById('nbReminderNotes').value = '';
+  closeModal('nbReminderModal');
+  showToast('Reminder added', 'success');
+  renderNBReminders(currentNBUnit.unitId);
+}
+
+async function saveNBTask() {
+  if (!currentNBUnit) return;
+  const title = document.getElementById('nbTaskTitle').value.trim();
+  if (!title) { showToast('Please describe the task', 'error'); return; }
+  await addDoc(collection(db,'adhocTasks'), {
+    unitId:currentNBUnit.unitId, scope:'unit', title,
+    priority: document.getElementById('nbTaskPriority').value,
+    dueDate: document.getElementById('nbTaskDueDate').value || null,
+    addedBy: currentStaffProfile?.initials||'??', addedByName: currentStaffProfile?.name||'',
+    completed: false, createdAt: serverTimestamp()
+  });
+  document.getElementById('nbTaskTitle').value = '';
+  document.getElementById('nbTaskPriority').value = 'medium';
+  document.getElementById('nbTaskDueDate').value = '';
+  closeModal('nbTaskModal');
+  showToast('Task added', 'success');
+  renderNBTasks(currentNBUnit.unitId);
+}
+
+window.openNBCompleteTask = function(id) {
+  pendingNBTaskId = id;
+  document.getElementById('nbCompletionNote').value = '';
+  openModal('nbCompleteTaskModal');
+};
+
+async function confirmNBCompleteTask() {
+  if (!pendingNBTaskId || !currentNBUnit) return;
+  await updateDoc(doc(db,'adhocTasks',pendingNBTaskId), {
+    completed: true,
+    completionNote: document.getElementById('nbCompletionNote').value.trim(),
+    completedBy: currentStaffProfile?.initials||'??',
+    completedAt: serverTimestamp()
+  });
+  closeModal('nbCompleteTaskModal');
+  showToast('Task marked complete', 'success');
+  renderNBTasks(currentNBUnit.unitId);
+}
+
+window.editNBAlert = async function(id, cur) {
+  const t = prompt('Edit alert:', cur); if (!t || t.trim()===cur) return;
+  await updateDoc(doc(db,'alerts',id), { text:t.trim(), editedBy:currentStaffProfile?.initials||'??' });
+  showToast('Updated', 'success'); renderNBAlerts(currentNBUnit.unitId);
+};
+window.deleteNBAlert = async function(id) {
+  if (!confirm('Delete this alert?')) return;
+  const { deleteDoc:dd } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
+  await dd(doc(db,'alerts',id)); showToast('Deleted', 'success'); renderNBAlerts(currentNBUnit.unitId);
+};
+window.editNBReminder = async function(id, cur) {
+  const t = prompt('Edit reminder title:', cur); if (!t || t.trim()===cur) return;
+  await updateDoc(doc(db,'reminders',id), { title:t.trim(), editedBy:currentStaffProfile?.initials||'??' });
+  showToast('Updated', 'success'); renderNBReminders(currentNBUnit.unitId);
+};
+window.deleteNBReminder = async function(id) {
+  if (!confirm('Delete this reminder?')) return;
+  const { deleteDoc:dd } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
+  await dd(doc(db,'reminders',id)); showToast('Deleted', 'success'); renderNBReminders(currentNBUnit.unitId);
+};
+window.editNBTask = async function(id, cur) {
+  const t = prompt('Edit task:', cur); if (!t || t.trim()===cur) return;
+  await updateDoc(doc(db,'adhocTasks',id), { title:t.trim(), editedBy:currentStaffProfile?.initials||'??' });
+  showToast('Updated', 'success'); renderNBTasks(currentNBUnit.unitId);
+};
+window.deleteNBTask = async function(id) {
+  if (!confirm('Delete this task?')) return;
+  const { deleteDoc:dd } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
+  await dd(doc(db,'adhocTasks',id)); showToast('Deleted', 'success'); renderNBTasks(currentNBUnit.unitId);
+};
 
 // Close modals on overlay click
 document.querySelectorAll('.modal-overlay').forEach(overlay => {
