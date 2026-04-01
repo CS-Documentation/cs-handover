@@ -920,6 +920,46 @@
     color: var(--brand);
   }
 
+  /* ── TASK HIERARCHY ── */
+  .task-hierarchy-item {
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    margin-bottom: 8px;
+    overflow: hidden;
+  }
+  .task-hierarchy-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    cursor: pointer;
+    background: var(--white);
+    user-select: none;
+    gap: 12px;
+  }
+  .task-hierarchy-header:hover { background: var(--brand-light); }
+  .task-hierarchy-body {
+    border-top: 1px solid var(--border);
+    padding: 12px 16px;
+    display: none;
+    background: var(--bg);
+  }
+  .task-hierarchy-body.open { display: block; }
+  .task-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 12px;
+    background: var(--white);
+    border-radius: 6px;
+    margin-bottom: 6px;
+    border: 1.5px solid var(--border);
+    gap: 12px;
+  }
+  .task-row-info { flex: 1; min-width: 0; }
+  .task-row-name { font-weight: 600; font-size: 14px; }
+  .task-row-meta { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+
   /* ── PRINT MODAL ── */
   .print-option {
     display: flex;
@@ -1344,18 +1384,29 @@
     <div class="admin-section" id="adminTasks">
       <div class="flex-between">
         <h3>✅ Routine Tasks</h3>
-        <button class="btn btn-primary btn-sm" onclick="openModal('addTaskModal')">+ Add Task</button>
+        <button class="btn btn-primary btn-sm" onclick="openAddTaskModal()">+ Add Task</button>
       </div>
-      <p class="text-muted mt-10">Tasks can apply to all service users, a specific unit, or a specific service user.</p>
-      <div style="overflow-x:auto;margin-top:16px">
-        <table class="data-table">
-          <thead>
-            <tr><th>Task</th><th>Type</th><th>Applies To</th><th>Shift</th><th>Status</th><th>Actions</th></tr>
-          </thead>
-          <tbody id="tasksTableBody">
-            <tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:20px">Loading...</td></tr>
-          </tbody>
-        </table>
+
+      <!-- Global Tasks -->
+      <div style="margin-top:20px">
+        <div class="flex-between" style="margin-bottom:10px">
+          <div style="font-size:14px;font-weight:700">🌐 Global Tasks <span id="globalTaskCount" class="section-count"></span></div>
+          <span style="font-size:12px;color:var(--text-muted)">Applies to every service user</span>
+        </div>
+        <div id="globalTasksList"><div style="color:var(--text-muted);font-size:13px;padding:6px 0">Loading...</div></div>
+        <button class="btn btn-secondary btn-sm" style="margin-top:8px" onclick="openAddTaskModal('global','','Global')">+ Add Global Task</button>
+      </div>
+
+      <!-- Service User Tasks -->
+      <div style="margin-top:28px">
+        <div style="font-size:14px;font-weight:700;margin-bottom:10px;color:var(--text)">👤 Service User Tasks</div>
+        <div id="suTaskGroups"><div style="color:var(--text-muted);font-size:13px;padding:6px 0">Loading...</div></div>
+      </div>
+
+      <!-- Unit Tasks -->
+      <div style="margin-top:28px">
+        <div style="font-size:14px;font-weight:700;margin-bottom:10px;color:var(--text)">🏠 Unit Tasks</div>
+        <div id="unitTaskGroups"><div style="color:var(--text-muted);font-size:13px;padding:6px 0">Loading...</div></div>
       </div>
     </div>
 
@@ -1731,14 +1782,115 @@
 <div class="modal-overlay" id="addTaskModal">
   <div class="modal">
     <div class="modal-header">
-      <h3>✅ Add Routine Task</h3>
+      <h3 id="addTaskModalTitle">✅ Add Task</h3>
       <button class="modal-close" onclick="closeModal('addTaskModal')">×</button>
     </div>
     <div class="modal-body">
-      <div class="form-group"><label>Task Name</label><input type="text" id="taskName" placeholder="e.g. Morning medication given"></div>
+      <!-- Category choice -->
       <div class="form-group">
         <label>Task Type</label>
-        <select id="taskType">
+        <select id="taskCategory" onchange="updateTaskCategoryFields()">
+          <option value="routine">Routine — repeats daily on the handover</option>
+          <option value="adhoc">One-time — appears on a specific date only</option>
+        </select>
+      </div>
+
+      <!-- Routine fields -->
+      <div id="routineTaskFields">
+        <div class="form-group"><label>Task Name</label><input type="text" id="taskName" placeholder="e.g. Morning medication given"></div>
+        <div class="form-group">
+          <label>Response Type</label>
+          <select id="taskType">
+            <option value="checkbox">Checkbox — tick when done</option>
+            <option value="yesno">Yes / No</option>
+            <option value="paragraph">Paragraph — requires written explanation</option>
+            <option value="time">Time entry</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Shift</label>
+          <select id="taskShift">
+            <option value="morning">Morning (06:00–12:00)</option>
+            <option value="afternoon">Afternoon (12:00–18:00)</option>
+            <option value="evening">Evening (18:00–22:00)</option>
+            <option value="night">Night (22:00–06:00)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Applies to</label>
+          <select id="taskLevel" onchange="updateTaskLevelFields()">
+            <option value="global">All service users (global)</option>
+            <option value="unit">Specific unit</option>
+            <option value="serviceuser">Specific service user</option>
+          </select>
+        </div>
+        <div class="form-group" id="taskUnitField" style="display:none">
+          <label>Unit</label>
+          <select id="taskUnit"></select>
+        </div>
+        <div class="form-group" id="taskSUField" style="display:none">
+          <label>Service User</label>
+          <select id="taskSU"></select>
+        </div>
+        <div class="form-group">
+          <label style="display:flex;align-items:center;gap:8px;font-weight:500;cursor:pointer">
+            <input type="checkbox" id="taskMustComplete" style="width:16px;height:16px;accent-color:var(--brand)">
+            Must be completed — carry forward if not done
+          </label>
+        </div>
+        <div class="form-group">
+          <label>Time-sensitive (optional) — task appears until this date</label>
+          <input type="date" id="taskExpiry">
+        </div>
+      </div>
+
+      <!-- One-time ad-hoc fields -->
+      <div id="adhocTaskFields" style="display:none">
+        <div class="form-group"><label>Task Title</label><input type="text" id="taskAdhocTitle" placeholder="e.g. Call GP about medication review"></div>
+        <div class="form-group">
+          <label>Service User</label>
+          <select id="taskAdhocSU"></select>
+        </div>
+        <div class="form-group">
+          <label>Due Date</label>
+          <input type="date" id="taskAdhocDate">
+        </div>
+        <div class="form-group">
+          <label>Priority</label>
+          <select id="taskAdhocPriority">
+            <option value="medium">Medium</option>
+            <option value="high">High</option>
+            <option value="low">Low</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label style="display:flex;align-items:center;gap:8px;font-weight:500;cursor:pointer">
+            <input type="checkbox" id="taskAdhocMustComplete" style="width:16px;height:16px;accent-color:var(--brand)">
+            Must be completed
+          </label>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost btn-sm" onclick="closeModal('addTaskModal')">Cancel</button>
+      <button class="btn btn-primary btn-sm" onclick="saveTask()">Add Task</button>
+    </div>
+  </div>
+</div>
+
+<!-- EDIT TASK MODAL -->
+<div class="modal-overlay" id="editTaskModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>✏️ Edit Task</h3>
+      <button class="modal-close" onclick="closeModal('editTaskModal')">×</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="editTaskId">
+      <div class="form-group"><label>Task Name</label><input type="text" id="editTaskName"></div>
+      <div class="form-group">
+        <label>Response Type</label>
+        <select id="editTaskType">
           <option value="checkbox">Checkbox — tick when done</option>
           <option value="yesno">Yes / No</option>
           <option value="paragraph">Paragraph — requires written explanation</option>
@@ -1747,7 +1899,7 @@
       </div>
       <div class="form-group">
         <label>Shift</label>
-        <select id="taskShift">
+        <select id="editTaskShift">
           <option value="morning">Morning (06:00–12:00)</option>
           <option value="afternoon">Afternoon (12:00–18:00)</option>
           <option value="evening">Evening (18:00–22:00)</option>
@@ -1755,35 +1907,26 @@
         </select>
       </div>
       <div class="form-group">
-        <label>Applies to</label>
-        <select id="taskLevel" onchange="updateTaskLevelFields()">
-          <option value="global">All service users (global)</option>
-          <option value="unit">Specific unit</option>
-          <option value="serviceuser">Specific service user</option>
-        </select>
-      </div>
-      <div class="form-group" id="taskUnitField" style="display:none">
-        <label>Unit</label>
-        <select id="taskUnit"></select>
-      </div>
-      <div class="form-group" id="taskSUField" style="display:none">
-        <label>Service User</label>
-        <select id="taskSU"></select>
-      </div>
-      <div class="form-group">
         <label style="display:flex;align-items:center;gap:8px;font-weight:500;cursor:pointer">
-          <input type="checkbox" id="taskMustComplete" style="width:16px;height:16px;accent-color:var(--brand)">
+          <input type="checkbox" id="editTaskMustComplete" style="width:16px;height:16px;accent-color:var(--brand)">
           Must be completed — carry forward if not done
         </label>
       </div>
       <div class="form-group">
-        <label>Time-sensitive (optional) — task appears until this date</label>
-        <input type="date" id="taskExpiry">
+        <label>Time-sensitive expiry date (optional)</label>
+        <input type="date" id="editTaskExpiry">
+      </div>
+      <div class="form-group">
+        <label>Status</label>
+        <select id="editTaskStatus">
+          <option value="active">Active</option>
+          <option value="inactive">Inactive</option>
+        </select>
       </div>
     </div>
     <div class="modal-footer">
-      <button class="btn btn-ghost btn-sm" onclick="closeModal('addTaskModal')">Cancel</button>
-      <button class="btn btn-primary btn-sm" onclick="saveTask()">Add Task</button>
+      <button class="btn btn-ghost btn-sm" onclick="closeModal('editTaskModal')">Cancel</button>
+      <button class="btn btn-primary btn-sm" onclick="saveEditTask()">Save Changes</button>
     </div>
   </div>
 </div>
@@ -2807,7 +2950,7 @@ function executePrint() {
 
 // ── ADMIN DATA ──
 async function loadAdminData() {
-  loadSUTable(); loadUnitsTable(); loadTasksTable(); loadStaffTable();
+  loadSUTable(); loadUnitsTable(); loadTasksHierarchy(); loadStaffTable();
 }
 
 async function loadSUTable() {
@@ -2835,20 +2978,197 @@ async function loadUnitsTable() {
   } catch(e) {}
 }
 
-async function loadTasksTable() {
-  const tbody = document.getElementById('tasksTableBody');
+async function loadTasksHierarchy() {
   try {
-    const snap = await getDocs(collection(db,'taskTemplates'));
-    tbody.innerHTML = snap.empty ? '<tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:20px">No routine tasks yet</td></tr>' : '';
-    snap.docs.forEach(d => {
-      const t = {id:d.id,...d.data()};
-      let appliesTo = 'All service users';
-      if (t.level === 'unit') { const u = unitsCache.find(u => u.id === t.unitId); appliesTo = u?.name || 'Unit'; }
-      if (t.level === 'serviceuser') appliesTo = 'Specific person';
-      tbody.innerHTML += `<tr><td><strong>${t.name}</strong></td><td>${t.type}</td><td>${appliesTo}</td><td>${t.shift}</td><td><span class="status-badge ${t.status==='active'?'status-active':'status-inactive'}">${t.status}</span></td><td><button class="btn btn-ghost btn-sm" onclick="deactivateTask('${t.id}','${t.status}')">Deactivate</button></td></tr>`;
-    });
+    const [tasksSnap, suSnap] = await Promise.all([
+      getDocs(collection(db,'taskTemplates')),
+      getDocs(query(collection(db,'serviceUsers'), where('status','==','active')))
+    ]);
+    const tasks = tasksSnap.docs.map(d => ({id:d.id,...d.data()}));
+    const sus = suSnap.docs.map(d => ({id:d.id,...d.data()}));
+
+    // Global tasks
+    const globalTasks = tasks.filter(t => t.level === 'global');
+    renderAdminTaskList('globalTasksList', globalTasks);
+    const gc = document.getElementById('globalTaskCount');
+    if (gc) gc.textContent = globalTasks.length > 0 ? globalTasks.length : '';
+
+    // Service user tasks
+    const suContainer = document.getElementById('suTaskGroups');
+    suContainer.innerHTML = '';
+    if (sus.length === 0) {
+      suContainer.innerHTML = '<div style="color:var(--text-muted);font-size:13px;padding:6px 0">No active service users found</div>';
+    } else {
+      sus.forEach(su => {
+        const suTasks = tasks.filter(t => t.level === 'serviceuser' && t.serviceUserId === su.id);
+        const unitName = unitsCache.find(u => u.id === su.unitId)?.name || '';
+        const eName = su.name.replace(/'/g,"\\'");
+        const div = document.createElement('div');
+        div.className = 'task-hierarchy-item';
+        div.innerHTML = `
+          <div class="task-hierarchy-header" onclick="toggleTaskGroup(this)">
+            <div style="display:flex;align-items:center;gap:10px;flex:1;min-width:0">
+              <strong>${su.name}</strong>
+              ${unitName ? `<span style="color:var(--text-muted);font-size:13px">· ${unitName}</span>` : ''}
+              <span class="section-count">${suTasks.length} task${suTasks.length !== 1 ? 's' : ''}</span>
+            </div>
+            <div style="display:flex;gap:8px;align-items:center;flex-shrink:0">
+              <button class="btn btn-primary btn-sm" onclick="event.stopPropagation();openAddTaskModal('serviceuser','${su.id}','${eName}')">+ Add Task</button>
+              <span style="color:var(--text-muted);font-size:12px;transition:transform 0.2s" class="th-chevron">▼</span>
+            </div>
+          </div>
+          <div class="task-hierarchy-body" id="su-tasks-${su.id}"></div>
+        `;
+        suContainer.appendChild(div);
+        renderAdminTaskList(`su-tasks-${su.id}`, suTasks);
+      });
+    }
+
+    // Unit tasks
+    const unitContainer = document.getElementById('unitTaskGroups');
+    unitContainer.innerHTML = '';
+    if (unitsCache.length === 0) {
+      unitContainer.innerHTML = '<div style="color:var(--text-muted);font-size:13px;padding:6px 0">No units found</div>';
+    } else {
+      unitsCache.forEach(unit => {
+        const unitTasks = tasks.filter(t => t.level === 'unit' && t.unitId === unit.id);
+        const eName = unit.name.replace(/'/g,"\\'");
+        const div = document.createElement('div');
+        div.className = 'task-hierarchy-item';
+        div.innerHTML = `
+          <div class="task-hierarchy-header" onclick="toggleTaskGroup(this)">
+            <div style="display:flex;align-items:center;gap:10px;flex:1;min-width:0">
+              <strong>${unit.name}</strong>
+              <span class="section-count">${unitTasks.length} task${unitTasks.length !== 1 ? 's' : ''}</span>
+            </div>
+            <div style="display:flex;gap:8px;align-items:center;flex-shrink:0">
+              <button class="btn btn-primary btn-sm" onclick="event.stopPropagation();openAddTaskModal('unit','${unit.id}','${eName}')">+ Add Task</button>
+              <span style="color:var(--text-muted);font-size:12px;transition:transform 0.2s" class="th-chevron">▼</span>
+            </div>
+          </div>
+          <div class="task-hierarchy-body" id="unit-tasks-${unit.id}"></div>
+        `;
+        unitContainer.appendChild(div);
+        renderAdminTaskList(`unit-tasks-${unit.id}`, unitTasks);
+      });
+    }
+  } catch(e) { console.error(e); }
+}
+
+function renderAdminTaskList(containerId, tasks) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  if (tasks.length === 0) {
+    container.innerHTML = '<div style="color:var(--text-muted);font-size:13px;padding:6px 4px">No tasks yet</div>';
+    return;
+  }
+  container.innerHTML = tasks.map(t => {
+    const eName = t.name.replace(/'/g,"\\'");
+    const statusStyle = t.status !== 'active' ? 'opacity:0.55' : '';
+    return `<div class="task-row" style="${statusStyle}">
+      <div class="task-row-info">
+        <div class="task-row-name">${t.name}${t.status !== 'active' ? ' <span class="status-badge status-inactive">inactive</span>' : ''}</div>
+        <div class="task-row-meta">${t.type} · ${t.shift}${t.mustComplete ? ' · Must complete' : ''}${t.expiryDate ? ` · Until ${t.expiryDate}` : ''}</div>
+      </div>
+      <div style="display:flex;gap:6px;flex-shrink:0">
+        <button class="btn btn-ghost btn-sm" onclick="openEditTask('${t.id}','${eName}','${t.type}','${t.shift}',${!!t.mustComplete},'${t.expiryDate||''}','${t.status||'active'}')">Edit</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteTask('${t.id}')">Delete</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function toggleTaskGroup(header) {
+  const body = header.nextElementSibling;
+  const chevron = header.querySelector('.th-chevron');
+  body.classList.toggle('open');
+  if (chevron) chevron.style.transform = body.classList.contains('open') ? 'rotate(180deg)' : '';
+}
+
+function openAddTaskModal(level, contextId, contextName) {
+  // Reset
+  document.getElementById('taskCategory').value = 'routine';
+  document.getElementById('taskName').value = '';
+  document.getElementById('taskType').value = 'checkbox';
+  document.getElementById('taskShift').value = 'morning';
+  document.getElementById('taskMustComplete').checked = false;
+  document.getElementById('taskExpiry').value = '';
+  document.getElementById('taskAdhocTitle').value = '';
+  document.getElementById('taskAdhocDate').value = '';
+  document.getElementById('taskAdhocPriority').value = 'medium';
+  document.getElementById('taskAdhocMustComplete').checked = false;
+  updateTaskCategoryFields();
+
+  // Pre-fill context
+  const lv = level || 'global';
+  document.getElementById('taskLevel').value = lv;
+  updateTaskLevelFields();
+  if (lv === 'unit' && contextId) {
+    populateTaskUnitSelect();
+    setTimeout(() => { document.getElementById('taskUnit').value = contextId; }, 50);
+  } else if (lv === 'serviceuser' && contextId) {
+    populateTaskSUSelect().then(() => { document.getElementById('taskSU').value = contextId; });
+    // Also pre-fill adhoc SU
+    populateAdhocSUSelect().then(() => { document.getElementById('taskAdhocSU').value = contextId; });
+  } else {
+    populateAdhocSUSelect();
+  }
+
+  const titleEl = document.getElementById('addTaskModalTitle');
+  if (titleEl) titleEl.textContent = contextName ? `✅ Add Task — ${contextName}` : '✅ Add Task';
+  openModal('addTaskModal');
+}
+
+function updateTaskCategoryFields() {
+  const cat = document.getElementById('taskCategory').value;
+  document.getElementById('routineTaskFields').style.display = cat === 'routine' ? 'block' : 'none';
+  document.getElementById('adhocTaskFields').style.display = cat === 'adhoc' ? 'block' : 'none';
+}
+
+async function populateAdhocSUSelect() {
+  const sel = document.getElementById('taskAdhocSU');
+  sel.innerHTML = '<option value="">Select service user...</option>';
+  try {
+    const snap = await getDocs(query(collection(db,'serviceUsers'), where('status','==','active')));
+    snap.docs.forEach(d => { const s = {id:d.id,...d.data()}; sel.innerHTML += `<option value="${s.id}">${s.name}</option>`; });
   } catch(e) {}
 }
+
+window.openEditTask = function(id, name, type, shift, mustComplete, expiry, status) {
+  document.getElementById('editTaskId').value = id;
+  document.getElementById('editTaskName').value = name;
+  document.getElementById('editTaskType').value = type;
+  document.getElementById('editTaskShift').value = shift;
+  document.getElementById('editTaskMustComplete').checked = mustComplete === true || mustComplete === 'true';
+  document.getElementById('editTaskExpiry').value = expiry || '';
+  document.getElementById('editTaskStatus').value = status || 'active';
+  openModal('editTaskModal');
+};
+
+async function saveEditTask() {
+  const id = document.getElementById('editTaskId').value;
+  const name = document.getElementById('editTaskName').value.trim();
+  if (!name) { showToast('Please enter a task name', 'error'); return; }
+  await updateDoc(doc(db,'taskTemplates',id), {
+    name,
+    type: document.getElementById('editTaskType').value,
+    shift: document.getElementById('editTaskShift').value,
+    mustComplete: document.getElementById('editTaskMustComplete').checked,
+    expiryDate: document.getElementById('editTaskExpiry').value || null,
+    status: document.getElementById('editTaskStatus').value
+  });
+  closeModal('editTaskModal');
+  showToast('Task updated', 'success');
+  loadTasksHierarchy();
+}
+
+window.deleteTask = async function(id) {
+  if (!confirm('Delete this task? It will no longer appear on any handover.')) return;
+  const { deleteDoc } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
+  await deleteDoc(doc(db,'taskTemplates',id));
+  showToast('Task deleted', 'success');
+  loadTasksHierarchy();
+};
 
 async function loadStaffTable() {
   const tbody = document.getElementById('staffTableBody');
@@ -2935,6 +3255,35 @@ async function saveUnit() {
 }
 
 async function saveTask() {
+  const category = document.getElementById('taskCategory').value;
+
+  if (category === 'adhoc') {
+    const title = document.getElementById('taskAdhocTitle').value.trim();
+    const suId = document.getElementById('taskAdhocSU').value;
+    const date = document.getElementById('taskAdhocDate').value;
+    if (!title) { showToast('Please enter a task title', 'error'); return; }
+    if (!suId) { showToast('Please select a service user', 'error'); return; }
+    if (!date) { showToast('Please select a due date', 'error'); return; }
+    const suSnap = await getDoc(doc(db,'serviceUsers',suId));
+    const suData = suSnap.exists() ? suSnap.data() : {};
+    await addDoc(collection(db,'adhocTasks'), {
+      serviceUserId: suId,
+      unitId: suData.unitId || '',
+      title,
+      priority: document.getElementById('taskAdhocPriority').value,
+      recurrence: 'once',
+      targetDate: date,
+      mustComplete: document.getElementById('taskAdhocMustComplete').checked,
+      addedBy: currentStaffProfile?.initials || '??',
+      addedByName: currentStaffProfile?.name || '',
+      completed: false,
+      createdAt: serverTimestamp()
+    });
+    closeModal('addTaskModal');
+    showToast('One-time task added', 'success');
+    return;
+  }
+
   const name = document.getElementById('taskName').value.trim();
   if (!name) { showToast('Please enter a task name', 'error'); return; }
   const level = document.getElementById('taskLevel').value;
@@ -2951,8 +3300,8 @@ async function saveTask() {
   if (level === 'serviceuser') data.serviceUserId = document.getElementById('taskSU').value;
   await addDoc(collection(db,'taskTemplates'), data);
   closeModal('addTaskModal');
-  showToast('Task added', 'success');
-  loadTasksTable();
+  showToast('Routine task added', 'success');
+  loadTasksHierarchy();
 }
 
 async function saveStaff() {
@@ -3016,7 +3365,7 @@ window.archiveSU = async function(id, currentStatus) {
 window.deactivateTask = async function(id, currentStatus) {
   const newStatus = currentStatus === 'active' ? 'inactive' : 'active';
   await updateDoc(doc(db,'taskTemplates',id), { status: newStatus });
-  showToast('Updated', 'success'); loadTasksTable();
+  showToast('Updated', 'success'); loadTasksHierarchy();
 };
 
 // ── HELPERS ──
