@@ -2699,6 +2699,9 @@ async function renderRoutineTasks(suId, date) {
               <button class="yn-btn no ${comp?.value==='no'?'active':''}" onclick="completeRoutineTask('${t.id}','yesno',this,'no')">No</button>
             </div>` : `<div class="task-stamp">${comp ? (comp.value==='yes'?'✅ Yes':'❌ No') : 'Not answered'}</div>`}
             ${comp ? `<div class="task-stamp">— ${comp.by} · ${comp.time}</div>` : ''}
+            ${!comp && !isObserverMode ? `<textarea class="task-note-field" placeholder="Optional note..." id="tn_${t.id}"></textarea>` : ''}
+            ${comp?.note ? `<div class="text-muted" style="margin-top:4px;font-size:12px">📝 ${comp.note}</div>` : ''}
+            ${canEditNote ? `<div id="task-note-edit-area-${t.id}" style="display:none"><textarea class="task-note-field" id="task-note-inp-${t.id}" placeholder="Optional note...">${comp.note || ''}</textarea><div style="display:flex;gap:8px;margin-top:6px"><button class="btn btn-primary btn-sm" onclick="saveRoutineNote('${t.id}')">Save</button><button class="btn btn-ghost btn-sm" onclick="document.getElementById('task-note-edit-area-${t.id}').style.display='none'">Cancel</button></div></div><button class="btn btn-ghost btn-sm" style="margin-top:6px;font-size:11px" onclick="document.getElementById('task-note-edit-area-${t.id}').style.display='block'">Edit Note</button>` : ''}
           </div>`;
         } else if (t.type === 'paragraph') {
           inner = `<div class="task-content">
@@ -2711,8 +2714,13 @@ async function renderRoutineTasks(suId, date) {
           inner = `<div class="task-content">
             <div class="task-label">${t.name}</div>
             ${comp ? `<div class="task-stamp">⏰ ${comp.value} — ${comp.by} · ${comp.time}</div>` :
-              (!isObserverMode ? `<input type="time" id="tn_${t.id}" style="margin-top:6px;padding:6px 10px;border:1.5px solid var(--border);border-radius:6px;font-size:14px">
-              <button class="btn btn-primary btn-sm" style="margin-top:6px;margin-left:8px" onclick="completeRoutineTask('${t.id}','time',null)">Save</button>` : '<div class="text-muted">Not recorded</div>')}
+              (!isObserverMode ? `<div style="display:flex;align-items:center;gap:8px;margin-top:6px;flex-wrap:wrap">
+                <input type="time" id="tn_${t.id}" style="padding:6px 10px;border:1.5px solid var(--border);border-radius:6px;font-size:14px">
+                <button class="btn btn-primary btn-sm" onclick="completeRoutineTask('${t.id}','time',null)">Save</button>
+              </div>
+              <textarea class="task-note-field" placeholder="Optional note..." id="tn_note_${t.id}" style="margin-top:8px"></textarea>` : '<div class="text-muted">Not recorded</div>')}
+            ${comp?.note ? `<div class="text-muted" style="margin-top:4px;font-size:12px">📝 ${comp.note}</div>` : ''}
+            ${canEditNote ? `<div id="task-note-edit-area-${t.id}" style="display:none"><textarea class="task-note-field" id="task-note-inp-${t.id}" placeholder="Optional note...">${comp.note || ''}</textarea><div style="display:flex;gap:8px;margin-top:6px"><button class="btn btn-primary btn-sm" onclick="saveRoutineNote('${t.id}')">Save</button><button class="btn btn-ghost btn-sm" onclick="document.getElementById('task-note-edit-area-${t.id}').style.display='none'">Cancel</button></div></div><button class="btn btn-ghost btn-sm" style="margin-top:6px;font-size:11px" onclick="document.getElementById('task-note-edit-area-${t.id}').style.display='block'">Edit Note</button>` : ''}
           </div>`;
         }
         item.innerHTML = inner;
@@ -2738,9 +2746,14 @@ window.completeRoutineTask = async function(taskId, type, el, value) {
     renderRoutineTasks(currentHandover.serviceUserId, currentHandover.date);
     return;
   }
-  const note = noteEl?.value?.trim() || '';
   const now = new Date();
   const timeStr = now.toLocaleTimeString('en-GB', {hour:'2-digit',minute:'2-digit'});
+  let note = '';
+  if (type === 'time') {
+    note = document.getElementById(`tn_note_${taskId}`)?.value?.trim() || '';
+  } else {
+    note = noteEl?.value?.trim() || '';
+  }
   const comp = {
     by: currentStaffProfile?.initials || '??',
     byName: currentStaffProfile?.name || '',
