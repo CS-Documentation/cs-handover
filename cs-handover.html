@@ -958,6 +958,57 @@
     gap: 10px;
   }
 
+  /* ── HANDOVER CONFIG ── */
+  .config-unit-section {
+    background: var(--white);
+    border-radius: var(--radius);
+    padding: 16px 20px;
+    box-shadow: var(--shadow);
+    margin-bottom: 12px;
+  }
+  .config-unit-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  .config-toggle {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+  }
+  .config-unit-name {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--brand);
+  }
+  .config-su-list {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .config-su-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    font-size: 13px;
+    padding: 3px 0;
+  }
+  .config-all-label {
+    font-size: 12px;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+
   /* ── TASK HIERARCHY ── */
   .task-hierarchy-item {
     border: 1.5px solid var(--border);
@@ -1365,6 +1416,11 @@
         <div class="admin-card-title">Routine Tasks</div>
         <div class="admin-card-desc">Set up daily task templates</div>
       </div>
+      <div class="admin-card" onclick="openConfigPage()">
+        <div class="admin-card-icon">🔧</div>
+        <div class="admin-card-title">Handover Config</div>
+        <div class="admin-card-desc">Choose which units &amp; service users appear here</div>
+      </div>
     </div>
 
     <!-- TASKS PAGE (full-panel view) -->
@@ -1397,6 +1453,16 @@
         <div class="tasks-section-title">🏠 Unit Tasks</div>
         <div id="unitTaskGroups"></div>
       </div>
+    </div>
+
+    <!-- CONFIG PAGE (full-panel view) -->
+    <div id="configPage" style="display:none">
+      <div class="tasks-page-header">
+        <button class="btn btn-ghost btn-sm" onclick="closeConfigPage()">← Back</button>
+        <div class="tasks-page-title">🔧 Handover Config</div>
+      </div>
+      <p style="font-size:13px;color:var(--text-muted);margin:-8px 0 16px">Select which units and service users are available in this handover. Changes save automatically.</p>
+      <div id="configPageContent"></div>
     </div>
 
   </div><!-- /tabAdmin -->
@@ -1973,6 +2039,8 @@ let unitsCache = [];
 let serviceUsersCache = [];
 let pendingAdhocId = null;
 let pendingCarryForward = null;
+let handoverConfig = { enabledUnits: [], unitSUs: {} };
+let allSUsForConfig = [];
 
 // ── EXPOSE TO WINDOW ──
 window.handleLogin = handleLogin;
@@ -1995,6 +2063,11 @@ window.executePrint = executePrint;
 window.saveTask = saveTask;
 window.updateAdhocRecurrenceFields = updateAdhocRecurrenceFields;
 window.updateTaskLevelFields = updateTaskLevelFields;
+window.openConfigPage = openConfigPage;
+window.closeConfigPage = closeConfigPage;
+window.toggleConfigUnit = toggleConfigUnit;
+window.toggleConfigUnitAll = toggleConfigUnitAll;
+window.toggleConfigSU = toggleConfigSU;
 
 // ── AUTH ──
 onAuthStateChanged(auth, async (user) => {
@@ -2044,7 +2117,7 @@ function showLogin() {
   document.getElementById('app').style.display = 'none';
 }
 
-function showApp() {
+async function showApp() {
   document.getElementById('loginScreen').style.display = 'none';
   document.getElementById('app').style.display = 'block';
   const role = currentStaffProfile?.role || 'support';
@@ -2063,6 +2136,7 @@ function showApp() {
     applyObserverMode();
   }
   setTodaysDate();
+  await loadHandoverConfig();
   loadUnits();
 }
 
@@ -2138,14 +2212,16 @@ async function loadUnits() {
   try {
     const snap = await getDocs(query(collection(db,'units'), where('status','==','active')));
     unitsCache = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    const enabledIds = handoverConfig.enabledUnits;
+    const visibleUnits = enabledIds.length ? unitsCache.filter(u => enabledIds.includes(u.id)) : unitsCache;
     const sel = document.getElementById('unitSelect');
     sel.innerHTML = '<option value="">Select unit...</option>';
-    unitsCache.forEach(u => { sel.innerHTML += `<option value="${u.id}">${u.name}</option>`; });
+    visibleUnits.forEach(u => { sel.innerHTML += `<option value="${u.id}">${u.name}</option>`; });
     const nbSel = document.getElementById('nbUnitSelect');
     nbSel.innerHTML = '<option value="">Select unit...</option>';
-    unitsCache.forEach(u => { nbSel.innerHTML += `<option value="${u.id}">${u.name}</option>`; });
+    visibleUnits.forEach(u => { nbSel.innerHTML += `<option value="${u.id}">${u.name}</option>`; });
     // Auto-select Hounslow as default unit
-    const hounslow = unitsCache.find(u => u.name.toLowerCase().includes('hounslow'));
+    const hounslow = visibleUnits.find(u => u.name.toLowerCase().includes('hounslow'));
     if (hounslow) {
       sel.value = hounslow.id;
       nbSel.value = hounslow.id;
@@ -2167,8 +2243,129 @@ async function loadServiceUsers() {
     const snap = await getDocs(query(collection(db,'serviceUsers'),
       where('currentUnitId','==',unitId), where('status','==','active')));
     serviceUsersCache = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    const configuredSUs = handoverConfig.unitSUs?.[unitId];
+    if (Array.isArray(configuredSUs)) {
+      serviceUsersCache = serviceUsersCache.filter(su => configuredSUs.includes(su.id));
+    }
     serviceUsersCache.forEach(su => { sel.innerHTML += `<option value="${su.id}">${su.name}</option>`; });
   } catch(e) { showToast('Could not load service users', 'error'); }
+}
+
+// ── HANDOVER CONFIG ──
+async function loadHandoverConfig() {
+  try {
+    const snap = await getDoc(doc(db, 'handoverConfig', 'cs'));
+    if (snap.exists()) handoverConfig = { enabledUnits: [], unitSUs: {}, ...snap.data() };
+  } catch(e) {}
+}
+
+async function saveHandoverConfig() {
+  try {
+    await setDoc(doc(db, 'handoverConfig', 'cs'), handoverConfig);
+    // Refresh unit dropdowns to reflect new config
+    const enabledIds = handoverConfig.enabledUnits;
+    const visibleUnits = enabledIds.length ? unitsCache.filter(u => enabledIds.includes(u.id)) : unitsCache;
+    const sel = document.getElementById('unitSelect');
+    const nbSel = document.getElementById('nbUnitSelect');
+    sel.innerHTML = '<option value="">Select unit...</option>';
+    visibleUnits.forEach(u => { sel.innerHTML += `<option value="${u.id}">${u.name}</option>`; });
+    nbSel.innerHTML = '<option value="">Select unit...</option>';
+    visibleUnits.forEach(u => { nbSel.innerHTML += `<option value="${u.id}">${u.name}</option>`; });
+  } catch(e) { showToast('Could not save config', 'error'); }
+}
+
+async function openConfigPage() {
+  document.getElementById('adminCardsGrid').style.display = 'none';
+  document.getElementById('configPage').style.display = 'block';
+  document.getElementById('configPageContent').innerHTML = '<div style="color:var(--text-muted);font-size:13px;padding:8px">Loading…</div>';
+  try {
+    const snap = await getDocs(query(collection(db, 'serviceUsers'), where('status', '==', 'active')));
+    allSUsForConfig = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  } catch(e) { allSUsForConfig = []; }
+  renderConfigPage();
+}
+
+function closeConfigPage() {
+  document.getElementById('configPage').style.display = 'none';
+  document.getElementById('adminCardsGrid').style.display = '';
+}
+
+function renderConfigPage() {
+  const container = document.getElementById('configPageContent');
+  if (!unitsCache.length) {
+    container.innerHTML = '<div style="color:var(--text-muted);font-size:13px;padding:8px">No active units found.</div>';
+    return;
+  }
+  container.innerHTML = unitsCache.map(u => {
+    const enabled = handoverConfig.enabledUnits.includes(u.id);
+    const configuredSUs = handoverConfig.unitSUs?.[u.id];
+    const unitSUs = allSUsForConfig.filter(s => s.currentUnitId === u.id);
+    const isAllSUs = !Array.isArray(configuredSUs);
+
+    const suRows = unitSUs.length === 0
+      ? '<div style="color:var(--text-muted);font-size:12px;margin-top:6px">No active service users in this unit</div>'
+      : unitSUs.map(su => {
+          const checked = isAllSUs || configuredSUs.includes(su.id);
+          return `<label class="config-su-row">
+            <input type="checkbox" ${checked ? 'checked' : ''} ${!enabled ? 'disabled' : ''}
+              onchange="toggleConfigSU('${u.id}','${su.id}',this.checked)">
+            <span>${su.name}</span>
+          </label>`;
+        }).join('');
+
+    return `<div class="config-unit-section">
+      <div class="config-unit-header">
+        <label class="config-toggle">
+          <input type="checkbox" ${enabled ? 'checked' : ''} onchange="toggleConfigUnit('${u.id}',this.checked)">
+          <span class="config-unit-name">${u.name}</span>
+        </label>
+        ${enabled && unitSUs.length > 0 ? `<label class="config-all-label">
+          <input type="checkbox" ${isAllSUs ? 'checked' : ''} onchange="toggleConfigUnitAll('${u.id}',this.checked)">
+          All service users
+        </label>` : ''}
+      </div>
+      ${enabled ? `<div class="config-su-list">${suRows}</div>` : ''}
+    </div>`;
+  }).join('');
+}
+
+async function toggleConfigUnit(unitId, enabled) {
+  if (enabled) {
+    if (!handoverConfig.enabledUnits.includes(unitId)) handoverConfig.enabledUnits.push(unitId);
+    if (!handoverConfig.unitSUs) handoverConfig.unitSUs = {};
+    handoverConfig.unitSUs[unitId] = null; // null = all SUs
+  } else {
+    handoverConfig.enabledUnits = handoverConfig.enabledUnits.filter(id => id !== unitId);
+    if (handoverConfig.unitSUs) delete handoverConfig.unitSUs[unitId];
+  }
+  await saveHandoverConfig();
+  renderConfigPage();
+}
+
+async function toggleConfigUnitAll(unitId, allEnabled) {
+  if (!handoverConfig.unitSUs) handoverConfig.unitSUs = {};
+  if (allEnabled) {
+    handoverConfig.unitSUs[unitId] = null;
+  } else {
+    handoverConfig.unitSUs[unitId] = [];
+  }
+  await saveHandoverConfig();
+  renderConfigPage();
+}
+
+async function toggleConfigSU(unitId, suId, checked) {
+  if (!handoverConfig.unitSUs) handoverConfig.unitSUs = {};
+  let current = handoverConfig.unitSUs[unitId];
+  if (current === null || current === undefined) {
+    // Was "all" — expand to explicit list, then apply change
+    const unitSUs = allSUsForConfig.filter(s => s.currentUnitId === unitId).map(s => s.id);
+    current = checked ? unitSUs : unitSUs.filter(id => id !== suId);
+  } else if (Array.isArray(current)) {
+    current = checked ? [...new Set([...current, suId])] : current.filter(id => id !== suId);
+  }
+  handoverConfig.unitSUs[unitId] = current;
+  await saveHandoverConfig();
+  renderConfigPage();
 }
 
 // ── LOAD HANDOVER ──

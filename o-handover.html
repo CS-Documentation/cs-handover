@@ -212,6 +212,14 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .chip:hover{border-color:var(--brand);color:var(--brand)}
 .chip.on{background:var(--brand);border-color:var(--brand);color:#fff}
 
+/* ── HANDOVER CONFIG ── */
+.cfg-unit{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:14px 16px;margin-bottom:10px}
+.cfg-unit-hdr{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.cfg-toggle{display:flex;align-items:center;gap:8px;cursor:pointer;font-weight:700;font-size:14px;color:var(--brand)}
+.cfg-su-list{margin-top:10px;padding-top:10px;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:4px}
+.cfg-su-row{display:flex;align-items:center;gap:7px;cursor:pointer;font-size:13px;padding:2px 0}
+.cfg-all-lbl{font-size:11px;color:var(--text3);display:flex;align-items:center;gap:5px;cursor:pointer;white-space:nowrap}
+
 /* ── ADMIN ── */
 .atabs{display:flex;gap:2px;background:var(--surface3);padding:3px;border-radius:var(--rs);margin-bottom:16px;width:fit-content;flex-wrap:wrap}
 .atab{padding:5px 14px;border-radius:4px;cursor:pointer;font-size:12px;font-weight:700;color:var(--text3);transition:all .12s}
@@ -441,6 +449,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
       <div class="atabs">
         <div class="atab on" onclick="showATab('rota')">Rota</div>
         <div class="atab" onclick="showATab('cats')">Categories</div>
+        <div class="atab" onclick="showATab('config')">Config</div>
       </div>
       <div class="asec on" id="a-rota">
         <div class="panel" style="margin-bottom:12px">
@@ -460,6 +469,10 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
           <div class="ph"><div class="pt">📅 Rota — <span id="rota-month-label"></span></div></div>
           <div class="pb" style="overflow-x:auto"><div id="rota-grid"></div></div>
         </div>
+      </div>
+      <div class="asec" id="a-config">
+        <p style="font-size:13px;color:var(--text3);margin:0 0 14px">Select which units and young people are available in this handover. Changes save automatically.</p>
+        <div id="cfg-content"></div>
       </div>
       <div class="asec" id="a-cats">
         <div style="display:flex;justify-content:flex-end;margin-bottom:10px"><button class="btn btn-primary" onclick="openAddCatModal()">＋ Add Category</button></div>
@@ -681,6 +694,8 @@ const db = getFirestore(app);
 let currentUser = null, currentStaff = null;
 let currentUnitId = '', currentShift = 'morning', currentDate = '';
 let currentUnitYPs = [], allUnitsCache = [];
+let handoverConfig = { enabledUnits: [], unitSUs: {} };
+let allSUsForConfig = [];
 let notesCache = [], tasksCache = [], kwCache = [], missingCache = [];
 let locsCache = {}, rotaCache = [];
 let pendingTaskId = null, pendingAlertId = null, pendingMissingId = null;
@@ -722,6 +737,7 @@ Object.assign(window, {
   showATab,
   openAddRotaModal,saveRota,saveRotaCell,renderRotaGrid,downloadSampleCSV,handleRotaCSV,
   openAddCatModal,saveCat,removeCat,
+  toggleConfigUnit,toggleConfigUnitAll,toggleConfigSU,
   cm
 });
 
@@ -757,7 +773,7 @@ async function doLogin() {
 
 async function doLogout() { await signOut(auth); }
 
-function showApp() {
+async function showApp() {
   g('loginScreen').style.display = 'none';
   g('app').style.display = 'flex';
   g('u-av').textContent = currentStaff.initials||'?';
@@ -768,6 +784,7 @@ function showApp() {
   if (currentStaff.role==='admin') g('nav-admin').style.display = 'flex';
   currentDate = todayISO();
   g('date-inp').value = currentDate;
+  await loadHandoverConfig();
   loadUnits();
 }
 
@@ -794,9 +811,11 @@ async function loadUnits() {
   try {
     const snap = await getDocs(query(collection(db,'units'), where('status','==','active')));
     allUnitsCache = snap.docs.map(d=>({id:d.id,...d.data()}));
+    const enabledIds = handoverConfig.enabledUnits;
+    const visibleUnits = enabledIds.length ? allUnitsCache.filter(u=>enabledIds.includes(u.id)) : allUnitsCache;
     const sel = g('unit-sel');
     sel.innerHTML = '<option value="">Select unit…</option>';
-    allUnitsCache.forEach(u=>{ sel.innerHTML+=`<option value="${u.id}">${u.name}</option>`; });
+    visibleUnits.forEach(u=>{ sel.innerHTML+=`<option value="${u.id}">${u.name}</option>`; });
   } catch { toast('Could not load units','err'); }
 }
 
@@ -811,7 +830,10 @@ async function loadYPsForUnit() {
   try {
     const snap = await getDocs(query(collection(db,'serviceUsers'),
       where('currentUnitId','==',currentUnitId), where('status','==','active')));
-    currentUnitYPs = snap.docs.map((d,i)=>({id:d.id,...d.data(),_idx:i}));
+    let yps = snap.docs.map(d=>({id:d.id,...d.data()}));
+    const configuredSUs = handoverConfig.unitSUs?.[currentUnitId];
+    if (Array.isArray(configuredSUs)) yps = yps.filter(y=>configuredSUs.includes(y.id));
+    currentUnitYPs = yps.map((y,i)=>({...y,_idx:i}));
   } catch { currentUnitYPs=[]; }
 }
 
@@ -1159,7 +1181,97 @@ async function resolveAlert() {
 
 // ── ADMIN ──
 function showATab(tab) {
-  ['rota','cats'].forEach((t,i)=>{ document.querySelectorAll('.atab')[i].classList.toggle('on',t===tab); g('a-'+t).classList.toggle('on',t===tab); });
+  ['rota','cats','config'].forEach((t,i)=>{ document.querySelectorAll('.atab')[i].classList.toggle('on',t===tab); g('a-'+t).classList.toggle('on',t===tab); });
+  if (tab === 'config') loadConfigTab();
+}
+
+// ── HANDOVER CONFIG ──
+async function loadHandoverConfig() {
+  try {
+    const snap = await getDoc(doc(db,'handoverConfig','o'));
+    if (snap.exists()) handoverConfig = { enabledUnits:[], unitSUs:{}, ...snap.data() };
+  } catch(e) {}
+}
+
+async function saveHandoverConfig() {
+  try {
+    await setDoc(doc(db,'handoverConfig','o'), handoverConfig);
+    // Refresh unit dropdown
+    const enabledIds = handoverConfig.enabledUnits;
+    const visibleUnits = enabledIds.length ? allUnitsCache.filter(u=>enabledIds.includes(u.id)) : allUnitsCache;
+    const sel = g('unit-sel');
+    sel.innerHTML = '<option value="">Select unit…</option>';
+    visibleUnits.forEach(u=>{ sel.innerHTML+=`<option value="${u.id}">${u.name}</option>`; });
+  } catch(e) { toast('Could not save config','err'); }
+}
+
+async function loadConfigTab() {
+  const container = g('cfg-content');
+  container.innerHTML = '<div style="color:var(--text3);font-size:13px;padding:6px">Loading…</div>';
+  try {
+    const snap = await getDocs(query(collection(db,'serviceUsers'), where('status','==','active')));
+    allSUsForConfig = snap.docs.map(d=>({id:d.id,...d.data()}));
+  } catch(e) { allSUsForConfig=[]; }
+  renderConfigPage();
+}
+
+function renderConfigPage() {
+  const container = g('cfg-content');
+  if (!allUnitsCache.length) { container.innerHTML='<div style="color:var(--text3);font-size:13px;padding:6px">No active units found.</div>'; return; }
+  container.innerHTML = allUnitsCache.map(u => {
+    const enabled = handoverConfig.enabledUnits.includes(u.id);
+    const configuredSUs = handoverConfig.unitSUs?.[u.id];
+    const unitSUs = allSUsForConfig.filter(s=>s.currentUnitId===u.id);
+    const isAllSUs = !Array.isArray(configuredSUs);
+    const suRows = unitSUs.length === 0
+      ? '<div style="color:var(--text3);font-size:12px;margin-top:6px">No active young people in this unit</div>'
+      : unitSUs.map(su => {
+          const checked = isAllSUs || configuredSUs.includes(su.id);
+          return `<label class="cfg-su-row"><input type="checkbox" ${checked?'checked':''} ${!enabled?'disabled':''}
+            onchange="toggleConfigSU('${u.id}','${su.id}',this.checked)"><span>${su.name}</span></label>`;
+        }).join('');
+    return `<div class="cfg-unit">
+      <div class="cfg-unit-hdr">
+        <label class="cfg-toggle"><input type="checkbox" ${enabled?'checked':''} onchange="toggleConfigUnit('${u.id}',this.checked)"><span>${u.name}</span></label>
+        ${enabled && unitSUs.length > 0 ? `<label class="cfg-all-lbl"><input type="checkbox" ${isAllSUs?'checked':''} onchange="toggleConfigUnitAll('${u.id}',this.checked)"> All young people</label>` : ''}
+      </div>
+      ${enabled ? `<div class="cfg-su-list">${suRows}</div>` : ''}
+    </div>`;
+  }).join('');
+}
+
+async function toggleConfigUnit(unitId, enabled) {
+  if (enabled) {
+    if (!handoverConfig.enabledUnits.includes(unitId)) handoverConfig.enabledUnits.push(unitId);
+    if (!handoverConfig.unitSUs) handoverConfig.unitSUs = {};
+    handoverConfig.unitSUs[unitId] = null;
+  } else {
+    handoverConfig.enabledUnits = handoverConfig.enabledUnits.filter(id=>id!==unitId);
+    if (handoverConfig.unitSUs) delete handoverConfig.unitSUs[unitId];
+  }
+  await saveHandoverConfig();
+  renderConfigPage();
+}
+
+async function toggleConfigUnitAll(unitId, allEnabled) {
+  if (!handoverConfig.unitSUs) handoverConfig.unitSUs = {};
+  handoverConfig.unitSUs[unitId] = allEnabled ? null : [];
+  await saveHandoverConfig();
+  renderConfigPage();
+}
+
+async function toggleConfigSU(unitId, suId, checked) {
+  if (!handoverConfig.unitSUs) handoverConfig.unitSUs = {};
+  let current = handoverConfig.unitSUs[unitId];
+  if (current === null || current === undefined) {
+    const unitSUs = allSUsForConfig.filter(s=>s.currentUnitId===unitId).map(s=>s.id);
+    current = checked ? unitSUs : unitSUs.filter(id=>id!==suId);
+  } else if (Array.isArray(current)) {
+    current = checked ? [...new Set([...current, suId])] : current.filter(id=>id!==suId);
+  }
+  handoverConfig.unitSUs[unitId] = current;
+  await saveHandoverConfig();
+  renderConfigPage();
 }
 
 async function renderAdmin() {
