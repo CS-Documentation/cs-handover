@@ -1360,79 +1360,10 @@
   <!-- ── ADMIN TAB ── -->
   <div id="tabAdmin" class="main-content" style="display:none">
     <div class="admin-grid" id="adminCardsGrid">
-      <div class="admin-card" onclick="openAdminSection('adminServiceUsers')">
-        <div class="admin-card-icon">👥</div>
-        <div class="admin-card-title">Service Users</div>
-        <div class="admin-card-desc">Add, edit or archive service users</div>
-      </div>
-      <div class="admin-card" onclick="openAdminSection('adminUnits')">
-        <div class="admin-card-icon">🏠</div>
-        <div class="admin-card-title">Units</div>
-        <div class="admin-card-desc">Manage your care units</div>
-      </div>
       <div class="admin-card" onclick="openTasksPage()">
         <div class="admin-card-icon">✅</div>
         <div class="admin-card-title">Routine Tasks</div>
         <div class="admin-card-desc">Set up daily task templates</div>
-      </div>
-      <div class="admin-card" onclick="openAdminSection('adminStaff')">
-        <div class="admin-card-icon">👤</div>
-        <div class="admin-card-title">Staff Accounts</div>
-        <div class="admin-card-desc">Manage staff and roles</div>
-      </div>
-    </div>
-
-    <!-- SERVICE USERS ADMIN -->
-    <div class="admin-section" id="adminServiceUsers">
-      <div class="flex-between">
-        <h3>👥 Service Users</h3>
-        <button class="btn btn-primary btn-sm" onclick="openModal('addSUModal')">+ Add Service User</button>
-      </div>
-      <div style="overflow-x:auto;margin-top:16px">
-        <table class="data-table" id="suTable">
-          <thead>
-            <tr><th>Name</th><th>Unit</th><th>Status</th><th>Actions</th></tr>
-          </thead>
-          <tbody id="suTableBody">
-            <tr><td colspan="4" style="text-align:center;color:var(--text-muted);padding:20px">Loading...</td></tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-
-    <!-- UNITS ADMIN -->
-    <div class="admin-section" id="adminUnits">
-      <div class="flex-between">
-        <h3>🏠 Units</h3>
-        <button class="btn btn-primary btn-sm" onclick="openModal('addUnitModal')">+ Add Unit</button>
-      </div>
-      <div style="overflow-x:auto;margin-top:16px">
-        <table class="data-table">
-          <thead>
-            <tr><th>Unit Name</th><th>Status</th><th>Actions</th></tr>
-          </thead>
-          <tbody id="unitsTableBody">
-            <tr><td colspan="3" style="text-align:center;color:var(--text-muted);padding:20px">Loading...</td></tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-
-    <!-- STAFF ADMIN -->
-    <div class="admin-section" id="adminStaff">
-      <div class="flex-between">
-        <h3>👤 Staff Accounts</h3>
-        <button class="btn btn-primary btn-sm" onclick="openModal('addStaffModal')">+ Add Staff</button>
-      </div>
-      <div style="overflow-x:auto;margin-top:16px">
-        <table class="data-table">
-          <thead>
-            <tr><th>Name</th><th>Initials</th><th>Role</th><th>Status</th><th>Actions</th></tr>
-          </thead>
-          <tbody id="staffTableBody">
-            <tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:20px">Loading...</td></tr>
-          </tbody>
-        </table>
       </div>
     </div>
 
@@ -1778,46 +1709,6 @@
   </div>
 </div>
 
-<!-- ADD SERVICE USER MODAL -->
-<div class="modal-overlay" id="addSUModal">
-  <div class="modal">
-    <div class="modal-header">
-      <h3>👥 Add Service User</h3>
-      <button class="modal-close" onclick="closeModal('addSUModal')">×</button>
-    </div>
-    <div class="modal-body">
-      <div class="form-group"><label>First Name</label><input type="text" id="suName" placeholder="First name only"></div>
-      <div class="form-group">
-        <label>Unit</label>
-        <select id="suUnit"></select>
-      </div>
-      <div class="form-group"><label>Date of Birth (optional)</label><input type="date" id="suDob"></div>
-      <div class="form-group"><label>Key Notes (optional)</label><textarea id="suNotes" style="width:100%;padding:10px;border:1.5px solid var(--border);border-radius:8px;font-family:DM Sans,sans-serif;font-size:14px;min-height:70px;outline:none;resize:vertical" placeholder="Any key information about this person..."></textarea></div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-ghost btn-sm" onclick="closeModal('addSUModal')">Cancel</button>
-      <button class="btn btn-primary btn-sm" onclick="saveServiceUser()">Add Service User</button>
-    </div>
-  </div>
-</div>
-
-<!-- ADD UNIT MODAL -->
-<div class="modal-overlay" id="addUnitModal">
-  <div class="modal">
-    <div class="modal-header">
-      <h3>🏠 Add Unit</h3>
-      <button class="modal-close" onclick="closeModal('addUnitModal')">×</button>
-    </div>
-    <div class="modal-body">
-      <div class="form-group"><label>Unit Name</label><input type="text" id="unitName" placeholder="e.g. Hounslow, Staines, Egham"></div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-ghost btn-sm" onclick="closeModal('addUnitModal')">Cancel</button>
-      <button class="btn btn-primary btn-sm" onclick="saveUnit()">Add Unit</button>
-    </div>
-  </div>
-</div>
-
 <!-- ADD TASK MODAL -->
 <div class="modal-overlay" id="addTaskModal">
   <div class="modal">
@@ -1971,73 +1862,6 @@
   </div>
 </div>
 
-<!-- ADD STAFF MODAL -->
-<div class="modal-overlay" id="addStaffModal">
-  <div class="modal">
-    <div class="modal-header">
-      <h3>👤 Add Staff Member</h3>
-      <button class="modal-close" onclick="closeModal('addStaffModal')">×</button>
-    </div>
-    <div class="modal-body">
-      <div class="form-group"><label>Full Name</label><input type="text" id="staffName" placeholder="e.g. Max Brown"></div>
-      <div class="form-group"><label>Initials (2–4 letters)</label><input type="text" id="staffInitials" placeholder="e.g. MB" maxlength="4" style="text-transform:uppercase"></div>
-      <div class="form-group">
-        <label>Role</label>
-        <select id="staffRole">
-          <option value="support">Support Staff</option>
-          <option value="admin">Admin</option>
-          <option value="observer">Observer</option>
-        </select>
-      </div>
-      <div class="form-group"><label>Email Address</label><input type="email" id="staffEmail" placeholder="staff@connectedstars.com"></div>
-      <div class="form-group">
-        <label>Firebase UID <span style="font-size:11px;font-weight:400;color:var(--text-muted)">— from Authentication console</span></label>
-        <input type="text" id="staffUID" placeholder="e.g. xK9mP2qRsT4uVwXyZ..." style="font-family:monospace;font-size:13px">
-      </div>
-      <p style="font-size:12px;color:var(--text-muted);margin-top:-8px">Create the login in Firebase Authentication first, then paste their UID above to link the profile.</p>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-ghost btn-sm" onclick="closeModal('addStaffModal')">Cancel</button>
-      <button class="btn btn-primary btn-sm" onclick="saveStaff()">Add Staff Member</button>
-    </div>
-  </div>
-</div>
-
-<!-- Edit Staff Modal -->
-<div class="modal-overlay" id="editStaffModal">
-  <div class="modal">
-    <div class="modal-header">
-      <h3>✏️ Edit Staff Member</h3>
-      <button class="modal-close" onclick="closeModal('editStaffModal')">×</button>
-    </div>
-    <div class="modal-body">
-      <input type="hidden" id="editStaffId">
-      <div class="form-group"><label>Full Name</label><input type="text" id="editStaffName" placeholder="e.g. Max Brown"></div>
-      <div class="form-group"><label>Initials (2–4 letters)</label><input type="text" id="editStaffInitials" placeholder="e.g. MB" maxlength="4" style="text-transform:uppercase"></div>
-      <div class="form-group">
-        <label>Role</label>
-        <select id="editStaffRole">
-          <option value="support">Support Staff</option>
-          <option value="admin">Admin</option>
-          <option value="observer">Observer</option>
-        </select>
-      </div>
-      <div class="form-group"><label>Email Address</label><input type="email" id="editStaffEmail" placeholder="staff@connectedstars.com"></div>
-      <div class="form-group">
-        <label>Status</label>
-        <select id="editStaffStatus">
-          <option value="active">Active</option>
-          <option value="inactive">Inactive</option>
-        </select>
-      </div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-ghost btn-sm" onclick="closeModal('editStaffModal')">Cancel</button>
-      <button class="btn btn-primary btn-sm" onclick="saveEditStaff()">Save Changes</button>
-    </div>
-  </div>
-</div>
-
 <!-- Toast Container -->
 <div class="toast-container" id="toastContainer"></div>
 
@@ -2168,8 +1992,6 @@ window.confirmCarryForward = confirmCarryForward;
 window.addLogEntry = addLogEntry;
 window.openPrintModal = openPrintModal;
 window.executePrint = executePrint;
-window.openAdminSection = openAdminSection;
-window.saveServiceUser = saveServiceUser;
 window.saveUnit = saveUnit;
 window.saveTask = saveTask;
 window.saveStaff = saveStaff;
@@ -2302,7 +2124,6 @@ function toggleSection(id) {
 // ── MODALS ──
 function openModal(id) {
   document.getElementById(id).classList.add('open');
-  if (id === 'addSUModal') populateSUUnitSelect();
   if (id === 'addTaskModal') { populateTaskUnitSelect(); populateTaskSUSelect(); }
   if (id === 'alertModal') document.getElementById('alertDuration').onchange = function() {
     document.getElementById('alertEndDateGroup').style.display = this.value === 'custom' ? 'block' : 'none';
@@ -3004,32 +2825,7 @@ function executePrint() {
 
 // ── ADMIN DATA ──
 async function loadAdminData() {
-  loadSUTable(); loadUnitsTable(); loadTasksHierarchy(); loadStaffTable();
-}
-
-async function loadSUTable() {
-  const tbody = document.getElementById('suTableBody');
-  try {
-    const snap = await getDocs(collection(db,'serviceUsers'));
-    tbody.innerHTML = snap.empty ? '<tr><td colspan="4" style="text-align:center;color:var(--text-muted);padding:20px">No service users yet</td></tr>' : '';
-    snap.docs.forEach(d => {
-      const su = {id:d.id,...d.data()};
-      const unit = unitsCache.find(u => u.id === su.unitId);
-      tbody.innerHTML += `<tr><td><strong>${su.name}</strong></td><td>${unit?.name||su.unitId||'—'}</td><td><span class="status-badge ${su.status==='active'?'status-active':'status-inactive'}">${su.status}</span></td><td><button class="btn btn-ghost btn-sm" onclick="archiveSU('${su.id}','${su.status}')">Archive</button></td></tr>`;
-    });
-  } catch(e) { tbody.innerHTML = '<tr><td colspan="4">Error loading</td></tr>'; }
-}
-
-async function loadUnitsTable() {
-  const tbody = document.getElementById('unitsTableBody');
-  try {
-    const snap = await getDocs(collection(db,'units'));
-    tbody.innerHTML = snap.empty ? '<tr><td colspan="3" style="text-align:center;color:var(--text-muted);padding:20px">No units yet</td></tr>' : '';
-    snap.docs.forEach(d => {
-      const u = {id:d.id,...d.data()};
-      tbody.innerHTML += `<tr><td><strong>${u.name}</strong></td><td><span class="status-badge ${u.status==='active'?'status-active':'status-inactive'}">${u.status}</span></td><td><button class="btn btn-ghost btn-sm">Edit</button></td></tr>`;
-    });
-  } catch(e) {}
+  loadTasksHierarchy();
 }
 
 async function loadTasksHierarchy() {
@@ -3233,42 +3029,6 @@ window.deleteTask = async function(id) {
   loadTasksHierarchy();
 };
 
-async function loadStaffTable() {
-  const tbody = document.getElementById('staffTableBody');
-  try {
-    const snap = await getDocs(collection(db,'staffProfiles'));
-    tbody.innerHTML = snap.empty ? '<tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:20px">No staff profiles yet</td></tr>' : '';
-    snap.docs.forEach(d => {
-      const s = {id:d.id,...d.data()};
-      const eName = (s.name||'').replace(/'/g,"\\'");
-      const eInit = (s.initials||'').replace(/'/g,"\\'");
-      const eEmail = (s.email||'').replace(/'/g,"\\'");
-      tbody.innerHTML += `<tr>
-        <td><strong>${s.name}</strong></td>
-        <td><span style="font-family:DM Mono,monospace;font-size:12px">${s.initials}</span></td>
-        <td><span class="role-badge">${s.role}</span></td>
-        <td><span class="status-badge ${s.status==='active'?'status-active':'status-inactive'}">${s.status||'active'}</span></td>
-        <td style="display:flex;gap:6px">
-          <button class="btn btn-ghost btn-sm" onclick="openEditStaff('${s.id}','${eName}','${eInit}','${s.role||'support'}','${eEmail}','${s.status||'active'}')">Edit</button>
-          <button class="btn btn-danger btn-sm" onclick="deleteStaffProfile('${s.id}','${eName}')">Delete</button>
-        </td>
-      </tr>`;
-    });
-  } catch(e) {}
-}
-
-function openAdminSection(id) {
-  document.querySelectorAll('.admin-section').forEach(s => s.classList.remove('open'));
-  document.getElementById(id).classList.add('open');
-  document.getElementById(id).scrollIntoView({behavior:'smooth',block:'start'});
-}
-
-function populateSUUnitSelect() {
-  const sel = document.getElementById('suUnit');
-  sel.innerHTML = '';
-  unitsCache.forEach(u => sel.innerHTML += `<option value="${u.id}">${u.name}</option>`);
-}
-
 function populateTaskUnitSelect() {
   const sel = document.getElementById('taskUnit');
   sel.innerHTML = '';
@@ -3288,33 +3048,6 @@ function updateTaskLevelFields() {
   const val = document.getElementById('taskLevel').value;
   document.getElementById('taskUnitField').style.display = val === 'unit' ? 'block' : 'none';
   document.getElementById('taskSUField').style.display = val === 'serviceuser' ? 'block' : 'none';
-}
-
-async function saveServiceUser() {
-  const name = document.getElementById('suName').value.trim();
-  const unitId = document.getElementById('suUnit').value;
-  if (!name || !unitId) { showToast('Please fill in name and unit', 'error'); return; }
-  await addDoc(collection(db,'serviceUsers'), {
-    name, unitId,
-    dob: document.getElementById('suDob').value || null,
-    notes: document.getElementById('suNotes').value.trim(),
-    status: 'active',
-    createdAt: serverTimestamp()
-  });
-  closeModal('addSUModal');
-  showToast(`${name} added`, 'success');
-  loadSUTable();
-  loadServiceUsers();
-}
-
-async function saveUnit() {
-  const name = document.getElementById('unitName').value.trim();
-  if (!name) { showToast('Please enter a unit name', 'error'); return; }
-  await addDoc(collection(db,'units'), { name, status: 'active', createdAt: serverTimestamp() });
-  document.getElementById('unitName').value = '';
-  closeModal('addUnitModal');
-  showToast(`${name} unit added`, 'success');
-  loadUnits(); loadUnitsTable();
 }
 
 async function saveTask() {
@@ -3367,64 +3100,6 @@ async function saveTask() {
   showToast('Routine task added', 'success');
   loadTasksHierarchy();
 }
-
-async function saveStaff() {
-  const name = document.getElementById('staffName').value.trim();
-  const initials = document.getElementById('staffInitials').value.trim().toUpperCase();
-  const uid = document.getElementById('staffUID').value.trim();
-  if (!name || !initials) { showToast('Please fill in name and initials', 'error'); return; }
-  if (!uid) { showToast('Please paste the Firebase UID', 'error'); return; }
-  await setDoc(doc(db,'staffProfiles', uid), {
-    name, initials,
-    role: document.getElementById('staffRole').value,
-    email: document.getElementById('staffEmail').value.trim(),
-    status: 'active',
-    createdAt: serverTimestamp()
-  });
-  closeModal('addStaffModal');
-  showToast(`${name} added`, 'success');
-  loadStaffTable();
-}
-
-window.openEditStaff = function(id, name, initials, role, email, status) {
-  document.getElementById('editStaffId').value = id;
-  document.getElementById('editStaffName').value = name;
-  document.getElementById('editStaffInitials').value = initials;
-  document.getElementById('editStaffRole').value = role || 'support';
-  document.getElementById('editStaffEmail').value = email || '';
-  document.getElementById('editStaffStatus').value = status || 'active';
-  openModal('editStaffModal');
-};
-
-async function saveEditStaff() {
-  const id = document.getElementById('editStaffId').value;
-  const name = document.getElementById('editStaffName').value.trim();
-  const initials = document.getElementById('editStaffInitials').value.trim().toUpperCase();
-  if (!name || !initials) { showToast('Please fill in name and initials', 'error'); return; }
-  await updateDoc(doc(db, 'staffProfiles', id), {
-    name, initials,
-    role: document.getElementById('editStaffRole').value,
-    email: document.getElementById('editStaffEmail').value.trim(),
-    status: document.getElementById('editStaffStatus').value
-  });
-  closeModal('editStaffModal');
-  showToast(`${name} updated`, 'success');
-  loadStaffTable();
-}
-
-window.deleteStaffProfile = async function(id, name) {
-  if (!confirm(`Delete ${name}'s profile? This removes their access to the system.\n\nNote: their Firebase Authentication account must be deleted separately in the Firebase console.`)) return;
-  const { deleteDoc } = await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js");
-  await deleteDoc(doc(db, 'staffProfiles', id));
-  showToast(`${name} deleted`, 'success');
-  loadStaffTable();
-};
-
-window.archiveSU = async function(id, currentStatus) {
-  const newStatus = currentStatus === 'active' ? 'archived' : 'active';
-  await updateDoc(doc(db,'serviceUsers',id), { status: newStatus });
-  showToast('Updated', 'success'); loadSUTable();
-};
 
 window.deactivateTask = async function(id, currentStatus) {
   const newStatus = currentStatus === 'active' ? 'inactive' : 'active';

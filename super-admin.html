@@ -315,8 +315,9 @@ tr:hover td{background:var(--surface2)}
               <th>Name</th>
               <th>Current Unit</th>
               <th>DOB</th>
+              <th>Local Authority</th>
+              <th>Reg. Body</th>
               <th>Status</th>
-              <th>Move-on Date</th>
               <th></th>
             </tr></thead>
             <tbody id="suTbody"></tbody>
@@ -407,6 +408,22 @@ tr:hover td{background:var(--surface2)}
       <div class="form-group">
         <label>Unit *</label>
         <select id="suUnit"></select>
+        <div class="form-hint" id="suUnitHint" style="display:none">To date-lock a unit change and preserve history, use the <strong>Transfer</strong> button instead.</div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Local Authority</label>
+          <input id="suLA" type="text" placeholder="e.g. Surrey County Council">
+        </div>
+        <div class="form-group">
+          <label>Regulatory Body</label>
+          <select id="suRegBody">
+            <option value="">— Select —</option>
+            <option value="PCO">PCO</option>
+            <option value="UC">UC</option>
+            <option value="CQC">CQC</option>
+          </select>
+        </div>
       </div>
       <div id="suHistoryWrap" style="display:none">
         <hr class="form-sep">
@@ -490,13 +507,13 @@ tr:hover td{background:var(--surface2)}
         </div>
       </div>
       <div class="form-group" id="staffEmailGroup">
-        <label>Email / Username *</label>
-        <input id="staffEmail" type="text" placeholder="username or full email">
-        <div class="form-hint">If no @, will append @connectedstars.co.uk</div>
+        <label>Email Address *</label>
+        <input id="staffEmail" type="email" placeholder="staff@connectedstars.co.uk">
       </div>
-      <div class="form-group" id="staffPassGroup">
-        <label>Password *</label>
-        <input id="staffPass" type="password" placeholder="Min 6 characters" autocomplete="new-password">
+      <div class="form-group" id="staffUIDGroup">
+        <label>Firebase UID *</label>
+        <input id="staffUID" type="text" placeholder="Paste UID from Firebase Authentication console" style="font-family:'DM Mono',monospace;font-size:12px">
+        <div class="form-hint">Create the login in Firebase Authentication first, then paste their UID here.</div>
       </div>
       <div class="form-row">
         <div class="form-group">
@@ -549,7 +566,6 @@ tr:hover td{background:var(--surface2)}
 <script type="module">
 import { initializeApp }                                          from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth, signInWithEmailAndPassword,
-         createUserWithEmailAndPassword,
          onAuthStateChanged, signOut as fbSignOut }              from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { getFirestore, collection, doc,
          getDoc, getDocs, addDoc, setDoc, updateDoc, deleteDoc,
@@ -582,7 +598,6 @@ let transferSUId   = null;
 let moveOnSUId     = null;
 let confirmAction  = null;
 let adminEmail     = null;
-let adminPass      = null; // held briefly during staff creation
 
 // ── AUTH ──
 onAuthStateChanged(auth, async user => {
@@ -623,7 +638,7 @@ document.getElementById('loginForm').addEventListener('submit', async e => {
 
 window.doSignOut = async () => {
   await fbSignOut(auth);
-  adminEmail = null; adminPass = null;
+  adminEmail = null;
   showScreen('login');
 };
 
@@ -759,8 +774,9 @@ window.renderSUs = function() {
       <td><strong>${esc(s.name)}</strong></td>
       <td>${unit ? `<span class="badge badge-blue">${esc(unit.name)}</span>` : '<span class="badge badge-grey">Unknown</span>'}</td>
       <td style="font-size:12px;color:var(--text3);font-family:'DM Mono',monospace">${s.dob || '—'}</td>
+      <td style="font-size:12px;color:var(--text2)">${esc(s.localAuthority || '—')}</td>
+      <td>${s.regulatoryBody ? `<span class="badge badge-purple">${esc(s.regulatoryBody)}</span>` : '<span style="color:var(--text3)">—</span>'}</td>
       <td>${movedOn ? '<span class="badge badge-grey">Moved On</span>' : '<span class="badge badge-green">Active</span>'}</td>
-      <td style="font-size:12px;color:var(--text3);font-family:'DM Mono',monospace">${s.moveOnDate || '—'}</td>
       <td><div class="actions-cell">
         <button class="btn btn-ghost btn-sm" onclick="openSUModal('${s.id}')">Edit</button>
         ${!movedOn ? `<button class="btn btn-ghost btn-sm" onclick="openTransferModal('${s.id}')">Transfer</button>` : ''}
@@ -793,9 +809,12 @@ window.openSUModal = function(id) {
 
   if (id) {
     const s = serviceUsers.find(x => x.id === id);
-    document.getElementById('suName').value = s.name || '';
-    document.getElementById('suDob').value  = s.dob  || '';
+    document.getElementById('suName').value    = s.name          || '';
+    document.getElementById('suDob').value     = s.dob           || '';
+    document.getElementById('suLA').value      = s.localAuthority|| '';
+    document.getElementById('suRegBody').value = s.regulatoryBody|| '';
     uSel.value = s.currentUnitId || '';
+    document.getElementById('suUnitHint').style.display = 'block';
 
     // Show unit history
     const history = s.unitHistory || [];
@@ -813,40 +832,47 @@ window.openSUModal = function(id) {
     } else {
       document.getElementById('suHistoryWrap').style.display = 'none';
     }
-
-    // Lock unit selector — use Transfer instead
-    uSel.disabled = true;
-    uSel.title    = 'Use the Transfer button to change units';
   } else {
-    document.getElementById('suName').value = '';
-    document.getElementById('suDob').value  = '';
-    uSel.disabled = false;
-    uSel.title    = '';
+    document.getElementById('suName').value    = '';
+    document.getElementById('suDob').value     = '';
+    document.getElementById('suLA').value      = '';
+    document.getElementById('suRegBody').value = '';
+    document.getElementById('suUnitHint').style.display = 'none';
     document.getElementById('suHistoryWrap').style.display = 'none';
   }
   openModal('suModal');
 };
 
 window.saveSU = async function() {
-  const name = document.getElementById('suName').value.trim();
-  const dob  = document.getElementById('suDob').value;
-  const uid  = document.getElementById('suUnit').value;
+  const name    = document.getElementById('suName').value.trim();
+  const dob     = document.getElementById('suDob').value;
+  const unitId  = document.getElementById('suUnit').value;
+  const la      = document.getElementById('suLA').value.trim();
+  const regBody = document.getElementById('suRegBody').value;
   if (!name) { toast('Name is required', 'error'); return; }
 
   try {
     if (editingSUId) {
-      await updateDoc(doc(db, 'serviceUsers', editingSUId), { name, dob: dob || '' });
+      const s = serviceUsers.find(x => x.id === editingSUId);
+      const updates = { name, dob: dob || '', localAuthority: la, regulatoryBody: regBody };
+      // If unit changed directly (not via Transfer), update it but don't create history entry
+      if (unitId && unitId !== s.currentUnitId) {
+        updates.currentUnitId = unitId;
+      }
+      await updateDoc(doc(db, 'serviceUsers', editingSUId), updates);
       toast('Service user updated');
     } else {
-      if (!uid) { toast('Please select a unit', 'error'); return; }
+      if (!unitId) { toast('Please select a unit', 'error'); return; }
       const today = toDateStr(new Date());
       await addDoc(collection(db, 'serviceUsers'), {
         name,
         dob: dob || '',
-        currentUnitId: uid,
+        localAuthority: la,
+        regulatoryBody: regBody,
+        currentUnitId: unitId,
         status: 'active',
         moveOnDate: null,
-        unitHistory: [{ unitId: uid, fromDate: today, toDate: null }],
+        unitHistory: [{ unitId, fromDate: today, toDate: null }],
         createdAt: serverTimestamp()
       });
       toast('Service user added', 'success');
@@ -973,7 +999,7 @@ window.openStaffModal = function(id) {
   document.getElementById('staffModalTitle').textContent = isEdit ? 'Edit Staff Account' : 'Add Staff Account';
   document.getElementById('staffSaveBtn').textContent    = isEdit ? 'Save Changes' : 'Create Account';
   document.getElementById('staffEmailGroup').style.display  = isEdit ? 'none' : '';
-  document.getElementById('staffPassGroup').style.display   = isEdit ? 'none' : '';
+  document.getElementById('staffUIDGroup').style.display    = isEdit ? 'none' : '';
   document.getElementById('staffStatusGroup').style.display = isEdit ? '' : 'none';
 
   if (isEdit) {
@@ -986,7 +1012,7 @@ window.openStaffModal = function(id) {
     document.getElementById('staffName').value     = '';
     document.getElementById('staffInitials').value = '';
     document.getElementById('staffEmail').value    = '';
-    document.getElementById('staffPass').value     = '';
+    document.getElementById('staffUID').value      = '';
     document.getElementById('staffRole').value     = 'support';
   }
   openModal('staffModal');
@@ -1008,26 +1034,14 @@ window.saveStaff = async function() {
       await updateDoc(doc(db, 'staffProfiles', editingStaffId), { name, initials, role, status });
       toast('Staff profile updated');
     } else {
-      let email = document.getElementById('staffEmail').value.trim();
-      const pass = document.getElementById('staffPass').value;
+      const email = document.getElementById('staffEmail').value.trim();
+      const uid   = document.getElementById('staffUID').value.trim();
       if (!email) { toast('Email required', 'error'); btn.disabled = false; return; }
-      if (!pass || pass.length < 6) { toast('Password must be at least 6 characters', 'error'); btn.disabled = false; return; }
-      if (!email.includes('@')) email += '@connectedstars.co.uk';
-
-      // Save admin password for re-login if available in session
-      const savedEmail = adminEmail;
-      const passIn     = document.getElementById('passIn')?.value;
-
-      const cred = await createUserWithEmailAndPassword(auth, email, pass);
-      await setDoc(doc(db, 'staffProfiles', cred.user.uid), {
+      if (!uid)   { toast('Firebase UID required', 'error'); btn.disabled = false; return; }
+      await setDoc(doc(db, 'staffProfiles', uid), {
         name, initials, email, role, status: 'active', createdAt: serverTimestamp()
       });
-
-      // Re-sign in as admin
-      if (savedEmail && passIn) {
-        await signInWithEmailAndPassword(auth, savedEmail, passIn);
-      }
-      toast(`Account created for ${name}`, 'success');
+      toast(`${name} added`, 'success');
     }
     closeModal('staffModal');
     await loadStaff();

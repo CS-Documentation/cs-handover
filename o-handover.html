@@ -439,21 +439,10 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
         <button class="btn btn-ghost no-print" onclick="window.print()">🖨 Print Handover</button>
       </div>
       <div class="atabs">
-        <div class="atab on" onclick="showATab('yp')">Young People</div>
-        <div class="atab" onclick="showATab('units')">Units</div>
-        <div class="atab" onclick="showATab('rota')">Rota</div>
+        <div class="atab on" onclick="showATab('rota')">Rota</div>
         <div class="atab" onclick="showATab('cats')">Categories</div>
-        <div class="atab" onclick="showATab('staff')">Staff</div>
       </div>
-      <div class="asec on" id="a-yp">
-        <div style="display:flex;justify-content:flex-end;margin-bottom:10px"><button class="btn btn-primary" onclick="openAddYPModal()">＋ Add YP</button></div>
-        <div class="panel"><table class="dt" id="yp-table"></table></div>
-      </div>
-      <div class="asec" id="a-units">
-        <div style="display:flex;justify-content:flex-end;margin-bottom:10px"><button class="btn btn-primary" onclick="openAddUnitModal()">＋ Add Unit</button></div>
-        <div class="panel"><table class="dt" id="units-table"></table></div>
-      </div>
-      <div class="asec" id="a-rota">
+      <div class="asec on" id="a-rota">
         <div class="panel" style="margin-bottom:12px">
           <div class="pb">
             <div class="rota-controls">
@@ -475,10 +464,6 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
       <div class="asec" id="a-cats">
         <div style="display:flex;justify-content:flex-end;margin-bottom:10px"><button class="btn btn-primary" onclick="openAddCatModal()">＋ Add Category</button></div>
         <div class="panel"><div class="pb" id="cats-list"></div></div>
-      </div>
-      <div class="asec" id="a-staff">
-        <div style="display:flex;justify-content:flex-end;margin-bottom:10px"><button class="btn btn-primary" onclick="openAddStaffModal()">＋ Add Staff</button></div>
-        <div class="panel"><table class="dt" id="staff-table"></table></div>
       </div>
     </div>
 
@@ -644,31 +629,6 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
   </div>
 </div>
 
-<!-- ADMIN: ADD YP -->
-<div class="mo" id="m-add-yp">
-  <div class="modal">
-    <div class="mh"><div class="mt">Add Young Person</div><button class="mc" onclick="cm('m-add-yp')">✕</button></div>
-    <div class="mb">
-      <div class="fg"><label class="fl">Unit</label><select class="fc" id="ay-unit"></select></div>
-      <div class="fg"><label class="fl">Initials / short name</label><input type="text" class="fc" id="ay-init" placeholder="e.g. TW" maxlength="4"></div>
-      <div class="fg"><label class="fl">Display name</label><input type="text" class="fc" id="ay-name" placeholder="e.g. Tyler W"></div>
-    </div>
-    <div class="mf"><button class="btn btn-ghost" onclick="cm('m-add-yp')">Cancel</button><button class="btn btn-primary" onclick="saveYP()">Add</button></div>
-  </div>
-</div>
-
-<!-- ADMIN: ADD UNIT -->
-<div class="mo" id="m-add-unit">
-  <div class="modal">
-    <div class="mh"><div class="mt">Add Unit</div><button class="mc" onclick="cm('m-add-unit')">✕</button></div>
-    <div class="mb">
-      <div class="fg"><label class="fl">Unit name</label><input type="text" class="fc" id="au-name" placeholder="e.g. Maple House"></div>
-      <div class="fg"><label class="fl">Type</label><select class="fc" id="au-type"><option value="Supported Accommodation">Supported Accommodation</option><option value="Supported Living">Supported Living</option></select></div>
-    </div>
-    <div class="mf"><button class="btn btn-ghost" onclick="cm('m-add-unit')">Cancel</button><button class="btn btn-primary" onclick="saveUnit()">Add Unit</button></div>
-  </div>
-</div>
-
 <!-- ADMIN: ADD ROTA -->
 <div class="mo" id="m-add-rota">
   <div class="modal">
@@ -694,26 +654,11 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
   </div>
 </div>
 
-<!-- ADMIN: ADD STAFF -->
-<div class="mo" id="m-add-staff">
-  <div class="modal">
-    <div class="mh"><div class="mt">Add Staff</div><button class="mc" onclick="cm('m-add-staff')">✕</button></div>
-    <div class="mb">
-      <div class="fg"><label class="fl">Full name</label><input type="text" class="fc" id="st-name" placeholder="e.g. Sarah Collins"></div>
-      <div class="fg"><label class="fl">Initials</label><input type="text" class="fc" id="st-init" placeholder="e.g. SC" maxlength="4"></div>
-      <div class="fg"><label class="fl">Username (before @connectedstars.co.uk)</label><input type="text" class="fc" id="st-user" placeholder="e.g. sarah.collins" style="text-transform:lowercase"></div>
-      <div class="fg"><label class="fl">Role</label><select class="fc" id="st-role"><option value="support">Support Worker</option><option value="senior">Senior Support Worker</option><option value="manager">Manager</option><option value="admin">Admin</option></select></div>
-      <div class="fg"><label class="fl">Temporary Password</label><input type="password" class="fc" id="st-pass" placeholder="Min 6 characters"></div>
-    </div>
-    <div class="mf"><button class="btn btn-ghost" onclick="cm('m-add-staff')">Cancel</button><button class="btn btn-primary" onclick="saveStaff()">Create</button></div>
-  </div>
-</div>
-
 <div id="toast"></div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged, createUserWithEmailAndPassword }
+import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged }
   from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { getFirestore, collection, doc, getDoc, getDocs, addDoc, updateDoc, setDoc, deleteDoc,
   query, where, orderBy, serverTimestamp, writeBatch }
@@ -774,10 +719,10 @@ Object.assign(window, {
   selNType,selRType,togPrior,togCB,saveNote,saveTask,openCompleteTask,completeTask,
   selKWType,saveKW,selMType,saveMissing,openCloseMiss,closeMissing,
   openUpd,saveUpdate,openResolve,resolveAlert,setLoc,setLocNote,submitShift,editShift,
-  showATab,openAddYPModal,saveYP,togYP,openAddUnitModal,saveUnit,
+  showATab,
   openAddRotaModal,saveRota,saveRotaCell,renderRotaGrid,downloadSampleCSV,handleRotaCSV,
   openAddCatModal,saveCat,removeCat,
-  openAddStaffModal,saveStaff,cm
+  cm
 });
 
 // ── AUTH ──
@@ -1214,7 +1159,7 @@ async function resolveAlert() {
 
 // ── ADMIN ──
 function showATab(tab) {
-  ['yp','units','rota','cats','staff'].forEach((t,i)=>{ document.querySelectorAll('.atab')[i].classList.toggle('on',t===tab); g('a-'+t).classList.toggle('on',t===tab); });
+  ['rota','cats'].forEach((t,i)=>{ document.querySelectorAll('.atab')[i].classList.toggle('on',t===tab); g('a-'+t).classList.toggle('on',t===tab); });
 }
 
 async function renderAdmin() {
@@ -1223,42 +1168,7 @@ async function renderAdmin() {
   rotaUnitSel.innerHTML = allUnitsCache.map(u=>`<option value="${u.id}">${u.name}</option>`).join('');
   if(currentUnitId) rotaUnitSel.value = currentUnitId;
   if(!g('rota-month-inp').value) g('rota-month-inp').value = todayISO().slice(0,7);
-  await Promise.all([renderYPTable(), renderUnitsTable(), renderRotaGrid(), renderCats(), renderStaffTable()]);
-}
-
-async function renderYPTable() {
-  try {
-    const snap=await getDocs(query(collection(db,'serviceUsers'),orderBy('name')));
-    const all=snap.docs.map(d=>({id:d.id,...d.data()}));
-    g('yp-table').innerHTML=`<thead><tr><th>Init.</th><th>Name</th><th>Unit</th><th>Status</th><th></th></tr></thead><tbody>${all.map((y,i)=>{ const unit=allUnitsCache.find(u=>u.id===y.unitId); return `<tr><td><span style="background:${ypColor(i)};color:#fff;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:800">${y.initials||y.name||'?'}</span></td><td>${y.name||''}</td><td>${unit?.name||y.unitId||'—'}</td><td>${y.status==='active'?'<span style="color:var(--green);font-weight:700">Active</span>':'<span style="color:var(--text3)">Inactive</span>'}</td><td><button class="btn-sm ${y.status==='active'?'d':'s'}" onclick="togYP('${y.id}','${y.status==='active'?'inactive':'active'}')">${y.status==='active'?'Deactivate':'Activate'}</button></td></tr>`; }).join('')}</tbody>`;
-  } catch { g('yp-table').innerHTML='<tr><td>Error loading</td></tr>'; }
-}
-
-async function togYP(id, newStatus) {
-  try { await updateDoc(doc(db,'serviceUsers',id),{status:newStatus}); renderYPTable(); toast(newStatus==='active'?'Activated':'Deactivated'); }
-  catch { toast('Error','err'); }
-}
-
-function openAddYPModal() { g('ay-unit').innerHTML=allUnitsCache.map(u=>`<option value="${u.id}">${u.name}</option>`).join(''); sv('ay-init',''); sv('ay-name',''); om('m-add-yp'); }
-
-async function saveYP() {
-  const init=gv('ay-init').trim().toUpperCase(), name=gv('ay-name').trim()||init, unitId=gv('ay-unit');
-  if(!init){toast('Enter initials','err');return;}
-  try { await addDoc(collection(db,'serviceUsers'),{initials:init,name,unitId,status:'active',createdAt:serverTimestamp()}); cm('m-add-yp'); renderYPTable(); toast('Added ✓'); }
-  catch { toast('Save failed','err'); }
-}
-
-async function renderUnitsTable() {
-  g('units-table').innerHTML=`<thead><tr><th>Name</th><th>Type</th></tr></thead><tbody>${allUnitsCache.map(u=>`<tr><td style="font-weight:700">${u.name}</td><td>${u.type||'—'}</td></tr>`).join('')}</tbody>`;
-}
-
-function openAddUnitModal() { sv('au-name',''); om('m-add-unit'); }
-
-async function saveUnit() {
-  const name=gv('au-name').trim(), type=gv('au-type');
-  if(!name){toast('Enter unit name','err');return;}
-  try { await addDoc(collection(db,'units'),{name,type,status:'active',createdAt:serverTimestamp()}); cm('m-add-unit'); await loadUnits(); renderUnitsTable(); toast('Unit added ✓'); }
-  catch { toast('Save failed','err'); }
+  await Promise.all([renderRotaGrid(), renderCats()]);
 }
 
 async function renderRotaGrid() {
@@ -1369,28 +1279,6 @@ async function saveCat() {
 async function removeCat(id) {
   try { await deleteDoc(doc(db,'oShiftCategories',id)); await renderCats(); toast('Removed'); }
   catch { toast('Error','err'); }
-}
-
-async function renderStaffTable() {
-  try {
-    const snap=await getDocs(collection(db,'staffProfiles'));
-    const all=snap.docs.map(d=>({id:d.id,...d.data()}));
-    g('staff-table').innerHTML=`<thead><tr><th>Name</th><th>Initials</th><th>Role</th></tr></thead><tbody>${all.map(s=>`<tr><td style="font-weight:600">${s.name||'—'}</td><td><span style="background:var(--brand-light);color:var(--brand);padding:2px 7px;border-radius:20px;font-size:11px;font-weight:700">${s.initials||'?'}</span></td><td>${s.role||'support'}</td></tr>`).join('')}</tbody>`;
-  } catch { g('staff-table').innerHTML='<tr><td>Error loading</td></tr>'; }
-}
-
-function openAddStaffModal() { sv('st-name',''); sv('st-init',''); sv('st-user',''); sv('st-pass',''); om('m-add-staff'); }
-
-async function saveStaff() {
-  const name=gv('st-name').trim(), init=gv('st-init').trim().toUpperCase(), username=gv('st-user').trim().toLowerCase(), pass=gv('st-pass'), role=gv('st-role');
-  if(!name||!init||!username||!pass){toast('Fill all fields','err');return;}
-  if(pass.length<6){toast('Password min 6 chars','err');return;}
-  const email=username.includes('@')?username:username+'@connectedstars.co.uk';
-  try {
-    const cred=await createUserWithEmailAndPassword(auth,email,pass);
-    await setDoc(doc(db,'staffProfiles',cred.user.uid),{name,initials:init,role,email,createdAt:serverTimestamp()});
-    cm('m-add-staff'); await renderStaffTable(); toast('Staff created ✓');
-  } catch(e) { toast(e.code==='auth/email-already-in-use'?'Email already exists':e.message,'err'); }
 }
 
 // ── HELPERS ──
