@@ -1,0 +1,1412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>O-Handover — Connected Stars</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --brand:#1446a0;--brand-dark:#0d3278;--brand-light:#e8eef8;--brand-mid:#2d5bbf;
+  --bg:#f4f6fb;--surface:#fff;--surface2:#f7f9fc;--surface3:#edf0f7;
+  --border:#dde3ef;--border2:#b8c5e0;
+  --text:#1a1a2e;--text2:#4a5568;--text3:#6b7280;
+  --green:#27ae60;--green-bg:#eafaf1;--green-bd:#a9dfbf;
+  --amber:#e67e22;--amber-bg:#fef9f0;--amber-bd:#fad7a0;
+  --red:#c0392b;--red-bg:#fdf0ef;--red-bd:#f5c6c2;
+  --purple:#7b2d8b;--purple-bg:#f5eef8;--purple-bd:#d7b8e0;
+  --teal:#0e7490;--teal-bg:#ecfeff;--teal-bd:#a5f3fc;
+  --shift-m:#1446a0;--shift-e:#7b2d8b;--shift-s:#0e7490;
+  --r:10px;--rs:8px;
+  --sh:0 2px 12px rgba(20,70,160,.08);
+  --sh-md:0 4px 16px rgba(20,70,160,.12);
+  --sh-lg:0 8px 32px rgba(20,70,160,.18);
+  --sidebar-w:228px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:14px}
+
+/* ── LOGIN ── */
+#loginScreen{min-height:100vh;background:linear-gradient(135deg,var(--brand-dark) 0%,var(--brand) 50%,var(--brand-mid) 100%);display:flex;align-items:center;justify-content:center;padding:20px}
+.login-card{background:var(--surface);border-radius:20px;padding:48px 40px;width:100%;max-width:420px;box-shadow:0 24px 64px rgba(0,0,0,.25);text-align:center}
+.login-logo{width:100%;max-width:280px;margin:0 auto 32px;display:block;background:var(--brand);border-radius:10px;padding:14px 20px}
+.login-title{font-size:22px;font-weight:700;color:var(--brand);margin-bottom:6px}
+.login-sub{font-size:13px;color:var(--text3);margin-bottom:32px}
+.login-err{background:var(--red-bg);color:var(--red);border:1px solid var(--red-bd);border-radius:var(--rs);padding:10px 14px;font-size:13px;margin-bottom:16px;display:none}
+.form-group{margin-bottom:18px;text-align:left}
+.form-group label{display:block;font-size:13px;font-weight:600;color:var(--text);margin-bottom:6px}
+.form-group input{width:100%;padding:12px 14px;border:1.5px solid var(--border);border-radius:var(--rs);font-family:'DM Sans',sans-serif;font-size:14px;color:var(--text);background:#fff;transition:border-color .2s;outline:none}
+.form-group input:focus{border-color:var(--brand);box-shadow:0 0 0 3px rgba(20,70,160,.1)}
+.login-btn{display:block;width:100%;padding:14px;background:var(--brand);color:#fff;border:none;border-radius:var(--rs);font-family:'DM Sans',sans-serif;font-size:15px;font-weight:700;cursor:pointer;transition:all .2s}
+.login-btn:hover{background:var(--brand-dark);transform:translateY(-1px);box-shadow:var(--sh)}
+
+/* ── LAYOUT ── */
+#app{display:none;flex-direction:row;min-height:100vh}
+#sidebar{width:var(--sidebar-w);background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:200;transition:transform .25s cubic-bezier(.4,0,.2,1)}
+#main{margin-left:var(--sidebar-w);flex:1;display:flex;flex-direction:column}
+#sb-overlay{display:none;position:fixed;inset:0;background:rgba(26,26,46,.35);z-index:190;backdrop-filter:blur(2px)}
+#sb-overlay.show{display:block}
+
+/* ── SIDEBAR ── */
+.sidebar-logo{padding:16px 14px 12px;border-bottom:1px solid var(--border)}
+.sidebar-logo .org{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:var(--text3);margin-bottom:2px}
+.sidebar-logo .sys{font-size:20px;font-weight:800;color:var(--text);letter-spacing:-.5px}
+.sidebar-logo .sys span{color:var(--brand)}
+.sidebar-nav{padding:6px;flex:1;overflow-y:auto}
+.sb-sec{padding:10px 8px 3px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--text3)}
+.nav-item{display:flex;align-items:center;gap:8px;padding:8px 9px;border-radius:var(--rs);cursor:pointer;color:var(--text2);font-weight:500;font-size:13px;transition:all .12s;margin-bottom:1px}
+.nav-item:hover{background:var(--surface2);color:var(--text)}
+.nav-item.active{background:var(--brand-light);color:var(--brand);font-weight:700}
+.nav-item .ni{font-size:14px;width:17px;text-align:center}
+.nav-badge{margin-left:auto;background:var(--red-bg);color:var(--red);font-size:10px;font-weight:700;padding:1px 6px;border-radius:20px;border:1px solid var(--red-bd)}
+.sidebar-user{padding:10px 12px;border-top:1px solid var(--border);display:flex;align-items:center;gap:8px}
+.u-av{width:28px;height:28px;border-radius:50%;background:var(--brand);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#fff;flex-shrink:0}
+.u-name{font-size:12px;font-weight:700}
+.u-role{font-size:10px;color:var(--text3)}
+
+/* ── TOPBAR ── */
+#topbar{background:var(--brand);color:#fff;padding:0 16px;min-height:54px;display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:100;box-shadow:0 2px 12px rgba(20,70,160,.3);flex-wrap:wrap}
+.tb-menu-btn{width:34px;height:34px;border-radius:var(--rs);background:rgba(255,255,255,.15);border:none;color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;flex-shrink:0}
+.tb-menu-btn:hover{background:rgba(255,255,255,.25)}
+.topbar-logo{height:34px;flex-shrink:0}
+.tb-left{display:flex;align-items:center;gap:8px;flex:1;min-width:0;flex-wrap:wrap}
+.tb-sel{background:rgba(255,255,255,.15);border:1.5px solid rgba(255,255,255,.3);color:#fff;padding:5px 9px;border-radius:var(--rs);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;cursor:pointer}
+.tb-sel option{color:var(--text);background:#fff}
+.tb-date{background:rgba(255,255,255,.15);border:1.5px solid rgba(255,255,255,.3);color:#fff;padding:5px 9px;border-radius:var(--rs);font-family:'DM Mono',monospace;font-size:12px;cursor:pointer}
+.tb-user{display:flex;align-items:center;gap:6px;background:rgba(255,255,255,.15);border-radius:20px;padding:4px 10px 4px 6px;font-size:12px;font-weight:600;flex-shrink:0}
+.tb-av{width:24px;height:24px;background:#fff;color:var(--brand);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;flex-shrink:0}
+.tb-signout{background:transparent;border:none;color:rgba(255,255,255,.7);font-size:11px;padding:0 4px;cursor:pointer;font-family:'DM Sans',sans-serif}
+.shift-tabs{display:flex;gap:2px;background:rgba(255,255,255,.15);padding:3px;border-radius:var(--rs);flex-shrink:0}
+.shift-tab{padding:5px 12px;border-radius:6px;cursor:pointer;font-size:11px;font-weight:700;color:rgba(255,255,255,.7);transition:all .12s;white-space:nowrap}
+.shift-tab:hover{color:#fff;background:rgba(255,255,255,.2)}
+.shift-tab.active{color:#fff;background:rgba(255,255,255,.25);box-shadow:0 1px 3px rgba(0,0,0,.2)}
+
+/* ── CONTENT ── */
+#content{padding:16px;flex:1}
+.view{display:none}.view.active{display:block}
+
+/* ── SHIFT INFO BAR ── */
+.sib{display:flex;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:9px 14px;margin-bottom:14px;box-shadow:var(--sh);flex-wrap:wrap}
+.sib-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.sib-lbl{color:var(--text3);font-size:11px}.sib-val{font-weight:700;font-size:13px}
+.sib-staff{font-size:13px;color:var(--text2)}.sib-staff strong{color:var(--text)}
+.sib-actions{margin-left:auto;display:flex;gap:6px;flex-wrap:wrap}
+
+/* ── ALERTS BANNER ── */
+.alerts-banner{display:flex;flex-direction:column;gap:8px;margin-bottom:14px}
+.ac{display:flex;align-items:flex-start;gap:10px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:10px 12px;box-shadow:var(--sh)}
+.ac.t-alert{border-left:3px solid var(--red);background:var(--red-bg);border-color:var(--red-bd)}
+.ac.t-reminder{border-left:3px solid var(--amber);background:var(--amber-bg);border-color:var(--amber-bd)}
+.ac.t-missing{border-left:3px solid var(--red);background:var(--red-bg);border-color:var(--red-bd);animation:mpulse 2s infinite}
+@keyframes mpulse{0%,100%{border-color:var(--red-bd)}50%{border-color:var(--red)}}
+.abadge{font-size:10px;font-weight:700;padding:2px 7px;border-radius:20px;text-transform:uppercase;letter-spacing:.7px;flex-shrink:0;margin-top:2px;border:1px solid}
+.ab-alert{background:var(--red-bg);color:var(--red);border-color:var(--red-bd)}
+.ab-reminder{background:var(--amber-bg);color:var(--amber);border-color:var(--amber-bd)}
+.ab-missing{background:var(--red-bg);color:var(--red);border-color:var(--red-bd)}
+.ac-body{flex:1;min-width:0}.ac-title{font-size:13px;font-weight:600;margin-bottom:1px}
+.ac-meta{font-size:11px;color:var(--text3)}.ac-yp{font-weight:700;color:var(--text2)}
+.ac-actions{display:flex;gap:5px;flex-shrink:0;flex-wrap:wrap}
+
+/* ── PANELS GRID ── */
+.pg{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:700px){.pg{grid-template-columns:1fr}}
+.panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;box-shadow:var(--sh)}
+.ph{padding:10px 13px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--surface2)}
+.pt{font-size:12px;font-weight:700;display:flex;align-items:center;gap:6px}
+.pb{padding:11px 13px}
+
+/* ── ENTRIES ── */
+.el{display:flex;flex-direction:column;gap:6px}
+.entry{background:var(--surface2);border:1px solid var(--border);border-radius:var(--rs);padding:8px 10px}
+.eh{display:flex;align-items:center;gap:6px;margin-bottom:3px;flex-wrap:wrap}
+.yp-tag{font-size:10px;font-weight:800;padding:2px 7px;border-radius:20px;color:#fff;letter-spacing:.4px}
+.etime{font-size:10px;color:var(--text3);font-family:'DM Mono',monospace}
+.etext{font-size:13px;color:var(--text2);line-height:1.5}
+.ecat{font-size:10px;padding:1px 6px;border-radius:20px;background:var(--surface3);color:var(--text3);border:1px solid var(--border);font-weight:600}
+.eflags{display:flex;gap:4px;margin-top:4px;flex-wrap:wrap}
+.eflag{font-size:10px;padding:1px 7px;border-radius:20px;font-weight:700;border:1px solid}
+.f-sp{background:var(--purple-bg);color:var(--purple);border-color:var(--purple-bd)}
+.f-ra{background:var(--teal-bg);color:var(--teal);border-color:var(--teal-bd)}
+
+/* ── TASKS ── */
+.task-item{display:flex;align-items:flex-start;gap:8px;padding:8px 0;border-bottom:1px solid var(--border)}
+.task-item:last-child{border-bottom:none}
+.tcheck{width:16px;height:16px;border-radius:4px;border:2px solid var(--border2);flex-shrink:0;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:9px;transition:all .12s;margin-top:1px}
+.tcheck.done{background:var(--green);border-color:var(--green);color:#fff}
+.tbody{flex:1;min-width:0}.tlabel{font-size:13px;font-weight:600}
+.tlabel.done{text-decoration:line-through;color:var(--text3)}
+.tmeta{font-size:11px;color:var(--text3);margin-top:1px}
+.tdue.over{color:var(--red);font-weight:700}
+.tcnote{font-size:11px;color:var(--green);margin-top:2px;font-style:italic}
+.tag-dot{width:7px;height:7px;border-radius:50%;display:inline-block;margin-right:4px}
+
+/* ── KEY WORK ── */
+.kw-badge{font-size:10px;font-weight:700;padding:2px 7px;border-radius:20px}
+.kw-kw{background:var(--brand-light);color:var(--brand)}
+.kw-iss{background:var(--purple-bg);color:var(--purple)}
+
+/* ── LOCATION TABLE ── */
+.lt{width:100%;border-collapse:collapse}
+.lt th{text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--text3);padding:6px 8px;border-bottom:1px solid var(--border);background:var(--surface2)}
+.lt td{padding:6px 8px;border-bottom:1px solid var(--border);font-size:13px;vertical-align:middle}
+.lt tr:last-child td{border-bottom:none}
+.loc-sel{background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:4px 7px;border-radius:var(--rs);font-family:'DM Sans',sans-serif;font-size:12px;cursor:pointer;width:100%}
+.loc-missing-tag{font-size:11px;font-weight:700;color:var(--red);background:var(--red-bg);padding:3px 8px;border-radius:20px;border:1px solid var(--red-bd)}
+
+/* ── SHIFT FOOTER ── */
+.sf{margin-top:14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:12px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px;box-shadow:var(--sh);flex-wrap:wrap}
+.sf-lbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--text3)}
+.sf-val{font-size:13px;font-weight:700}
+.sf-submitted{font-size:12px;font-weight:700;color:var(--green);display:flex;align-items:center;gap:5px}
+
+/* ── BUTTONS ── */
+.btn{padding:7px 13px;border-radius:var(--rs);border:none;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:700;cursor:pointer;transition:all .12s;display:inline-flex;align-items:center;gap:5px}
+.btn-primary{background:var(--brand);color:#fff}.btn-primary:hover{background:var(--brand-dark)}
+.btn-ghost{background:transparent;border:1px solid var(--border2);color:var(--text2)}.btn-ghost:hover{background:var(--surface3);color:var(--text)}
+.btn-danger{background:var(--red-bg);color:var(--red);border:1px solid var(--red-bd)}.btn-danger:hover{background:var(--red);color:#fff}
+.btn-success{background:var(--green-bg);color:var(--green);border:1px solid var(--green-bd)}.btn-success:hover{background:var(--green);color:#fff}
+.btn-amber{background:var(--amber-bg);color:var(--amber);border:1px solid var(--amber-bd)}.btn-amber:hover{background:var(--amber);color:#fff}
+.btn-sm{padding:4px 9px;border-radius:var(--rs);border:1px solid var(--border2);background:transparent;color:var(--text2);font-family:'DM Sans',sans-serif;font-size:11px;font-weight:700;cursor:pointer;transition:all .12s}
+.btn-sm:hover{background:var(--surface3);color:var(--text)}
+.btn-sm.d{border-color:var(--red-bd);color:var(--red);background:var(--red-bg)}
+.btn-sm.s{border-color:var(--green-bd);color:var(--green);background:var(--green-bg)}
+
+/* ── MODAL ── */
+.mo{position:fixed;inset:0;background:rgba(26,26,46,.4);backdrop-filter:blur(3px);z-index:1000;display:none;align-items:center;justify-content:center;padding:16px}
+.mo.open{display:flex}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:14px;width:100%;max-width:480px;max-height:92vh;overflow-y:auto;box-shadow:var(--sh-lg);animation:su .18s ease}
+@keyframes su{from{transform:translateY(14px);opacity:0}to{transform:translateY(0);opacity:1}}
+.mh{padding:14px 16px 11px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.mt{font-size:15px;font-weight:800;color:var(--brand)}
+.mc{width:25px;height:25px;border-radius:50%;background:var(--surface3);border:none;color:var(--text3);font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.mc:hover{background:var(--border);color:var(--text)}
+.mb{padding:16px}.mf{padding:11px 16px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:7px}
+
+/* ── FORM ── */
+.fg{margin-bottom:12px}
+.fl{display:block;font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:4px}
+.fc{width:100%;background:var(--surface2);border:1.5px solid var(--border);color:var(--text);padding:8px 10px;border-radius:var(--rs);font-family:'DM Sans',sans-serif;font-size:13px;transition:border-color .12s;resize:vertical}
+.fc:focus{outline:none;border-color:var(--brand);background:var(--surface)}
+.fc::placeholder{color:var(--text3)}
+.fr{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.rg{display:flex;gap:6px;flex-wrap:wrap}
+.ro{flex:1;min-width:60px;padding:7px 9px;border-radius:var(--rs);border:1px solid var(--border2);cursor:pointer;text-align:center;font-size:11px;font-weight:700;color:var(--text3);transition:all .12s}
+.ro:hover{background:var(--surface3)}
+.ro.sn{border-color:var(--brand);background:var(--brand-light);color:var(--brand)}
+.ro.sa{border-color:var(--red-bd);background:var(--red-bg);color:var(--red)}
+.ro.sr{border-color:var(--amber-bd);background:var(--amber-bg);color:var(--amber)}
+.tog-row{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)}
+.tog-row:last-child{border-bottom:none}
+.tog-lbl{font-size:13px;font-weight:600}.tog-sub{font-size:11px;color:var(--text3)}
+.ts{width:34px;height:19px;background:var(--border2);border-radius:9px;position:relative;cursor:pointer;transition:background .2s;flex-shrink:0}
+.ts.on{background:var(--green)}
+.ts::after{content:'';position:absolute;top:3px;left:3px;width:13px;height:13px;border-radius:50%;background:#fff;transition:transform .2s}
+.ts.on::after{transform:translateX(15px)}
+.cb-row{display:flex;align-items:center;gap:7px;padding:5px 0;cursor:pointer}
+.cbox{width:15px;height:15px;border-radius:3px;border:2px solid var(--border2);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:9px;transition:all .12s}
+.cbox.on{background:var(--brand);border-color:var(--brand);color:#fff}
+.cb-lbl{font-size:13px}
+.hrm{border:none;border-top:1px solid var(--border);margin:11px 0}
+.chip-grp{display:flex;gap:5px;flex-wrap:wrap}
+.chip{padding:4px 10px;border-radius:20px;font-size:11px;font-weight:700;background:var(--surface2);border:1px solid var(--border);color:var(--text3);cursor:pointer;transition:all .12s}
+.chip:hover{border-color:var(--brand);color:var(--brand)}
+.chip.on{background:var(--brand);border-color:var(--brand);color:#fff}
+
+/* ── ADMIN ── */
+.atabs{display:flex;gap:2px;background:var(--surface3);padding:3px;border-radius:var(--rs);margin-bottom:16px;width:fit-content;flex-wrap:wrap}
+.atab{padding:5px 14px;border-radius:4px;cursor:pointer;font-size:12px;font-weight:700;color:var(--text3);transition:all .12s}
+.atab.on{background:var(--surface);color:var(--text);box-shadow:var(--sh)}
+.asec{display:none}.asec.on{display:block}
+.dt{width:100%;border-collapse:collapse}
+.dt th{text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--text3);padding:7px 10px;border-bottom:2px solid var(--border);background:var(--surface2)}
+.dt td{padding:8px 10px;border-bottom:1px solid var(--border);font-size:13px;vertical-align:middle}
+.dt tr:last-child td{border-bottom:none}
+.dt tr:hover td{background:var(--surface2)}
+.rota-grid{display:grid;grid-template-columns:90px repeat(3,1fr);gap:1px;background:var(--border);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;font-size:12px;overflow-x:auto}
+.rc{background:var(--surface);padding:7px 8px;display:flex;align-items:center;min-width:0}
+.rc.rh{background:var(--surface2);font-weight:700;font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.7px}
+.rdate{font-weight:700;font-family:'DM Mono',monospace;font-size:11px}
+.rtoday{background:var(--brand-light) !important}
+.rstaff{font-size:12px;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rempty{color:var(--text3);font-size:11px}
+.creator-tag{font-size:10px;padding:1px 6px;border-radius:20px;background:var(--brand-light);color:var(--brand);border:1px solid var(--border2);font-weight:600;font-family:'DM Mono',monospace;flex-shrink:0}
+.rota-tbl{width:100%;border-collapse:collapse;font-size:12px;min-width:560px}
+.rota-tbl th{background:var(--brand);color:#fff;padding:7px 10px;text-align:left;white-space:nowrap;font-weight:600}
+.rota-tbl td{border:1px solid var(--border);padding:4px 7px;vertical-align:middle}
+.rota-tbl tr:nth-child(even) td{background:var(--surface2)}
+.rota-tbl td:first-child{font-family:'DM Mono',monospace;font-size:11px;color:var(--text3);white-space:nowrap;background:var(--surface2)!important}
+.rota-inp{width:100%;padding:4px 6px;border:1px solid var(--border);border-radius:4px;font-size:12px;font-family:'DM Sans',sans-serif;background:#fff;min-width:110px}
+.rota-inp:focus{outline:none;border-color:var(--brand)}
+.rota-controls{display:flex;align-items:flex-end;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+
+/* ── MISSING ── */
+.miss-card{background:var(--surface);border:2px solid var(--red-bd);border-radius:var(--r);padding:13px;margin-bottom:10px;box-shadow:var(--sh);animation:mglow 2s infinite}
+.miss-card.closed{animation:none;border-color:var(--green-bd)}
+@keyframes mglow{0%,100%{box-shadow:0 0 0 rgba(192,57,43,0)}50%{box-shadow:0 0 10px rgba(192,57,43,.2)}}
+.miss-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+.miss-title{font-size:14px;font-weight:800;color:var(--red);display:flex;align-items:center;gap:6px}
+.miss-title.cl{color:var(--green)}
+.miss-upd{background:var(--surface2);border-radius:var(--rs);padding:6px 9px;font-size:12px;color:var(--text2);border-left:2px solid var(--border2);margin-top:5px}
+.upd-t{font-family:'DM Mono',monospace;color:var(--text3);font-size:10px}
+
+/* ── MISC ── */
+.sec-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px}
+.sec-title{font-size:16px;font-weight:800}
+.cbadge{background:var(--surface3);color:var(--text3);font-size:10px;font-weight:700;padding:2px 7px;border-radius:20px;border:1px solid var(--border)}
+.empty{text-align:center;padding:24px 16px;color:var(--text3)}
+.empty .ei{font-size:22px;margin-bottom:6px}
+.empty .et{font-size:12px}
+
+/* ── TOAST ── */
+#toast{position:fixed;bottom:18px;right:18px;background:var(--text);color:#fff;padding:9px 15px;border-radius:var(--rs);font-size:13px;font-weight:700;z-index:9999;transform:translateY(50px);opacity:0;transition:all .22s;max-width:260px;box-shadow:var(--sh-lg)}
+#toast.show{transform:translateY(0);opacity:1}
+#toast.ok{background:var(--green)}
+#toast.err{background:var(--red)}
+
+/* ── PRINT ── */
+@media print{
+  #sidebar,#topbar,.sib-actions,.shift-tabs,.sf,.no-print,#toast,button,select,input[type=time],input[type=date]{display:none!important}
+  #main{margin-left:0!important}
+  body{background:#fff}
+  .panel{box-shadow:none;border:1px solid #ccc;break-inside:avoid}
+  .pg{grid-template-columns:1fr 1fr}
+  .print-header{display:block!important}
+  #loginScreen{display:none!important}
+}
+.print-header{display:none;margin-bottom:16px}
+
+/* ── RESPONSIVE ── */
+@media(max-width:768px){
+  #sidebar{transform:translateX(-100%)}
+  #sidebar.open{transform:translateX(0)}
+  #main{margin-left:0!important}
+  .sib{flex-direction:column;align-items:flex-start}
+  .sib-actions{width:100%;flex-wrap:wrap}
+}
+@media(max-width:480px){
+  #content{padding:10px}
+  .btn{font-size:11px;padding:6px 10px}
+  .login-card{padding:32px 24px}
+}
+</style>
+</head>
+<body>
+
+<!-- ══ LOGIN ══ -->
+<div id="loginScreen">
+  <div class="login-card">
+    <img src="https://raw.githubusercontent.com/CS-Documentation/invoice/refs/heads/main/front%20page%20header.png"
+         alt="Connected Stars" class="login-logo" onerror="this.style.display='none'">
+    <div class="login-title">Shift Handover</div>
+    <div class="login-sub">Sign in to access the shift handover system</div>
+    <div id="login-err" class="login-err">Incorrect username or password. Please try again.</div>
+    <div class="form-group">
+      <label>Username</label>
+      <input type="text" id="li-email" placeholder="e.g. sarah.jones" autocomplete="username" style="text-transform:lowercase" onkeydown="if(event.key==='Enter')doLogin()">
+    </div>
+    <div class="form-group">
+      <label>Password</label>
+      <input type="password" id="li-pass" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()">
+    </div>
+    <button class="login-btn" onclick="doLogin()">Sign In</button>
+  </div>
+</div>
+
+<!-- ══ APP ══ -->
+<div id="app">
+
+<aside id="sidebar">
+  <div class="sidebar-logo">
+    <div class="org">Connected Stars</div>
+    <div class="sys"><span>O</span>-Handover</div>
+  </div>
+  <div class="sidebar-nav">
+    <div class="sb-sec">Main</div>
+    <div class="nav-item active" onclick="showView('handover');closeSB()"><span class="ni">📋</span>Handover</div>
+    <div class="nav-item" onclick="showView('missing');closeSB()"><span class="ni">🔴</span>Missing Persons<span class="nav-badge" id="miss-badge" style="display:none">0</span></div>
+    <div class="sb-sec">Reports</div>
+    <div class="nav-item" onclick="showView('sp-ra');closeSB()"><span class="ni">📌</span>SP / RA Actions</div>
+    <div class="sb-sec">Admin</div>
+    <div class="nav-item" id="nav-admin" onclick="showView('admin');closeSB()" style="display:none"><span class="ni">⚙️</span>Admin Panel</div>
+  </div>
+  <div class="sidebar-user">
+    <div class="u-av" id="u-av">?</div>
+    <div>
+      <div class="u-name" id="u-name">—</div>
+      <div class="u-role" id="u-role">—</div>
+    </div>
+  </div>
+</aside>
+<div id="sb-overlay" onclick="closeSB()"></div>
+
+<main id="main">
+  <div id="topbar">
+    <button class="tb-menu-btn" onclick="toggleSB()">☰</button>
+    <img src="https://raw.githubusercontent.com/CS-Documentation/invoice/refs/heads/main/front%20page%20header.png"
+         alt="Connected Stars" class="topbar-logo" onerror="this.style.display='none'">
+    <div class="tb-left">
+      <select class="tb-sel" id="unit-sel" onchange="onUnitChange()"><option value="">Select unit…</option></select>
+      <input type="date" class="tb-date" id="date-inp" onchange="loadShiftData()">
+    </div>
+    <div class="shift-tabs">
+      <div class="shift-tab active" data-s="morning" onclick="switchShift('morning')">☀️ Morning</div>
+      <div class="shift-tab" data-s="evening" onclick="switchShift('evening')">🌙 Evening</div>
+      <div class="shift-tab" data-s="sleepin" onclick="switchShift('sleepin')">💤 Sleep-in</div>
+    </div>
+    <div class="tb-user">
+      <div class="tb-av" id="tb-av">?</div>
+      <span id="tb-name">—</span>
+      <button class="tb-signout" onclick="doLogout()">Sign Out</button>
+    </div>
+  </div>
+
+  <div id="content">
+
+    <!-- HANDOVER VIEW -->
+    <div id="view-handover" class="view active">
+      <div class="print-header">
+        <h2 id="print-title" style="font-size:18px;font-weight:800"></h2>
+        <p id="print-sub" style="font-size:13px;color:#666;margin-top:3px"></p>
+      </div>
+      <div class="sib">
+        <div class="sib-dot" id="sib-dot"></div>
+        <div><span class="sib-lbl">Shift </span><span class="sib-val" id="sib-shift"></span></div>
+        <div><span class="sib-lbl">Time </span><span class="sib-val" id="sib-time"></span></div>
+        <div class="sib-staff">Staff: <strong id="sib-staff">—</strong></div>
+        <div class="sib-actions">
+          <button class="btn btn-danger no-print" onclick="openMissingModal()">🔴 Missing</button>
+          <button class="btn btn-amber no-print" onclick="openTaskModal()">＋ Task</button>
+          <button class="btn btn-ghost no-print" onclick="openKWModal()">＋ Key Work / ISS</button>
+          <button class="btn btn-primary no-print" onclick="openNoteModal()">＋ Note / Alert</button>
+        </div>
+      </div>
+      <div class="alerts-banner" id="alerts-banner"></div>
+      <div class="pg">
+        <div class="panel">
+          <div class="ph"><div class="pt">📝 Notes</div><span class="cbadge" id="cnt-notes">0</span></div>
+          <div class="pb"><div class="el" id="notes-list"></div></div>
+        </div>
+        <div class="panel">
+          <div class="ph"><div class="pt">✅ Tasks</div><span class="cbadge" id="cnt-tasks">0</span></div>
+          <div class="pb" id="tasks-list"></div>
+        </div>
+        <div class="panel">
+          <div class="ph"><div class="pt">🤝 Key Work / ISS</div><span class="cbadge" id="cnt-kw">0</span></div>
+          <div class="pb"><div class="el" id="kw-list"></div></div>
+        </div>
+        <div class="panel">
+          <div class="ph"><div class="pt">📍 YP Locations — End of Shift</div></div>
+          <div class="pb" style="padding:0"><table class="lt" id="loc-table"></table></div>
+        </div>
+      </div>
+      <div class="sf">
+        <div style="display:flex;gap:16px;flex-wrap:wrap">
+          <div><div class="sf-lbl">Submitted by</div><div class="sf-val" id="sf-staff">—</div></div>
+          <div><div class="sf-lbl">Shift</div><div class="sf-val" id="sf-shift">—</div></div>
+        </div>
+        <div id="sf-btns" class="no-print"></div>
+      </div>
+    </div>
+
+    <!-- MISSING VIEW -->
+    <div id="view-missing" class="view">
+      <div class="sec-hdr">
+        <div class="sec-title">🔴 Missing Persons</div>
+        <button class="btn btn-danger no-print" onclick="openMissingModal()">＋ Report Missing</button>
+      </div>
+      <div id="missing-list"></div>
+    </div>
+
+    <!-- SP/RA VIEW -->
+    <div id="view-sp-ra" class="view">
+      <div class="sec-hdr"><div class="sec-title">📌 SP / RA Actions</div></div>
+      <div class="pg">
+        <div class="panel">
+          <div class="ph"><div class="pt">📘 Update Support Plan</div></div>
+          <div class="pb"><div id="sp-list"></div></div>
+        </div>
+        <div class="panel">
+          <div class="ph"><div class="pt">⚠️ Update Risk Assessment</div></div>
+          <div class="pb"><div id="ra-list"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ADMIN VIEW -->
+    <div id="view-admin" class="view">
+      <div class="sec-hdr">
+        <div class="sec-title">⚙️ Admin Panel</div>
+        <button class="btn btn-ghost no-print" onclick="window.print()">🖨 Print Handover</button>
+      </div>
+      <div class="atabs">
+        <div class="atab on" onclick="showATab('yp')">Young People</div>
+        <div class="atab" onclick="showATab('units')">Units</div>
+        <div class="atab" onclick="showATab('rota')">Rota</div>
+        <div class="atab" onclick="showATab('cats')">Categories</div>
+        <div class="atab" onclick="showATab('staff')">Staff</div>
+      </div>
+      <div class="asec on" id="a-yp">
+        <div style="display:flex;justify-content:flex-end;margin-bottom:10px"><button class="btn btn-primary" onclick="openAddYPModal()">＋ Add YP</button></div>
+        <div class="panel"><table class="dt" id="yp-table"></table></div>
+      </div>
+      <div class="asec" id="a-units">
+        <div style="display:flex;justify-content:flex-end;margin-bottom:10px"><button class="btn btn-primary" onclick="openAddUnitModal()">＋ Add Unit</button></div>
+        <div class="panel"><table class="dt" id="units-table"></table></div>
+      </div>
+      <div class="asec" id="a-rota">
+        <div class="panel" style="margin-bottom:12px">
+          <div class="pb">
+            <div class="rota-controls">
+              <div><label class="fl">Unit</label><select class="fc" id="rota-unit-sel" onchange="renderRotaGrid()" style="width:180px"></select></div>
+              <div><label class="fl">Month</label><input type="month" class="fc" id="rota-month-inp" onchange="renderRotaGrid()" style="width:160px"></div>
+              <div style="display:flex;gap:6px;align-items:flex-end">
+                <button class="btn btn-ghost" onclick="downloadSampleCSV()">⬇ Sample CSV</button>
+                <label class="btn btn-primary" style="cursor:pointer;margin:0">⬆ Upload CSV<input type="file" accept=".csv" style="display:none" id="rota-csv-inp" onchange="handleRotaCSV(event)"></label>
+              </div>
+            </div>
+            <div style="font-size:11px;color:var(--text3)">CSV format: <code style="background:var(--surface3);padding:1px 5px;border-radius:3px">date,shift,staffName</code> — shifts: morning, evening, sleepin. Edit cells inline — saves automatically.</div>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="ph"><div class="pt">📅 Rota — <span id="rota-month-label"></span></div></div>
+          <div class="pb" style="overflow-x:auto"><div id="rota-grid"></div></div>
+        </div>
+      </div>
+      <div class="asec" id="a-cats">
+        <div style="display:flex;justify-content:flex-end;margin-bottom:10px"><button class="btn btn-primary" onclick="openAddCatModal()">＋ Add Category</button></div>
+        <div class="panel"><div class="pb" id="cats-list"></div></div>
+      </div>
+      <div class="asec" id="a-staff">
+        <div style="display:flex;justify-content:flex-end;margin-bottom:10px"><button class="btn btn-primary" onclick="openAddStaffModal()">＋ Add Staff</button></div>
+        <div class="panel"><table class="dt" id="staff-table"></table></div>
+      </div>
+    </div>
+
+  </div>
+</main>
+</div>
+
+<!-- ══ MODALS ══ -->
+
+<!-- NOTE / ALERT / REMINDER -->
+<div class="mo" id="m-note">
+  <div class="modal">
+    <div class="mh"><div class="mt" id="note-modal-title">Add Entry</div><button class="mc" onclick="cm('m-note')">✕</button></div>
+    <div class="mb">
+      <div class="fg"><label class="fl">Young Person</label><select class="fc" id="n-yp"></select></div>
+      <div class="fg"><label class="fl">Type</label>
+        <div class="rg">
+          <div class="ro sn" onclick="selNType('note',this)">📝 Note</div>
+          <div class="ro" onclick="selNType('alert',this)">🔴 Alert</div>
+          <div class="ro" onclick="selNType('reminder',this)">🔔 Reminder</div>
+        </div>
+        <input type="hidden" id="n-type" value="note">
+      </div>
+      <div class="fg"><label class="fl">Text</label><textarea class="fc" id="n-text" rows="3" placeholder="Enter text…"></textarea></div>
+      <div class="fr"><div class="fg"><label class="fl">Time</label><input type="time" class="fc" id="n-time"></div><div></div></div>
+      <div id="note-fields">
+        <div class="fg"><label class="fl">Category</label><select class="fc" id="n-cat"><option value="">No category</option></select></div>
+        <hr class="hrm">
+        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--text3);margin-bottom:7px">Flag for action</div>
+        <div class="cb-row" onclick="togCB('cb-sp')"><div class="cbox" id="cb-sp"></div><div class="cb-lbl">📘 Update Support Plan needed</div></div>
+        <div class="cb-row" onclick="togCB('cb-ra')"><div class="cbox" id="cb-ra"></div><div class="cb-lbl">⚠️ Update Risk Assessment needed</div></div>
+      </div>
+      <div id="alert-fields" style="display:none">
+        <hr class="hrm">
+        <div class="fg"><label class="fl">Keep alert active until</label><input type="date" class="fc" id="n-until"></div>
+      </div>
+      <div id="reminder-fields" style="display:none">
+        <hr class="hrm">
+        <div class="fg"><label class="fl">Remind</label>
+          <div class="chip-grp" style="margin-bottom:7px">
+            <div class="chip on" onclick="selRType('today',this)">Later today</div>
+            <div class="chip" onclick="selRType('date',this)">Specific date</div>
+          </div>
+          <input type="hidden" id="n-rtype" value="today">
+        </div>
+        <div id="r-date-row" style="display:none">
+          <div class="fg"><label class="fl">Reminder date</label><input type="date" class="fc" id="n-rdate"></div>
+          <div class="tog-row">
+            <div><div class="tog-lbl">Day-before reminder</div><div class="tog-sub">Also show the day before</div></div>
+            <div class="ts" id="prior-tog" onclick="togPrior()"></div>
+          </div>
+          <div id="prior-note-wrap" style="display:none;margin-top:8px">
+            <div class="fg"><label class="fl">Day-before note</label><textarea class="fc" id="n-prior" rows="2" placeholder="e.g. Prepare documents for appointment…"></textarea></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="mf"><button class="btn btn-ghost" onclick="cm('m-note')">Cancel</button><button class="btn btn-primary" onclick="saveNote()">Save</button></div>
+  </div>
+</div>
+
+<!-- TASK -->
+<div class="mo" id="m-task">
+  <div class="modal">
+    <div class="mh"><div class="mt">✅ Add Task</div><button class="mc" onclick="cm('m-task')">✕</button></div>
+    <div class="mb">
+      <div class="fg"><label class="fl">Young Person</label><select class="fc" id="t-yp"></select></div>
+      <div class="fg"><label class="fl">Task name</label><input type="text" class="fc" id="t-name" placeholder="e.g. Book GP appointment"></div>
+      <div class="fg"><label class="fl">Description</label><textarea class="fc" id="t-desc" rows="2" placeholder="Details…"></textarea></div>
+      <div class="fr"><div class="fg"><label class="fl">Due date</label><input type="date" class="fc" id="t-due"></div><div></div></div>
+    </div>
+    <div class="mf"><button class="btn btn-ghost" onclick="cm('m-task')">Cancel</button><button class="btn btn-primary" onclick="saveTask()">Add Task</button></div>
+  </div>
+</div>
+
+<!-- COMPLETE TASK -->
+<div class="mo" id="m-ctask">
+  <div class="modal">
+    <div class="mh"><div class="mt">Complete Task</div><button class="mc" onclick="cm('m-ctask')">✕</button></div>
+    <div class="mb">
+      <div class="fg"><label class="fl">Completion note (required)</label><textarea class="fc" id="ct-note" rows="3" placeholder="What was done…"></textarea></div>
+    </div>
+    <div class="mf"><button class="btn btn-ghost" onclick="cm('m-ctask')">Cancel</button><button class="btn btn-success" onclick="completeTask()">Mark Complete ✓</button></div>
+  </div>
+</div>
+
+<!-- KEY WORK / ISS -->
+<div class="mo" id="m-kw">
+  <div class="modal">
+    <div class="mh"><div class="mt">Key Work / ISS</div><button class="mc" onclick="cm('m-kw')">✕</button></div>
+    <div class="mb">
+      <div class="fg"><label class="fl">Type</label>
+        <div class="rg">
+          <div class="ro sn" id="kwt-kw" onclick="selKWType('kw',this)">🤝 Key Work</div>
+          <div class="ro" id="kwt-iss" onclick="selKWType('iss',this)">📋 ISS</div>
+        </div>
+        <input type="hidden" id="kw-type" value="kw">
+      </div>
+      <div class="fg"><label class="fl">Young Person</label><select class="fc" id="kw-yp"></select></div>
+      <div class="fg"><label class="fl">Notes</label><textarea class="fc" id="kw-text" rows="4" placeholder="Session notes…"></textarea></div>
+      <div class="fr"><div class="fg"><label class="fl">Time</label><input type="time" class="fc" id="kw-time"></div><div></div></div>
+    </div>
+    <div class="mf"><button class="btn btn-ghost" onclick="cm('m-kw')">Cancel</button><button class="btn btn-primary" onclick="saveKW()">Save</button></div>
+  </div>
+</div>
+
+<!-- MISSING -->
+<div class="mo" id="m-missing">
+  <div class="modal">
+    <div class="mh"><div class="mt">🔴 Report Missing</div><button class="mc" onclick="cm('m-missing')">✕</button></div>
+    <div class="mb">
+      <div class="fg"><label class="fl">Young Person</label><select class="fc" id="mis-yp"></select></div>
+      <div class="fg"><label class="fl">Type</label>
+        <div class="rg">
+          <div class="ro sa" onclick="selMType('missing',this)">🔴 Missing</div>
+          <div class="ro" onclick="selMType('ua',this)">⚠️ Unauth. Absence</div>
+        </div>
+        <input type="hidden" id="mis-type" value="missing">
+      </div>
+      <div class="fg"><label class="fl">Circumstances / last seen</label><textarea class="fc" id="mis-note" rows="3" placeholder="Where and when last seen…"></textarea></div>
+      <div class="fr"><div class="fg"><label class="fl">Time</label><input type="time" class="fc" id="mis-time"></div><div></div></div>
+    </div>
+    <div class="mf"><button class="btn btn-ghost" onclick="cm('m-missing')">Cancel</button><button class="btn btn-danger" onclick="saveMissing()">Submit</button></div>
+  </div>
+</div>
+
+<!-- CLOSE MISSING -->
+<div class="mo" id="m-close-missing">
+  <div class="modal">
+    <div class="mh"><div class="mt">Close Missing Case</div><button class="mc" onclick="cm('m-close-missing')">✕</button></div>
+    <div class="mb">
+      <div class="fg"><label class="fl">Resolution</label>
+        <select class="fc" id="cml-res"><option value="">Select…</option><option value="home">Came home</option><option value="police">Taken to police</option><option value="found">Found by staff</option><option value="other">Other</option></select>
+      </div>
+      <div class="fg"><label class="fl">Closing note (required)</label><textarea class="fc" id="cml-note" rows="3" placeholder="How was case resolved…"></textarea></div>
+      <div class="fr"><div class="fg"><label class="fl">Time resolved</label><input type="time" class="fc" id="cml-time"></div><div></div></div>
+    </div>
+    <div class="mf"><button class="btn btn-ghost" onclick="cm('m-close-missing')">Cancel</button><button class="btn btn-success" onclick="closeMissing()">Close Case ✓</button></div>
+  </div>
+</div>
+
+<!-- ADD UPDATE -->
+<div class="mo" id="m-update">
+  <div class="modal">
+    <div class="mh"><div class="mt" id="upd-title">Add Update</div><button class="mc" onclick="cm('m-update')">✕</button></div>
+    <div class="mb">
+      <div class="fg"><label class="fl">Update</label><textarea class="fc" id="upd-text" rows="3" placeholder="Enter update…"></textarea></div>
+      <div class="fr"><div class="fg"><label class="fl">Time</label><input type="time" class="fc" id="upd-time"></div><div></div></div>
+    </div>
+    <div class="mf"><button class="btn btn-ghost" onclick="cm('m-update')">Cancel</button><button class="btn btn-primary" onclick="saveUpdate()">Save</button></div>
+  </div>
+</div>
+
+<!-- RESOLVE ALERT -->
+<div class="mo" id="m-resolve">
+  <div class="modal">
+    <div class="mh"><div class="mt">Resolve</div><button class="mc" onclick="cm('m-resolve')">✕</button></div>
+    <div class="mb">
+      <p style="font-size:13px;color:var(--text2);margin-bottom:11px">A note is required before resolving.</p>
+      <div class="fg"><label class="fl">Resolution note (required)</label><textarea class="fc" id="res-note" rows="3" placeholder="What was done…"></textarea></div>
+    </div>
+    <div class="mf"><button class="btn btn-ghost" onclick="cm('m-resolve')">Cancel</button><button class="btn btn-success" onclick="resolveAlert()">Resolve ✓</button></div>
+  </div>
+</div>
+
+<!-- ADMIN: ADD YP -->
+<div class="mo" id="m-add-yp">
+  <div class="modal">
+    <div class="mh"><div class="mt">Add Young Person</div><button class="mc" onclick="cm('m-add-yp')">✕</button></div>
+    <div class="mb">
+      <div class="fg"><label class="fl">Unit</label><select class="fc" id="ay-unit"></select></div>
+      <div class="fg"><label class="fl">Initials / short name</label><input type="text" class="fc" id="ay-init" placeholder="e.g. TW" maxlength="4"></div>
+      <div class="fg"><label class="fl">Display name</label><input type="text" class="fc" id="ay-name" placeholder="e.g. Tyler W"></div>
+    </div>
+    <div class="mf"><button class="btn btn-ghost" onclick="cm('m-add-yp')">Cancel</button><button class="btn btn-primary" onclick="saveYP()">Add</button></div>
+  </div>
+</div>
+
+<!-- ADMIN: ADD UNIT -->
+<div class="mo" id="m-add-unit">
+  <div class="modal">
+    <div class="mh"><div class="mt">Add Unit</div><button class="mc" onclick="cm('m-add-unit')">✕</button></div>
+    <div class="mb">
+      <div class="fg"><label class="fl">Unit name</label><input type="text" class="fc" id="au-name" placeholder="e.g. Maple House"></div>
+      <div class="fg"><label class="fl">Type</label><select class="fc" id="au-type"><option value="Supported Accommodation">Supported Accommodation</option><option value="Supported Living">Supported Living</option></select></div>
+    </div>
+    <div class="mf"><button class="btn btn-ghost" onclick="cm('m-add-unit')">Cancel</button><button class="btn btn-primary" onclick="saveUnit()">Add Unit</button></div>
+  </div>
+</div>
+
+<!-- ADMIN: ADD ROTA -->
+<div class="mo" id="m-add-rota">
+  <div class="modal">
+    <div class="mh"><div class="mt">Add Rota Entry</div><button class="mc" onclick="cm('m-add-rota')">✕</button></div>
+    <div class="mb">
+      <div class="fg"><label class="fl">Date</label><input type="date" class="fc" id="r-date"></div>
+      <div class="fg"><label class="fl">Unit</label><select class="fc" id="r-unit"></select></div>
+      <div class="fg"><label class="fl">Shift</label><select class="fc" id="r-shift"><option value="morning">Morning (07:00–15:00)</option><option value="evening">Evening (15:00–23:00)</option><option value="sleepin">Sleep-in (23:00–07:00)</option></select></div>
+      <div class="fg"><label class="fl">Staff name</label><input type="text" class="fc" id="r-staff" placeholder="Full name"></div>
+    </div>
+    <div class="mf"><button class="btn btn-ghost" onclick="cm('m-add-rota')">Cancel</button><button class="btn btn-primary" onclick="saveRota()">Save</button></div>
+  </div>
+</div>
+
+<!-- ADMIN: ADD CATEGORY -->
+<div class="mo" id="m-add-cat">
+  <div class="modal">
+    <div class="mh"><div class="mt">Add Note Category</div><button class="mc" onclick="cm('m-add-cat')">✕</button></div>
+    <div class="mb">
+      <div class="fg"><label class="fl">Category name</label><input type="text" class="fc" id="cat-name" placeholder="e.g. Safeguarding, Medical…"></div>
+    </div>
+    <div class="mf"><button class="btn btn-ghost" onclick="cm('m-add-cat')">Cancel</button><button class="btn btn-primary" onclick="saveCat()">Add</button></div>
+  </div>
+</div>
+
+<!-- ADMIN: ADD STAFF -->
+<div class="mo" id="m-add-staff">
+  <div class="modal">
+    <div class="mh"><div class="mt">Add Staff</div><button class="mc" onclick="cm('m-add-staff')">✕</button></div>
+    <div class="mb">
+      <div class="fg"><label class="fl">Full name</label><input type="text" class="fc" id="st-name" placeholder="e.g. Sarah Collins"></div>
+      <div class="fg"><label class="fl">Initials</label><input type="text" class="fc" id="st-init" placeholder="e.g. SC" maxlength="4"></div>
+      <div class="fg"><label class="fl">Username (before @connectedstars.co.uk)</label><input type="text" class="fc" id="st-user" placeholder="e.g. sarah.collins" style="text-transform:lowercase"></div>
+      <div class="fg"><label class="fl">Role</label><select class="fc" id="st-role"><option value="support">Support Worker</option><option value="senior">Senior Support Worker</option><option value="manager">Manager</option><option value="admin">Admin</option></select></div>
+      <div class="fg"><label class="fl">Temporary Password</label><input type="password" class="fc" id="st-pass" placeholder="Min 6 characters"></div>
+    </div>
+    <div class="mf"><button class="btn btn-ghost" onclick="cm('m-add-staff')">Cancel</button><button class="btn btn-primary" onclick="saveStaff()">Create</button></div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged, createUserWithEmailAndPassword }
+  from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getFirestore, collection, doc, getDoc, getDocs, addDoc, updateDoc, setDoc, deleteDoc,
+  query, where, orderBy, serverTimestamp, writeBatch }
+  from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCwHzZFibrc9SNP8vAV6Jr_NmQr4fVCEto",
+  authDomain: "connected-stars-handover.firebaseapp.com",
+  projectId: "connected-stars-handover",
+  storageBucket: "connected-stars-handover.firebasestorage.app",
+  messagingSenderId: "606134396217",
+  appId: "1:606134396217:web:6636e2fbe9b73b7723b4e8"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+// ── STATE ──
+let currentUser = null, currentStaff = null;
+let currentUnitId = '', currentShift = 'morning', currentDate = '';
+let currentUnitYPs = [], allUnitsCache = [];
+let notesCache = [], tasksCache = [], kwCache = [], missingCache = [];
+let locsCache = {}, rotaCache = [];
+let pendingTaskId = null, pendingAlertId = null, pendingMissingId = null;
+let pendingUpdCtx = null, pendingUpdId = null, priorOn = false, kwTypeVal = 'kw';
+
+const SHIFTS = {
+  morning:{label:'Morning Shift',time:'07:00–15:00',dot:'var(--shift-m)'},
+  evening:{label:'Evening Shift',time:'15:00–23:00',dot:'var(--shift-e)'},
+  sleepin:{label:'Sleep-in Shift',time:'23:00–07:00',dot:'var(--shift-s)'}
+};
+const LOCS = ['At home','College','Work','Appointment','Out (known)','Out (unknown)','Hospital','Police','Not returned'];
+const YP_COLORS = ['#1446a0','#27ae60','#7b2d8b','#e67e22','#0e7490','#c0392b','#0d9488','#9333ea','#d97706','#059669'];
+
+// ── UTILS ──
+const g = id => document.getElementById(id);
+const nowT = () => new Date().toTimeString().slice(0,5);
+const todayISO = () => { const d=new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; };
+const fmtD = d => { try{ return new Date(d).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}); }catch{return d;} };
+const priorD = d => { const dt=new Date(d); dt.setDate(dt.getDate()-1); return dt.toISOString().slice(0,10); };
+const empt = (i,t) => `<div class="empty"><div class="ei">${i}</div><div class="et">${t}</div></div>`;
+const om = id => g(id).classList.add('open');
+const cm = id => g(id).classList.remove('open');
+const gv = id => g(id)?g(id).value:'';
+const sv = (id,val) => { const el=g(id); if(el) el.value=val; };
+const ypColor = idx => YP_COLORS[idx % YP_COLORS.length];
+
+function toast(msg, type='ok') {
+  const el=g('toast'); el.textContent=msg; el.className='show '+type;
+  setTimeout(()=>el.className='',2500);
+}
+
+// ── EXPOSE TO WINDOW ──
+Object.assign(window, {
+  doLogin,doLogout,showView,toggleSB,closeSB,switchShift,onUnitChange,loadShiftData,
+  openNoteModal,openTaskModal,openKWModal,openMissingModal,
+  selNType,selRType,togPrior,togCB,saveNote,saveTask,openCompleteTask,completeTask,
+  selKWType,saveKW,selMType,saveMissing,openCloseMiss,closeMissing,
+  openUpd,saveUpdate,openResolve,resolveAlert,setLoc,setLocNote,submitShift,editShift,
+  showATab,openAddYPModal,saveYP,togYP,openAddUnitModal,saveUnit,
+  openAddRotaModal,saveRota,saveRotaCell,renderRotaGrid,downloadSampleCSV,handleRotaCSV,
+  openAddCatModal,saveCat,removeCat,
+  openAddStaffModal,saveStaff,cm
+});
+
+// ── AUTH ──
+onAuthStateChanged(auth, async user => {
+  if (user) {
+    currentUser = user;
+    await loadStaffProfile(user.uid);
+    showApp();
+  } else {
+    currentUser = null; currentStaff = null;
+    g('loginScreen').style.display = 'flex';
+    g('app').style.display = 'none';
+  }
+});
+
+async function loadStaffProfile(uid) {
+  try {
+    const snap = await getDoc(doc(db,'staffProfiles',uid));
+    currentStaff = snap.exists() ? {id:snap.id,...snap.data()} : {name:currentUser.email,initials:'??',role:'support'};
+  } catch { currentStaff = {name:currentUser.email,initials:'??',role:'support'}; }
+}
+
+async function doLogin() {
+  const raw = gv('li-email').trim().toLowerCase(), pass = gv('li-pass');
+  const err = g('login-err');
+  err.style.display = 'none';
+  if (!raw||!pass) { err.textContent='Please enter your username and password.'; err.style.display='block'; return; }
+  const email = raw.includes('@') ? raw : raw+'@connectedstars.co.uk';
+  try { await signInWithEmailAndPassword(auth, email, pass); }
+  catch { err.textContent='Incorrect username or password. Please try again.'; err.style.display='block'; }
+}
+
+async function doLogout() { await signOut(auth); }
+
+function showApp() {
+  g('loginScreen').style.display = 'none';
+  g('app').style.display = 'flex';
+  g('u-av').textContent = currentStaff.initials||'?';
+  g('u-name').textContent = currentStaff.name||'';
+  g('u-role').textContent = currentStaff.role||'';
+  g('tb-av').textContent = currentStaff.initials||'?';
+  g('tb-name').textContent = currentStaff.name||'';
+  if (currentStaff.role==='admin') g('nav-admin').style.display = 'flex';
+  currentDate = todayISO();
+  g('date-inp').value = currentDate;
+  loadUnits();
+}
+
+// ── SIDEBAR ──
+function toggleSB() {
+  const sb=g('sidebar'), ov=g('sb-overlay'), open=sb.classList.contains('open');
+  sb.classList.toggle('open',!open); ov.classList.toggle('show',!open);
+}
+function closeSB() { g('sidebar').classList.remove('open'); g('sb-overlay').classList.remove('show'); }
+
+// ── VIEWS ──
+function showView(name) {
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  g('view-'+name).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.toggle('active',(n.getAttribute('onclick')||'').includes("'"+name+"'")));
+  if(name==='handover') renderHandover();
+  if(name==='missing') renderMissingView();
+  if(name==='sp-ra') renderSPRA();
+  if(name==='admin') renderAdmin();
+}
+
+// ── UNITS ──
+async function loadUnits() {
+  try {
+    const snap = await getDocs(query(collection(db,'units'), where('status','==','active')));
+    allUnitsCache = snap.docs.map(d=>({id:d.id,...d.data()}));
+    const sel = g('unit-sel');
+    sel.innerHTML = '<option value="">Select unit…</option>';
+    allUnitsCache.forEach(u=>{ sel.innerHTML+=`<option value="${u.id}">${u.name}</option>`; });
+  } catch { toast('Could not load units','err'); }
+}
+
+async function onUnitChange() {
+  currentUnitId = gv('unit-sel');
+  if (!currentUnitId) { currentUnitYPs=[]; renderHandover(); return; }
+  await loadYPsForUnit();
+  await loadShiftData();
+}
+
+async function loadYPsForUnit() {
+  try {
+    const snap = await getDocs(query(collection(db,'serviceUsers'),
+      where('unitId','==',currentUnitId), where('status','==','active')));
+    currentUnitYPs = snap.docs.map((d,i)=>({id:d.id,...d.data(),_idx:i}));
+  } catch { currentUnitYPs=[]; }
+}
+
+// ── LOAD SHIFT DATA ──
+async function loadShiftData() {
+  currentDate = gv('date-inp') || todayISO();
+  if (!currentUnitId) { renderHandover(); return; }
+  await Promise.all([loadNotes(), loadTasks(), loadKW(), loadMissing(), loadLocations(), loadRota()]);
+  renderHandover();
+}
+
+async function loadNotes() {
+  try {
+    const snap = await getDocs(query(collection(db,'oShiftNotes'),
+      where('unitId','==',currentUnitId), where('date','==',currentDate)));
+    notesCache = snap.docs.map(d=>({id:d.id,...d.data()}));
+  } catch { notesCache=[]; }
+}
+
+async function loadTasks() {
+  try {
+    const snap = await getDocs(query(collection(db,'oShiftTasks'), where('unitId','==',currentUnitId)));
+    tasksCache = snap.docs.map(d=>({id:d.id,...d.data()}));
+  } catch { tasksCache=[]; }
+}
+
+async function loadKW() {
+  try {
+    const snap = await getDocs(query(collection(db,'oShiftKeywork'),
+      where('unitId','==',currentUnitId), where('date','==',currentDate), where('shift','==',currentShift)));
+    kwCache = snap.docs.map(d=>({id:d.id,...d.data()}));
+  } catch { kwCache=[]; }
+}
+
+async function loadMissing() {
+  try {
+    const snap = await getDocs(query(collection(db,'oShiftMissing'), where('unitId','==',currentUnitId)));
+    missingCache = snap.docs.map(d=>({id:d.id,...d.data()}));
+  } catch { missingCache=[]; }
+}
+
+async function loadLocations() {
+  locsCache = {};
+  if (!currentUnitYPs.length) return;
+  try {
+    const snap = await getDocs(query(collection(db,'oShiftLocations'),
+      where('unitId','==',currentUnitId), where('date','==',currentDate)));
+    snap.docs.forEach(d=>{ locsCache[d.data().ypId]={location:d.data().location||'',locNotes:d.data().locNotes||''}; });
+  } catch {}
+}
+
+async function loadRota() {
+  try {
+    const snap = await getDocs(query(collection(db,'oShiftRota'), where('unitId','==',currentUnitId)));
+    rotaCache = snap.docs.map(d=>({id:d.id,...d.data()}));
+  } catch { rotaCache=[]; }
+}
+
+function switchShift(s) {
+  currentShift = s;
+  document.querySelectorAll('.shift-tab').forEach(t=>t.classList.toggle('active',t.dataset.s===s));
+  loadShiftData();
+}
+
+// ── RENDER HANDOVER ──
+async function renderHandover() {
+  const meta = SHIFTS[currentShift];
+  g('sib-dot').style.background = meta.dot;
+  g('sib-shift').textContent = meta.label;
+  g('sib-time').textContent = meta.time;
+  g('sf-shift').textContent = meta.label;
+  const rotaSubmitEntry = rotaCache.find(r=>r.shift===currentShift&&r.date===currentDate);
+  g('sf-staff').textContent = rotaSubmitEntry?.staffName || '—';
+
+  const rotaEntry = rotaCache.find(r=>r.shift===currentShift&&r.date===currentDate);
+  g('sib-staff').textContent = rotaEntry ? rotaEntry.staffName : '— not assigned';
+
+  // Print header
+  const unit = allUnitsCache.find(u=>u.id===currentUnitId);
+  g('print-title').textContent = (unit?.name||'') + ' — ' + meta.label;
+  g('print-sub').textContent = fmtD(currentDate);
+
+  // Submission check
+  let submitted = false;
+  if (currentUnitId) {
+    try {
+      const submSnap = await getDoc(doc(db,'oShiftSubmissions',`${currentUnitId}_${currentShift}_${currentDate}`));
+      submitted = submSnap.exists();
+    } catch {}
+  }
+  g('sf-btns').innerHTML = submitted
+    ? `<span class="sf-submitted">✓ Submitted</span>&nbsp;<button class="btn btn-ghost" onclick="editShift()">Edit</button>`
+    : `<button class="btn btn-primary" onclick="submitShift()">Submit Handover ✓</button>`;
+
+  renderAlertsBanner();
+  renderNotes();
+  renderTasks();
+  renderKW();
+  renderLocTable();
+  updateMissBadge();
+}
+
+function getYPInit(ypId) { const y=currentUnitYPs.find(y=>y.id===ypId); return y?(y.initials||y.name||'?'):'?'; }
+function getYPColorIdx(ypId) { return currentUnitYPs.findIndex(y=>y.id===ypId); }
+
+function renderAlertsBanner() {
+  const date = currentDate;
+  const openMiss = missingCache.filter(m=>m.status==='open');
+  const active = notesCache.filter(n=>{
+    if(n.done) return false;
+    if(n.type==='alert') return !n.until||n.until>=date;
+    if(n.type==='reminder') return n.rtype==='today'||(n.rdate&&n.rdate>=date)||(n.prior&&n.rdate&&priorD(n.rdate)===date);
+    return false;
+  });
+  g('alerts-banner').innerHTML = [
+    ...openMiss.map(m=>`<div class="ac t-missing"><span class="abadge ab-missing">${m.mtype==='ua'?'⚠️ UA':'🔴 MISSING'}</span><div class="ac-body"><div class="ac-title">${getYPInit(m.ypId)} — ${m.mtype==='ua'?'Unauthorised Absence':'MISSING PERSON'}</div><div class="ac-meta">Reported ${m.time||''}${(m.updates||[]).length?' · '+(m.updates||[]).length+' update(s)':''}</div></div><div class="ac-actions"><button class="btn-sm" onclick="openUpd('missing','${m.id}')">+ Update</button><button class="btn-sm s" onclick="openCloseMiss('${m.id}')">Close</button></div></div>`),
+    ...active.map(n=>{ const isr=n.type==='reminder'; return `<div class="ac t-${n.type}"><span class="abadge ${isr?'ab-reminder':'ab-alert'}">${isr?'🔔 Reminder':'🔴 Alert'}</span><div class="ac-body"><div class="ac-title">${n.text}</div><div class="ac-meta"><span class="ac-yp">${getYPInit(n.ypId)}</span> · ${n.time||''}${n.until?' · until '+fmtD(n.until):''}${n.rdate?' · '+fmtD(n.rdate):''}</div></div><div class="ac-actions"><button class="btn-sm" onclick="openUpd('alert','${n.id}')">+ Update</button><button class="btn-sm s" onclick="openResolve('${n.id}')">Resolve</button></div></div>`; })
+  ].join('')||'';
+}
+
+function renderNotes() {
+  const items = notesCache.filter(n=>n.shift===currentShift&&n.type==='note');
+  g('cnt-notes').textContent = items.length;
+  g('notes-list').innerHTML = items.length ? items.map(n=>{
+    const idx=getYPColorIdx(n.ypId); const col=ypColor(idx);
+    return `<div class="entry"><div class="eh"><span class="yp-tag" style="background:${col}">${getYPInit(n.ypId)}</span>${n.cat?`<span class="ecat">${n.cat}</span>`:''}<span class="etime">${n.time||''}</span>${n.createdByName?`<span class="creator-tag">${n.createdByName}</span>`:''}</div><div class="etext">${n.text}</div>${(n.flagSP||n.flagRA)?`<div class="eflags">${n.flagSP?'<span class="eflag f-sp">📘 Update SP</span>':''}${n.flagRA?'<span class="eflag f-ra">⚠️ Update RA</span>':''}</div>`:''}</div>`;
+  }).join('') : empt('📝','No notes for this shift');
+}
+
+function renderTasks() {
+  g('cnt-tasks').textContent = tasksCache.filter(t=>!t.done).length;
+  g('tasks-list').innerHTML = tasksCache.length ? tasksCache.map(t=>{
+    const idx=getYPColorIdx(t.ypId); const col=ypColor(idx); const over=!t.done&&t.due&&t.due<currentDate;
+    return `<div class="task-item"><div class="tcheck ${t.done?'done':''}" onclick="openCompleteTask('${t.id}')">${t.done?'✓':''}</div><div class="tbody"><div class="tlabel ${t.done?'done':''}"><span class="tag-dot" style="background:${col}"></span>${t.name}${t.createdByName?` <span class="creator-tag">${t.createdByName}</span>`:''}</div>${t.desc?`<div class="tmeta">${t.desc}</div>`:''}${t.due?`<div class="tmeta tdue ${over?'over':''}">Due: ${fmtD(t.due)}${over?' ⚠️ Overdue':''}</div>`:''}${t.done&&t.cnote?`<div class="tcnote">✓ ${t.cnote}</div>`:''}</div></div>`;
+  }).join('') : empt('✅','No tasks');
+}
+
+function renderKW() {
+  g('cnt-kw').textContent = kwCache.length;
+  g('kw-list').innerHTML = kwCache.length ? kwCache.map(k=>{
+    const idx=getYPColorIdx(k.ypId); const col=ypColor(idx);
+    return `<div class="entry"><div class="eh"><span class="yp-tag" style="background:${col}">${getYPInit(k.ypId)}</span><span class="kw-badge ${k.type==='kw'?'kw-kw':'kw-iss'}">${k.type==='kw'?'Key Work':'ISS'}</span><span class="etime">${k.time||''}</span>${k.createdByName?`<span class="creator-tag">${k.createdByName}</span>`:''}</div><div class="etext">${k.text}</div></div>`;
+  }).join('') : empt('🤝','No key work or ISS entries');
+}
+
+function renderLocTable() {
+  const openMissYPs = missingCache.filter(m=>m.status==='open').map(m=>m.ypId);
+  g('loc-table').innerHTML = `<thead><tr><th>YP</th><th>Location</th><th>Notes</th></tr></thead><tbody>${currentUnitYPs.map((yp,i)=>{
+    const isMiss=openMissYPs.includes(yp.id); const col=ypColor(i);
+    const ld=locsCache[yp.id]||{}; const val=ld.location||''; const note=ld.locNotes||'';
+    return `<tr><td><span style="background:${col};color:#fff;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:800">${yp.initials||yp.name}</span></td><td>${isMiss?'<span class="loc-missing-tag">🔴 Missing</span>':`<select class="loc-sel" onchange="setLoc('${yp.id}',this.value)"><option value="">Select…</option>${LOCS.map(l=>`<option ${val===l?'selected':''}>${l}</option>`).join('')}</select>`}</td><td>${isMiss?'<span style="font-size:11px;color:var(--red)">Open missing case</span>':`<input type="text" class="fc" placeholder="Optional" style="font-size:12px" value="${note}" onchange="setLocNote('${yp.id}',this.value)">`}</td></tr>`;
+  }).join('')}</tbody>`;
+}
+
+async function setLoc(ypId, val) {
+  if(!currentUnitId) return;
+  const existing=locsCache[ypId]||{};
+  locsCache[ypId]={...existing,location:val};
+  try {
+    await setDoc(doc(db,'oShiftLocations',`${currentUnitId}_${ypId}_${currentDate}`),
+      {unitId:currentUnitId,ypId,date:currentDate,location:val,locNotes:existing.locNotes||'',updatedBy:currentUser.uid,updatedAt:serverTimestamp()},{merge:true});
+  } catch { toast('Save failed','err'); }
+}
+
+async function setLocNote(ypId, val) {
+  if(!currentUnitId) return;
+  const existing=locsCache[ypId]||{};
+  locsCache[ypId]={...existing,locNotes:val};
+  try {
+    await setDoc(doc(db,'oShiftLocations',`${currentUnitId}_${ypId}_${currentDate}`),
+      {unitId:currentUnitId,ypId,date:currentDate,location:existing.location||'',locNotes:val,updatedBy:currentUser.uid,updatedAt:serverTimestamp()},{merge:true});
+  } catch {}
+}
+
+function updateMissBadge() {
+  const open=missingCache.filter(m=>m.status==='open');
+  g('miss-badge').style.display=open.length?'inline':'none';
+  g('miss-badge').textContent=open.length;
+}
+
+async function submitShift() {
+  if(!currentUnitId) { toast('Select a unit first','err'); return; }
+  try {
+    const rotaSubmitEntry2=rotaCache.find(r=>r.shift===currentShift&&r.date===currentDate);
+    await setDoc(doc(db,'oShiftSubmissions',`${currentUnitId}_${currentShift}_${currentDate}`),
+      {unitId:currentUnitId,shift:currentShift,date:currentDate,rotaStaffName:rotaSubmitEntry2?.staffName||'—',submittedBy:currentUser.uid,submittedByName:currentStaff?.name||'',submittedAt:serverTimestamp()});
+    toast('Handover submitted ✓'); renderHandover();
+  } catch { toast('Submit failed','err'); }
+}
+
+async function editShift() {
+  try {
+    await deleteDoc(doc(db,'oShiftSubmissions',`${currentUnitId}_${currentShift}_${currentDate}`));
+    toast('Editing handover'); renderHandover();
+  } catch { toast('Error','err'); }
+}
+
+// ── NOTE MODAL ──
+function openNoteModal() {
+  popYP('n-yp'); popCat('n-cat');
+  sv('n-text',''); sv('n-time',nowT()); sv('n-type','note');
+  sv('n-until',''); sv('n-rdate',''); sv('n-prior',''); sv('n-rtype','today');
+  priorOn=false; g('prior-tog').classList.remove('on'); g('prior-note-wrap').style.display='none';
+  g('r-date-row').style.display='none';
+  g('note-fields').style.display='block'; g('alert-fields').style.display='none'; g('reminder-fields').style.display='none';
+  g('cb-sp').className='cbox'; g('cb-sp').textContent='';
+  g('cb-ra').className='cbox'; g('cb-ra').textContent='';
+  document.querySelectorAll('#m-note .ro').forEach(o=>{o.className='ro';if(o.textContent.includes('Note'))o.classList.add('sn')});
+  document.querySelectorAll('#m-note .chip').forEach((c,i)=>c.classList.toggle('on',i===0));
+  g('note-modal-title').textContent='Add Entry'; om('m-note');
+}
+function selNType(type,el) {
+  sv('n-type',type);
+  document.querySelectorAll('#m-note .ro').forEach(o=>o.className='ro');
+  el.classList.add('s'+type[0]+(type==='note'?'n':type==='alert'?'a':'r'));
+  g('note-fields').style.display=type==='note'?'block':'none';
+  g('alert-fields').style.display=type==='alert'?'block':'none';
+  g('reminder-fields').style.display=type==='reminder'?'block':'none';
+}
+function selRType(type,el) {
+  sv('n-rtype',type);
+  document.querySelectorAll('#m-note .chip').forEach(c=>c.classList.remove('on'));
+  el.classList.add('on'); g('r-date-row').style.display=type==='date'?'block':'none';
+}
+function togPrior() { priorOn=!priorOn; g('prior-tog').classList.toggle('on',priorOn); g('prior-note-wrap').style.display=priorOn?'block':'none'; }
+function togCB(id) { const el=g(id); const on=el.classList.contains('on'); el.className='cbox'+(on?'':' on'); el.textContent=on?'':'✓'; }
+
+async function saveNote() {
+  const ypId=gv('n-yp'), text=gv('n-text').trim(), type=gv('n-type');
+  if(!text){toast('Enter text','err');return;} if(!ypId){toast('Select YP','err');return;}
+  if(!currentUnitId){toast('Select a unit first','err');return;}
+  const data={unitId:currentUnitId,ypId,shift:currentShift,date:currentDate,type,text,time:gv('n-time'),done:false,updates:[],createdBy:currentUser.uid,createdByName:currentStaff?.name||'',createdAt:serverTimestamp()};
+  if(type==='note'){data.cat=gv('n-cat');data.flagSP=g('cb-sp').classList.contains('on');data.flagRA=g('cb-ra').classList.contains('on');}
+  if(type==='alert') data.until=gv('n-until')||null;
+  if(type==='reminder'){data.rtype=gv('n-rtype');data.rdate=gv('n-rdate')||null;data.prior=priorOn;data.priorNote=priorOn?gv('n-prior'):'';}
+  try { await addDoc(collection(db,'oShiftNotes'),data); cm('m-note'); await loadNotes(); renderHandover(); toast('Saved ✓'); }
+  catch { toast('Save failed','err'); }
+}
+
+// ── TASK MODAL ──
+function openTaskModal() { popYP('t-yp'); sv('t-name',''); sv('t-desc',''); sv('t-due',''); om('m-task'); }
+
+async function saveTask() {
+  const ypId=gv('t-yp'), name=gv('t-name').trim();
+  if(!name){toast('Enter task name','err');return;} if(!currentUnitId){toast('Select a unit first','err');return;}
+  try {
+    await addDoc(collection(db,'oShiftTasks'),{unitId:currentUnitId,ypId,name,desc:gv('t-desc'),due:gv('t-due'),done:false,cnote:'',createdBy:currentUser.uid,createdByName:currentStaff?.name||'',createdAt:serverTimestamp()});
+    cm('m-task'); await loadTasks(); renderHandover(); toast('Task added ✓');
+  } catch { toast('Save failed','err'); }
+}
+
+function openCompleteTask(id) {
+  const t=tasksCache.find(t=>t.id===id); if(!t||t.done){toast('Already done');return;}
+  pendingTaskId=id; sv('ct-note',''); om('m-ctask');
+}
+
+async function completeTask() {
+  const note=gv('ct-note').trim(); if(!note){toast('Note required','err');return;}
+  try {
+    await updateDoc(doc(db,'oShiftTasks',pendingTaskId),{done:true,cnote:note,completedBy:currentUser.uid,completedByName:currentStaff?.name||'',completedAt:serverTimestamp()});
+    cm('m-ctask'); await loadTasks(); renderHandover(); toast('Completed ✓');
+  } catch { toast('Save failed','err'); }
+}
+
+// ── KEY WORK MODAL ──
+function openKWModal() {
+  kwTypeVal='kw'; popYP('kw-yp'); sv('kw-text',''); sv('kw-time',nowT()); sv('kw-type','kw');
+  document.querySelectorAll('#m-kw .ro').forEach(o=>o.className='ro'); g('kwt-kw').classList.add('sn'); om('m-kw');
+}
+function selKWType(type,el) { kwTypeVal=type; sv('kw-type',type); document.querySelectorAll('#m-kw .ro').forEach(o=>o.className='ro'); el.classList.add('sn'); }
+
+async function saveKW() {
+  const ypId=gv('kw-yp'), text=gv('kw-text').trim();
+  if(!text){toast('Enter notes','err');return;} if(!currentUnitId){toast('Select a unit first','err');return;}
+  try {
+    await addDoc(collection(db,'oShiftKeywork'),{unitId:currentUnitId,ypId,shift:currentShift,date:currentDate,type:kwTypeVal,text,time:gv('kw-time'),createdBy:currentUser.uid,createdByName:currentStaff?.name||'',createdAt:serverTimestamp()});
+    cm('m-kw'); await loadKW(); renderHandover(); toast('Saved ✓');
+  } catch { toast('Save failed','err'); }
+}
+
+// ── MISSING ──
+function openMissingModal() {
+  popYP('mis-yp'); sv('mis-note',''); sv('mis-time',nowT()); sv('mis-type','missing');
+  document.querySelectorAll('#m-missing .ro').forEach((o,i)=>{o.className='ro';if(i===0)o.classList.add('sa');}); om('m-missing');
+}
+function selMType(type,el) { sv('mis-type',type); document.querySelectorAll('#m-missing .ro').forEach(o=>o.className='ro'); el.classList.add('sa'); }
+
+async function saveMissing() {
+  const ypId=gv('mis-yp'), note=gv('mis-note').trim();
+  if(!ypId){toast('Select YP','err');return;} if(!note){toast('Add details','err');return;}
+  if(!currentUnitId){toast('Select a unit first','err');return;}
+  try {
+    await addDoc(collection(db,'oShiftMissing'),{unitId:currentUnitId,ypId,mtype:gv('mis-type'),note,time:gv('mis-time'),status:'open',updates:[],date:currentDate,createdBy:currentUser.uid,createdByName:currentStaff?.name||'',createdAt:serverTimestamp()});
+    cm('m-missing'); await loadMissing(); renderHandover(); updateMissBadge(); toast('Missing report submitted','err');
+  } catch { toast('Save failed','err'); }
+}
+
+function openCloseMiss(id) { pendingMissingId=id; sv('cml-note',''); sv('cml-time',nowT()); g('cml-res').value=''; om('m-close-missing'); }
+
+async function closeMissing() {
+  const note=gv('cml-note').trim(), res=g('cml-res').value;
+  if(!note){toast('Closing note required','err');return;} if(!res){toast('Select resolution','err');return;}
+  try {
+    await updateDoc(doc(db,'oShiftMissing',pendingMissingId),{status:'closed',resolution:res,closeNote:note,closeTime:gv('cml-time'),closedBy:currentUser.uid,closedByName:currentStaff?.name||''});
+    cm('m-close-missing'); await loadMissing(); renderHandover(); renderMissingView(); updateMissBadge(); toast('Case closed ✓');
+  } catch { toast('Save failed','err'); }
+}
+
+function renderMissingView() {
+  const cases=missingCache;
+  g('missing-list').innerHTML = cases.length ? cases.map(m=>`<div class="miss-card ${m.status==='closed'?'closed':''}"><div class="miss-hdr"><div class="miss-title ${m.status==='closed'?'cl':''}">${m.status==='closed'?'✓':'🔴'} ${m.mtype==='ua'?'Unauth. Absence':'Missing'} — ${getYPInit(m.ypId)}</div><div style="display:flex;gap:6px">${m.status==='open'?`<button class="btn-sm" onclick="openUpd('missing','${m.id}')">+ Update</button><button class="btn-sm s" onclick="openCloseMiss('${m.id}')">Close</button>`:'<span style="color:var(--green);font-size:12px;font-weight:700">Closed ✓</span>'}</div></div><div style="font-size:11px;color:var(--text3)">${m.time||''} · ${fmtD(m.date)}${m.createdByName?` · <span class="creator-tag">${m.createdByName}</span>`:''}</div><div style="font-size:13px;color:var(--text2);margin-top:4px">${m.note}</div>${(m.updates||[]).map(u=>`<div class="miss-upd"><div class="upd-t">${u.time||''}</div>${u.text}</div>`).join('')}${m.resolution?`<div style="margin-top:7px;padding:6px 9px;background:var(--green-bg);border-radius:var(--rs);font-size:12px;color:var(--green)">✓ ${m.resolution}: ${m.closeNote}</div>`:''}</div>`).join('')
+    : empt('✅','No missing persons reported for this unit');
+}
+
+// ── SP/RA ──
+function renderSPRA() {
+  const rl=items=>items.length?items.map(n=>`<div class="entry" style="margin-bottom:6px"><div class="eh"><span class="yp-tag" style="background:${ypColor(getYPColorIdx(n.ypId))}">${getYPInit(n.ypId)}</span><span class="etime">${n.time||''} · ${fmtD(n.date)}</span></div><div class="etext">${n.text}</div></div>`).join(''):empt('📌','No flagged items');
+  g('sp-list').innerHTML=rl(notesCache.filter(n=>n.flagSP));
+  g('ra-list').innerHTML=rl(notesCache.filter(n=>n.flagRA));
+}
+
+// ── UPDATES / RESOLVE ──
+function openUpd(ctx,id) { pendingUpdCtx=ctx; pendingUpdId=id; g('upd-title').textContent=ctx==='missing'?'Update — Missing Case':'Update — Alert/Reminder'; sv('upd-text',''); sv('upd-time',nowT()); om('m-update'); }
+
+async function saveUpdate() {
+  const text=gv('upd-text').trim(); if(!text){toast('Enter update','err');return;}
+  const upd={text,time:gv('upd-time'),by:currentStaff?.name||''};
+  try {
+    if(pendingUpdCtx==='missing'){ const m=missingCache.find(m=>m.id===pendingUpdId); if(m) await updateDoc(doc(db,'oShiftMissing',pendingUpdId),{updates:[...(m.updates||[]),upd]}); }
+    else { const n=notesCache.find(n=>n.id===pendingUpdId); if(n) await updateDoc(doc(db,'oShiftNotes',pendingUpdId),{updates:[...(n.updates||[]),upd]}); }
+    cm('m-update'); await loadNotes(); await loadMissing(); renderHandover(); renderMissingView(); toast('Update saved ✓');
+  } catch { toast('Save failed','err'); }
+}
+
+function openResolve(id) { pendingAlertId=id; sv('res-note',''); om('m-resolve'); }
+
+async function resolveAlert() {
+  const note=gv('res-note').trim(); if(!note){toast('Note required','err');return;}
+  try {
+    const n=notesCache.find(n=>n.id===pendingAlertId);
+    await updateDoc(doc(db,'oShiftNotes',pendingAlertId),{done:true,updates:[...(n?.updates||[]),{text:'✓ Resolved: '+note,time:nowT(),by:currentStaff?.name||''}]});
+    cm('m-resolve'); await loadNotes(); renderHandover(); toast('Resolved ✓');
+  } catch { toast('Save failed','err'); }
+}
+
+// ── ADMIN ──
+function showATab(tab) {
+  ['yp','units','rota','cats','staff'].forEach((t,i)=>{ document.querySelectorAll('.atab')[i].classList.toggle('on',t===tab); g('a-'+t).classList.toggle('on',t===tab); });
+}
+
+async function renderAdmin() {
+  // Populate rota unit selector
+  const rotaUnitSel = g('rota-unit-sel');
+  rotaUnitSel.innerHTML = allUnitsCache.map(u=>`<option value="${u.id}">${u.name}</option>`).join('');
+  if(currentUnitId) rotaUnitSel.value = currentUnitId;
+  if(!g('rota-month-inp').value) g('rota-month-inp').value = todayISO().slice(0,7);
+  await Promise.all([renderYPTable(), renderUnitsTable(), renderRotaGrid(), renderCats(), renderStaffTable()]);
+}
+
+async function renderYPTable() {
+  try {
+    const snap=await getDocs(query(collection(db,'serviceUsers'),orderBy('name')));
+    const all=snap.docs.map(d=>({id:d.id,...d.data()}));
+    g('yp-table').innerHTML=`<thead><tr><th>Init.</th><th>Name</th><th>Unit</th><th>Status</th><th></th></tr></thead><tbody>${all.map((y,i)=>{ const unit=allUnitsCache.find(u=>u.id===y.unitId); return `<tr><td><span style="background:${ypColor(i)};color:#fff;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:800">${y.initials||y.name||'?'}</span></td><td>${y.name||''}</td><td>${unit?.name||y.unitId||'—'}</td><td>${y.status==='active'?'<span style="color:var(--green);font-weight:700">Active</span>':'<span style="color:var(--text3)">Inactive</span>'}</td><td><button class="btn-sm ${y.status==='active'?'d':'s'}" onclick="togYP('${y.id}','${y.status==='active'?'inactive':'active'}')">${y.status==='active'?'Deactivate':'Activate'}</button></td></tr>`; }).join('')}</tbody>`;
+  } catch { g('yp-table').innerHTML='<tr><td>Error loading</td></tr>'; }
+}
+
+async function togYP(id, newStatus) {
+  try { await updateDoc(doc(db,'serviceUsers',id),{status:newStatus}); renderYPTable(); toast(newStatus==='active'?'Activated':'Deactivated'); }
+  catch { toast('Error','err'); }
+}
+
+function openAddYPModal() { g('ay-unit').innerHTML=allUnitsCache.map(u=>`<option value="${u.id}">${u.name}</option>`).join(''); sv('ay-init',''); sv('ay-name',''); om('m-add-yp'); }
+
+async function saveYP() {
+  const init=gv('ay-init').trim().toUpperCase(), name=gv('ay-name').trim()||init, unitId=gv('ay-unit');
+  if(!init){toast('Enter initials','err');return;}
+  try { await addDoc(collection(db,'serviceUsers'),{initials:init,name,unitId,status:'active',createdAt:serverTimestamp()}); cm('m-add-yp'); renderYPTable(); toast('Added ✓'); }
+  catch { toast('Save failed','err'); }
+}
+
+async function renderUnitsTable() {
+  g('units-table').innerHTML=`<thead><tr><th>Name</th><th>Type</th></tr></thead><tbody>${allUnitsCache.map(u=>`<tr><td style="font-weight:700">${u.name}</td><td>${u.type||'—'}</td></tr>`).join('')}</tbody>`;
+}
+
+function openAddUnitModal() { sv('au-name',''); om('m-add-unit'); }
+
+async function saveUnit() {
+  const name=gv('au-name').trim(), type=gv('au-type');
+  if(!name){toast('Enter unit name','err');return;}
+  try { await addDoc(collection(db,'units'),{name,type,status:'active',createdAt:serverTimestamp()}); cm('m-add-unit'); await loadUnits(); renderUnitsTable(); toast('Unit added ✓'); }
+  catch { toast('Save failed','err'); }
+}
+
+async function renderRotaGrid() {
+  const unitId = gv('rota-unit-sel');
+  const month  = gv('rota-month-inp');
+  if(!unitId||!month) { g('rota-grid').innerHTML='<div style="color:var(--text3);font-size:13px;padding:8px">Select a unit and month.</div>'; return; }
+  const [year,m] = month.split('-').map(Number);
+  const daysInMonth = new Date(year,m,0).getDate();
+  const pad = n=>String(n).padStart(2,'0');
+  g('rota-month-label').textContent = new Date(year,m-1,1).toLocaleDateString('en-GB',{month:'long',year:'numeric'});
+  try {
+    const snap=await getDocs(query(collection(db,'oShiftRota'),where('unitId','==',unitId),where('month','==',month)));
+    const rotaMap={};
+    snap.forEach(d=>{ rotaMap[d.id]=d.data().staffName; });
+    const shifts=['morning','evening','sleepin'],labels={morning:'Morning',evening:'Evening',sleepin:'Sleep-in'};
+    const rows=[];
+    for(let day=1;day<=daysInMonth;day++){
+      const dateStr=`${year}-${pad(m)}-${pad(day)}`;
+      const dayName=new Date(dateStr+'T00:00:00').toLocaleDateString('en-GB',{weekday:'short'});
+      const cells=shifts.map(shift=>{
+        const docId=`${unitId}_${dateStr}_${shift}`;
+        const val=rotaMap[docId]||'';
+        return `<td><input type="text" class="rota-inp" value="${val.replace(/"/g,'&quot;')}" placeholder="—" data-date="${dateStr}" data-shift="${shift}" data-unit="${unitId}" data-month="${month}" onchange="saveRotaCell(this)" onblur="saveRotaCell(this)"></td>`;
+      }).join('');
+      rows.push(`<tr><td>${pad(day)} <span style="color:var(--text3)">${dayName}</span></td>${cells}</tr>`);
+    }
+    g('rota-grid').innerHTML=`<table class="rota-tbl"><thead><tr><th>Date</th>${shifts.map(s=>`<th>${labels[s]}</th>`).join('')}</tr></thead><tbody>${rows.join('')}</tbody></table>`;
+  } catch(e) { toast('Failed to load rota','err'); }
+}
+
+async function saveRotaCell(input) {
+  const {date,shift,unit:unitId,month}=input.dataset;
+  const staffName=input.value.trim();
+  const docId=`${unitId}_${date}_${shift}`;
+  try {
+    if(staffName) await setDoc(doc(db,'oShiftRota',docId),{unitId,date,shift,staffName,month,updatedAt:serverTimestamp()},{merge:true});
+    else await deleteDoc(doc(db,'oShiftRota',docId));
+  } catch { toast('Save failed','err'); }
+}
+
+function downloadSampleCSV() {
+  const month=gv('rota-month-inp')||todayISO().slice(0,7);
+  const [year,m]=month.split('-').map(Number);
+  const pad=n=>String(n).padStart(2,'0');
+  const rows=['date,shift,staffName',`${year}-${pad(m)}-01,morning,Sarah Collins`,`${year}-${pad(m)}-01,evening,James Osei`,`${year}-${pad(m)}-01,sleepin,David Mensah`,`${year}-${pad(m)}-02,morning,Fatima Al-Rashid`,`${year}-${pad(m)}-02,evening,Leon Walsh`];
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([rows.join('\n')],{type:'text/csv'}));
+  a.download=`rota-sample-${month}.csv`; a.click();
+}
+
+async function handleRotaCSV(ev) {
+  const file=ev.target.files[0];
+  const unitId=gv('rota-unit-sel'), month=gv('rota-month-inp');
+  if(!file||!unitId||!month){toast('Select a unit and month first','err');ev.target.value='';return;}
+  const reader=new FileReader();
+  reader.onload=async e=>{
+    const lines=e.target.result.trim().split('\n').slice(1);
+    const batch=writeBatch(db); let count=0;
+    for(const line of lines){
+      const [date,shift,staffName]=line.split(',').map(s=>s.trim().replace(/^"|"$/g,''));
+      if(!date||!shift||!staffName) continue;
+      const s=shift.toLowerCase();
+      if(!['morning','evening','sleepin'].includes(s)) continue;
+      if(date.slice(0,7)!==month) continue;
+      batch.set(doc(db,'oShiftRota',`${unitId}_${date}_${s}`),{unitId,date,shift:s,staffName,month,updatedAt:serverTimestamp()});
+      count++;
+    }
+    await batch.commit();
+    toast(`Imported ${count} rota entries ✓`);
+    ev.target.value='';
+    await renderRotaGrid();
+  };
+  reader.readAsText(file);
+}
+
+function openAddRotaModal() { sv('r-date',currentDate||todayISO()); sv('r-staff',''); g('r-unit').innerHTML=allUnitsCache.map(u=>`<option value="${u.id}" ${u.id===currentUnitId?'selected':''}>${u.name}</option>`).join(''); om('m-add-rota'); }
+
+async function saveRota() {
+  const date=gv('r-date'), shift=gv('r-shift'), staffName=gv('r-staff').trim(), unitId=gv('r-unit');
+  if(!staffName||!date){toast('Fill all fields','err');return;}
+  try {
+    const ex=rotaCache.find(r=>r.date===date&&r.shift===shift&&r.unitId===unitId);
+    if(ex) await updateDoc(doc(db,'oShiftRota',ex.id),{staffName});
+    else await addDoc(collection(db,'oShiftRota'),{unitId,date,shift,staffName,createdBy:currentUser.uid,createdAt:serverTimestamp()});
+    cm('m-add-rota'); await loadRota(); renderHandover(); renderRotaGrid(); toast('Rota updated ✓');
+  } catch { toast('Save failed','err'); }
+}
+
+async function renderCats() {
+  try {
+    const snap=await getDocs(query(collection(db,'oShiftCategories'),orderBy('name')));
+    const cats=snap.docs.map(d=>({id:d.id,...d.data()}));
+    g('cats-list').innerHTML=cats.length
+      ? cats.map(c=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border)"><span style="font-size:13px;font-weight:600">${c.name}</span><button class="btn-sm d" onclick="removeCat('${c.id}')">Remove</button></div>`).join('')
+      +'<div style="font-size:11px;color:var(--text3);padding-top:7px">These appear in the note category dropdown.</div>'
+      :'<div style="font-size:13px;color:var(--text3)">No categories yet.</div>';
+  } catch {}
+}
+
+function openAddCatModal() { sv('cat-name',''); om('m-add-cat'); }
+
+async function saveCat() {
+  const name=gv('cat-name').trim(); if(!name){toast('Enter name','err');return;}
+  try { await addDoc(collection(db,'oShiftCategories'),{name,createdAt:serverTimestamp()}); cm('m-add-cat'); await renderCats(); toast('Added ✓'); }
+  catch { toast('Save failed','err'); }
+}
+
+async function removeCat(id) {
+  try { await deleteDoc(doc(db,'oShiftCategories',id)); await renderCats(); toast('Removed'); }
+  catch { toast('Error','err'); }
+}
+
+async function renderStaffTable() {
+  try {
+    const snap=await getDocs(collection(db,'staffProfiles'));
+    const all=snap.docs.map(d=>({id:d.id,...d.data()}));
+    g('staff-table').innerHTML=`<thead><tr><th>Name</th><th>Initials</th><th>Role</th></tr></thead><tbody>${all.map(s=>`<tr><td style="font-weight:600">${s.name||'—'}</td><td><span style="background:var(--brand-light);color:var(--brand);padding:2px 7px;border-radius:20px;font-size:11px;font-weight:700">${s.initials||'?'}</span></td><td>${s.role||'support'}</td></tr>`).join('')}</tbody>`;
+  } catch { g('staff-table').innerHTML='<tr><td>Error loading</td></tr>'; }
+}
+
+function openAddStaffModal() { sv('st-name',''); sv('st-init',''); sv('st-user',''); sv('st-pass',''); om('m-add-staff'); }
+
+async function saveStaff() {
+  const name=gv('st-name').trim(), init=gv('st-init').trim().toUpperCase(), username=gv('st-user').trim().toLowerCase(), pass=gv('st-pass'), role=gv('st-role');
+  if(!name||!init||!username||!pass){toast('Fill all fields','err');return;}
+  if(pass.length<6){toast('Password min 6 chars','err');return;}
+  const email=username.includes('@')?username:username+'@connectedstars.co.uk';
+  try {
+    const cred=await createUserWithEmailAndPassword(auth,email,pass);
+    await setDoc(doc(db,'staffProfiles',cred.user.uid),{name,initials:init,role,email,createdAt:serverTimestamp()});
+    cm('m-add-staff'); await renderStaffTable(); toast('Staff created ✓');
+  } catch(e) { toast(e.code==='auth/email-already-in-use'?'Email already exists':e.message,'err'); }
+}
+
+// ── HELPERS ──
+async function popCat(selId) {
+  try {
+    const snap=await getDocs(query(collection(db,'oShiftCategories'),orderBy('name')));
+    g(selId).innerHTML='<option value="">No category</option>'+snap.docs.map(d=>`<option>${d.data().name}</option>`).join('');
+  } catch { g(selId).innerHTML='<option value="">No category</option>'; }
+}
+
+function popYP(selId) {
+  g(selId).innerHTML='<option value="">Select YP…</option>'+currentUnitYPs.map(y=>`<option value="${y.id}">${y.initials||y.name}</option>`).join('');
+}
+
+// ── CLOSE MODALS ON OVERLAY CLICK ──
+document.querySelectorAll('.mo').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('open')}));
+</script>
+</body>
+</html>
