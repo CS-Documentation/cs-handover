@@ -736,7 +736,7 @@ Object.assign(window, {
   selNType,selRType,togPrior,togCB,saveNote,saveTask,openCompleteTask,completeTask,
   selKWType,saveKW,selMType,saveMissing,openCloseMiss,closeMissing,
   openUpd,saveUpdate,openResolve,resolveAlert,setLoc,setLocNote,submitShift,editShift,
-  editNote,deleteNote,editTask,deleteTask,editKW,deleteKW,deleteMissing,
+  editNote,deleteNote,editTask,uncompleteTask,deleteTask,editKW,deleteKW,deleteMissing,
   showATab,
   openAddRotaModal,saveRota,saveRotaCell,renderRotaGrid,downloadSampleCSV,handleRotaCSV,
   openAddCatModal,saveCat,removeCat,
@@ -970,7 +970,7 @@ function renderTasks() {
   g('cnt-tasks').textContent = tasksCache.filter(t=>!t.done).length;
   g('tasks-list').innerHTML = tasksCache.length ? tasksCache.map(t=>{
     const idx=getYPColorIdx(t.ypId); const col=ypColor(idx); const over=!t.done&&t.due&&t.due<currentDate;
-    return `<div class="task-item"><div class="tcheck ${t.done?'done':''}" onclick="openCompleteTask('${t.id}')">${t.done?'✓':''}</div><div class="tbody"><div class="tlabel ${t.done?'done':''}"><span class="tag-dot" style="background:${col}"></span>${t.name}${t.createdByName?` <span class="creator-tag">${t.createdByName}</span>`:''}</div>${t.desc?`<div class="tmeta">${t.desc}</div>`:''}${t.due?`<div class="tmeta tdue ${over?'over':''}">Due: ${fmtD(t.due)}${over?' ⚠️ Overdue':''}</div>`:''}${t.done&&t.cnote?`<div class="tcnote">✓ ${t.cnote}</div>`:''}${!t.done?`<div class="entry-actions"><button class="btn-sm" onclick="editTask('${t.id}')">✏ Edit</button><button class="btn-sm d" onclick="deleteTask('${t.id}')">✕ Delete</button></div>`:`<div class="entry-actions"><button class="btn-sm d" onclick="deleteTask('${t.id}')">✕ Delete</button></div>`}</div></div>`;
+    return `<div class="task-item"><div class="tcheck ${t.done?'done':''}" onclick="${t.done?`uncompleteTask('${t.id}')`:`openCompleteTask('${t.id}')`}" title="${t.done?'Click to reopen':'Click to complete'}">${t.done?'✓':''}</div><div class="tbody"><div class="tlabel ${t.done?'done':''}"><span class="tag-dot" style="background:${col}"></span>${t.name}${t.createdByName?` <span class="creator-tag">${t.createdByName}</span>`:''}</div>${t.desc?`<div class="tmeta">${t.desc}</div>`:''}${t.due?`<div class="tmeta tdue ${over?'over':''}">Due: ${fmtD(t.due)}${over?' ⚠️ Overdue':''}</div>`:''}${t.done&&t.cnote?`<div class="tcnote">✓ ${t.cnote}</div>`:''}${!t.done?`<div class="entry-actions"><button class="btn-sm" onclick="editTask('${t.id}')">✏ Edit</button><button class="btn-sm d" onclick="deleteTask('${t.id}')">✕ Delete</button></div>`:`<div class="entry-actions"><button class="btn-sm" onclick="uncompleteTask('${t.id}')">↩ Reopen</button><button class="btn-sm d" onclick="deleteTask('${t.id}')">✕ Delete</button></div>`}</div></div>`;
   }).join('') : empt('✅','No tasks');
 }
 
@@ -1162,6 +1162,11 @@ function editTask(id) {
   pendingEditTaskId=id;
   popYP('t-yp'); sv('t-yp',t.ypId); sv('t-name',t.name); sv('t-desc',t.desc||''); sv('t-due',t.due||'');
   g('task-modal-title').textContent='Edit Task'; om('m-task');
+}
+
+async function uncompleteTask(id) {
+  try { await updateDoc(doc(db,'oShiftTasks',id),{done:false,cnote:'',completedBy:'',completedByName:'',completedAt:null}); await loadTasks(); renderHandover(); toast('Task reopened'); }
+  catch { toast('Failed','err'); }
 }
 
 async function deleteTask(id) {
