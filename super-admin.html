@@ -241,6 +241,11 @@ tr:hover td{background:var(--surface2)}
         <span class="ni">🧑‍💼</span> Staff Accounts
         <span class="nav-count" id="cnt-staff">0</span>
       </div>
+      <div class="sb-sec">Settings</div>
+      <div class="nav-item" onclick="showView('regbodies')" id="nav-regbodies">
+        <span class="ni">🏷️</span> Regulatory Bodies
+        <span class="nav-count" id="cnt-rb">0</span>
+      </div>
     </nav>
     <div class="sb-user">
       <div class="u-av" id="userAv">A</div>
@@ -363,6 +368,27 @@ tr:hover td{background:var(--surface2)}
         </div>
       </div>
 
+      <!-- REGULATORY BODIES VIEW -->
+      <div class="view" id="v-regbodies">
+        <div class="page-hdr">
+          <div>
+            <h2>Regulatory Bodies</h2>
+            <p>Manage the options available in service user profiles</p>
+          </div>
+          <button class="btn btn-primary" onclick="openRBModal()">＋ Add Option</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr>
+              <th>Label</th>
+              <th>Service Users Using This</th>
+              <th></th>
+            </tr></thead>
+            <tbody id="rbTbody"></tbody>
+          </table>
+        </div>
+      </div>
+
     </div><!-- /content -->
   </div><!-- /main -->
 </div><!-- /app -->
@@ -417,12 +443,7 @@ tr:hover td{background:var(--surface2)}
         </div>
         <div class="form-group">
           <label>Regulatory Body</label>
-          <select id="suRegBody">
-            <option value="">— Select —</option>
-            <option value="PCO">PCO</option>
-            <option value="UC">UC</option>
-            <option value="CQC">CQC</option>
-          </select>
+          <select id="suRegBody"></select>
         </div>
       </div>
       <div id="suHistoryWrap" style="display:none">
@@ -541,6 +562,27 @@ tr:hover td{background:var(--surface2)}
   </div>
 </div>
 
+<!-- REGULATORY BODY MODAL -->
+<div class="modal-bg" id="rbModal">
+  <div class="modal">
+    <div class="modal-hdr">
+      <h3 id="rbModalTitle">Add Regulatory Body</h3>
+      <button class="modal-close" onclick="closeModal('rbModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>Label *</label>
+        <input id="rbLabel" type="text" placeholder="e.g. O">
+        <div class="form-hint">Short label shown in service user profiles</div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('rbModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveRB()">Save</button>
+    </div>
+  </div>
+</div>
+
 <!-- CONFIRM MODAL -->
 <div class="modal-bg" id="confirmModal">
   <div class="modal">
@@ -591,6 +633,8 @@ let units        = [];   // [{id, name, status, createdAt}]
 let serviceUsers = [];   // [{id, name, dob, currentUnitId, status, moveOnDate, unitHistory, createdAt}]
 let staffList    = [];   // [{id, name, initials, role, email, status}]
 
+let regBodies    = [];   // [{id, label}]
+let editingRBId  = null;
 let editingUnitId  = null;
 let editingSUId    = null;
 let editingStaffId = null;
@@ -644,7 +688,7 @@ window.doSignOut = async () => {
 
 // ── LOAD ALL DATA ──
 async function loadAll() {
-  await Promise.all([loadUnits(), loadServiceUsers(), loadStaff()]);
+  await Promise.all([loadUnits(), loadServiceUsers(), loadStaff(), loadRegBodies()]);
   updateCounts();
 }
 
@@ -667,12 +711,76 @@ async function loadStaff() {
   renderStaff();
 }
 
+async function loadRegBodies() {
+  const snap = await getDocs(query(collection(db, 'regulatoryBodies'), orderBy('label')));
+  regBodies = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  renderRBs();
+}
+
 // ── COUNTS ──
 function updateCounts() {
   document.getElementById('cnt-units').textContent  = units.filter(u => u.status !== 'archived').length;
   document.getElementById('cnt-su').textContent     = serviceUsers.filter(s => s.status !== 'moved-on').length;
   document.getElementById('cnt-staff').textContent  = staffList.filter(s => s.status !== 'archived').length;
+  document.getElementById('cnt-rb').textContent     = regBodies.length;
 }
+
+// ── REGULATORY BODIES ──
+window.renderRBs = function() {
+  const tbody = document.getElementById('rbTbody');
+  if (!regBodies.length) {
+    tbody.innerHTML = '<tr class="empty-row"><td colspan="3">No regulatory bodies yet</td></tr>';
+    return;
+  }
+  tbody.innerHTML = regBodies.map(rb => {
+    const inUse = serviceUsers.filter(s => s.regulatoryBody === rb.label).length;
+    return `<tr>
+      <td><strong style="font-size:15px">${esc(rb.label)}</strong></td>
+      <td><span class="badge badge-blue">${inUse} user${inUse !== 1 ? 's' : ''}</span></td>
+      <td><div class="actions-cell">
+        <button class="btn btn-ghost btn-sm" onclick="openRBModal('${rb.id}')">Edit</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteRB('${rb.id}')">Delete</button>
+      </div></td>
+    </tr>`;
+  }).join('');
+};
+
+window.openRBModal = function(id) {
+  editingRBId = id || null;
+  document.getElementById('rbModalTitle').textContent = id ? 'Edit Regulatory Body' : 'Add Regulatory Body';
+  document.getElementById('rbLabel').value = id ? (regBodies.find(r => r.id === id)?.label || '') : '';
+  openModal('rbModal');
+};
+
+window.saveRB = async function() {
+  const label = document.getElementById('rbLabel').value.trim();
+  if (!label) { toast('Label is required', 'error'); return; }
+  try {
+    if (editingRBId) {
+      await updateDoc(doc(db, 'regulatoryBodies', editingRBId), { label });
+      toast('Updated');
+    } else {
+      await addDoc(collection(db, 'regulatoryBodies'), { label, createdAt: serverTimestamp() });
+      toast('Added', 'success');
+    }
+    closeModal('rbModal');
+    await loadRegBodies();
+    updateCounts();
+  } catch (e) { toast(e.message, 'error'); }
+};
+
+window.deleteRB = function(id) {
+  const rb = regBodies.find(r => r.id === id);
+  const inUse = serviceUsers.filter(s => s.regulatoryBody === rb.label).length;
+  confirmAction = async () => {
+    await deleteDoc(doc(db, 'regulatoryBodies', id));
+    toast('Deleted');
+    await loadRegBodies();
+    updateCounts();
+  };
+  showConfirm('Delete Regulatory Body', `Delete "${rb.label}"?`,
+    inUse > 0 ? `⚠️ ${inUse} service user(s) currently have this value — it will remain on their profile but no longer appear as a dropdown option.` : 'This cannot be undone.', '🗑️');
+};
 
 // ── UNITS RENDER ──
 window.renderUnits = function() {
@@ -806,6 +914,11 @@ window.openSUModal = function(id) {
   uSel.innerHTML = units.filter(u => u.status !== 'archived').map(u =>
     `<option value="${u.id}">${esc(u.name)}</option>`
   ).join('');
+
+  // Populate regulatory body dropdown from Firestore
+  const rbSel = document.getElementById('suRegBody');
+  rbSel.innerHTML = '<option value="">— Select —</option>' +
+    regBodies.map(r => `<option value="${esc(r.label)}">${esc(r.label)}</option>`).join('');
 
   if (id) {
     const s = serviceUsers.find(x => x.id === id);
@@ -1073,7 +1186,8 @@ window.showView = function(view) {
   document.getElementById('nav-' + view).classList.add('active');
   const titles = { units: 'Units <span class="tb-sub">Manage care units</span>',
                    serviceusers: 'Service Users <span class="tb-sub">Profiles and assignments</span>',
-                   staff: 'Staff Accounts <span class="tb-sub">Logins and roles</span>' };
+                   staff: 'Staff Accounts <span class="tb-sub">Logins and roles</span>',
+                   regbodies: 'Regulatory Bodies <span class="tb-sub">Manage dropdown options</span>' };
   document.getElementById('topbarTitle').innerHTML = titles[view] || view;
   closeSidebar();
 };
