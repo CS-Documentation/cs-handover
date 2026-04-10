@@ -1082,7 +1082,7 @@ async function loadLocations() {
   if (!currentUnitYPs.length) return;
   try {
     const snap = await getDocs(query(collection(db,'oShiftLocations'),
-      where('unitId','==',currentUnitId), where('date','==',currentDate)));
+      where('unitId','==',currentUnitId), where('date','==',currentDate), where('shift','==',currentShift)));
     snap.docs.forEach(d=>{ locsCache[d.data().ypId]={location:d.data().location||'',locNotes:d.data().locNotes||''}; });
   } catch {}
 }
@@ -1147,7 +1147,7 @@ function renderAlertsBanner() {
   const active = notesCache.filter(n=>{
     if(n.done) return false;
     if(n.type==='alert') return !n.until||n.until>=date;
-    if(n.type==='reminder') return n.rtype==='today'||(n.rdate&&n.rdate>=date)||(n.prior&&n.rdate&&priorD(n.rdate)===date);
+    if(n.type==='reminder') return n.shift===currentShift&&(n.rtype==='today'||(n.rdate&&n.rdate>=date)||(n.prior&&n.rdate&&priorD(n.rdate)===date));
     return false;
   });
   g('alerts-banner').innerHTML = [
@@ -1195,8 +1195,8 @@ async function setLoc(ypId, val) {
   const existing=locsCache[ypId]||{};
   locsCache[ypId]={...existing,location:val};
   try {
-    await setDoc(doc(db,'oShiftLocations',`${currentUnitId}_${ypId}_${currentDate}`),
-      {unitId:currentUnitId,ypId,date:currentDate,location:val,locNotes:existing.locNotes||'',updatedBy:currentUser.uid,updatedAt:serverTimestamp()},{merge:true});
+    await setDoc(doc(db,'oShiftLocations',`${currentUnitId}_${ypId}_${currentDate}_${currentShift}`),
+      {unitId:currentUnitId,ypId,date:currentDate,shift:currentShift,location:val,locNotes:existing.locNotes||'',updatedBy:currentUser.uid,updatedAt:serverTimestamp()},{merge:true});
   } catch { toast('Save failed','err'); }
 }
 
@@ -1205,8 +1205,8 @@ async function setLocNote(ypId, val) {
   const existing=locsCache[ypId]||{};
   locsCache[ypId]={...existing,locNotes:val};
   try {
-    await setDoc(doc(db,'oShiftLocations',`${currentUnitId}_${ypId}_${currentDate}`),
-      {unitId:currentUnitId,ypId,date:currentDate,location:existing.location||'',locNotes:val,updatedBy:currentUser.uid,updatedAt:serverTimestamp()},{merge:true});
+    await setDoc(doc(db,'oShiftLocations',`${currentUnitId}_${ypId}_${currentDate}_${currentShift}`),
+      {unitId:currentUnitId,ypId,date:currentDate,shift:currentShift,location:existing.location||'',locNotes:val,updatedBy:currentUser.uid,updatedAt:serverTimestamp()},{merge:true});
   } catch {}
 }
 
@@ -1665,9 +1665,9 @@ async function saveRota() {
   const date=gv('r-date'), shift=gv('r-shift'), staffName=gv('r-staff').trim(), unitId=gv('r-unit');
   if(!staffName||!date){toast('Fill all fields','err');return;}
   try {
-    const ex=rotaCache.find(r=>r.date===date&&r.shift===shift&&r.unitId===unitId);
-    if(ex) await updateDoc(doc(db,'oShiftRota',ex.id),{staffName});
-    else await addDoc(collection(db,'oShiftRota'),{unitId,date,shift,staffName,createdBy:currentUser.uid,createdAt:serverTimestamp()});
+    const month=date.slice(0,7);
+    const docId=`${unitId}_${date}_${shift}`;
+    await setDoc(doc(db,'oShiftRota',docId),{unitId,date,shift,staffName,month,updatedAt:serverTimestamp()},{merge:true});
     cm('m-add-rota'); await loadRota(); renderHandover(); renderRotaGrid(); toast('Rota updated ✓');
   } catch { toast('Save failed','err'); }
 }
