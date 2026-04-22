@@ -448,6 +448,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
           <button class="btn btn-amber no-print" onclick="openTaskModal()">＋ Task</button>
           <button class="btn btn-ghost no-print" onclick="openKWModal()">＋ Key Work / ISS</button>
           <button class="btn btn-primary no-print" onclick="openNoteModal()">＋ Note / Alert</button>
+          <button class="btn btn-ghost no-print" onclick="openNBTaskModal()">＋ Unit Task</button>
+          <button class="btn btn-ghost no-print" onclick="openNBNoticeModal('alert')">＋ Unit Alert</button>
         </div>
       </div>
       <div class="alerts-banner" id="alerts-banner"></div>
@@ -889,6 +891,7 @@ const SHIFTS = {
 };
 const LOCS = ['At home','College','Work','Appointment','Out (known)','Out (unknown)','Hospital','Police','Not returned'];
 const YP_COLORS = ['#1446a0','#27ae60','#7b2d8b','#e67e22','#0e7490','#c0392b','#0d9488','#9333ea','#d97706','#059669'];
+const UNIT_COLOR = '#64748b';
 
 // ── UTILS ──
 const g = id => document.getElementById(id);
@@ -1043,7 +1046,7 @@ async function loadYPsForUnit() {
 async function loadShiftData() {
   currentDate = gv('date-inp') || todayISO();
   if (!currentUnitId) { renderHandover(); return; }
-  await Promise.all([loadNotes(), loadTasks(), loadKW(), loadMissing(), loadLocations(), loadRota()]);
+  await Promise.all([loadNotes(), loadTasks(), loadKW(), loadMissing(), loadLocations(), loadRota(), loadNoticeBoardData()]);
   renderHandover();
 }
 
@@ -1140,6 +1143,11 @@ async function renderHandover() {
 
 function getYPInit(ypId) { const y=currentUnitYPs.find(y=>y.id===ypId); return y?(y.initials||y.name||'?'):'?'; }
 function getYPColorIdx(ypId) { return currentUnitYPs.findIndex(y=>y.id===ypId); }
+function ypTagHtml(ypId) {
+  if (!ypId) return `<span class="yp-tag" style="background:${UNIT_COLOR}">Unit</span>`;
+  const idx = getYPColorIdx(ypId);
+  return `<span class="yp-tag" style="background:${ypColor(idx)}">${getYPInit(ypId)}</span>`;
+}
 
 function renderAlertsBanner() {
   const date = currentDate;
@@ -1150,9 +1158,15 @@ function renderAlertsBanner() {
     if(n.type==='reminder') return n.shift===currentShift&&(n.rtype==='today'||(n.rdate&&n.rdate>=date)||(n.prior&&n.rdate&&priorD(n.rdate)===date));
     return false;
   });
+  const nbActive = nbUnitNoticesCache.filter(n=>{
+    if(n.type==='alert') return !n.until||n.until>=date;
+    if(n.type==='reminder') return n.rtype==='today'||(n.rdate&&n.rdate>=date);
+    return false;
+  });
   g('alerts-banner').innerHTML = [
     ...openMiss.map(m=>`<div class="ac t-missing"><span class="abadge ab-missing">${m.mtype==='ua'?'⚠️ UA':'🔴 MISSING'}</span><div class="ac-body"><div class="ac-title">${getYPInit(m.ypId)} — ${m.mtype==='ua'?'Unauthorised Absence':'MISSING PERSON'}</div><div class="ac-meta">Reported ${m.time||''}${(m.updates||[]).length?' · '+(m.updates||[]).length+' update(s)':''}</div></div><div class="ac-actions"><button class="btn-sm" onclick="openUpd('missing','${m.id}')">+ Update</button><button class="btn-sm s" onclick="openCloseMiss('${m.id}')">Close</button></div></div>`),
-    ...active.map(n=>{ const isr=n.type==='reminder'; return `<div class="ac t-${n.type}"><span class="abadge ${isr?'ab-reminder':'ab-alert'}">${isr?'🔔 Reminder':'🔴 Alert'}</span><div class="ac-body"><div class="ac-title">${n.text}</div><div class="ac-meta"><span class="ac-yp">${getYPInit(n.ypId)}</span> · ${n.time||''}${n.until?' · until '+fmtD(n.until):''}${n.rdate?' · '+fmtD(n.rdate):''}</div></div><div class="ac-actions"><button class="btn-sm" onclick="openUpd('alert','${n.id}')">+ Update</button><button class="btn-sm s" onclick="openResolve('${n.id}')">Resolve</button><button class="btn-sm" onclick="editNote('${n.id}')">✏ Edit</button><button class="btn-sm d" onclick="deleteNote('${n.id}')">✕ Delete</button></div></div>`; })
+    ...active.map(n=>{ const isr=n.type==='reminder'; return `<div class="ac t-${n.type}"><span class="abadge ${isr?'ab-reminder':'ab-alert'}">${isr?'🔔 Reminder':'🔴 Alert'}</span><div class="ac-body"><div class="ac-title">${n.text}</div><div class="ac-meta">${ypTagHtml(n.ypId)} · ${n.time||''}${n.until?' · until '+fmtD(n.until):''}${n.rdate?' · '+fmtD(n.rdate):''}</div></div><div class="ac-actions"><button class="btn-sm" onclick="openUpd('alert','${n.id}')">+ Update</button><button class="btn-sm s" onclick="openResolve('${n.id}')">Resolve</button><button class="btn-sm" onclick="editNote('${n.id}')">✏ Edit</button><button class="btn-sm d" onclick="deleteNote('${n.id}')">✕ Delete</button></div></div>`; }),
+    ...nbActive.map(n=>{ const isr=n.type==='reminder'; return `<div class="ac t-${n.type}"><span class="abadge ${isr?'ab-reminder':'ab-alert'}">${isr?'🔔 Reminder':'🔴 Alert'}</span><div class="ac-body"><div class="ac-title">${n.text}</div><div class="ac-meta">${ypTagHtml(n.ypId||null)}${n.until?' · until '+fmtD(n.until):''}${n.rdate?' · '+fmtD(n.rdate):''}</div></div><div class="ac-actions"><button class="btn-sm s" onclick="resolveNBNotice('${n.id}')">Resolve</button><button class="btn-sm" onclick="editNBNotice('${n.id}')">✏ Edit</button><button class="btn-sm d" onclick="deleteNBNotice('${n.id}')">✕ Delete</button></div></div>`; })
   ].join('')||'';
 }
 
@@ -1166,11 +1180,24 @@ function renderNotes() {
 }
 
 function renderTasks() {
-  g('cnt-tasks').textContent = tasksCache.filter(t=>!t.done).length;
-  g('tasks-list').innerHTML = tasksCache.length ? tasksCache.map(t=>{
-    const idx=getYPColorIdx(t.ypId); const col=ypColor(idx); const over=!t.done&&t.due&&t.due<currentDate;
-    return `<div class="task-item"><div class="tcheck ${t.done?'done':''}" onclick="${t.done?`uncompleteTask('${t.id}')`:`openCompleteTask('${t.id}')`}" title="${t.done?'Click to reopen':'Click to complete'}">${t.done?'✓':''}</div><div class="tbody"><div class="tlabel ${t.done?'done':''}"><span class="tag-dot" style="background:${col}"></span>${t.name}${t.createdByName?` <span class="creator-tag">${t.createdByName}</span>`:''}</div>${t.desc?`<div class="tmeta">${t.desc}</div>`:''}${t.due?`<div class="tmeta tdue ${over?'over':''}">Due: ${fmtD(t.due)}${over?' ⚠️ Overdue':''}</div>`:''}${t.done&&t.cnote?`<div class="tcnote">✓ ${t.cnote}</div>`:''}${!t.done?`<div class="entry-actions"><button class="btn-sm" onclick="editTask('${t.id}')">✏ Edit</button><button class="btn-sm d" onclick="deleteTask('${t.id}')">✕ Delete</button></div>`:`<div class="entry-actions"><button class="btn-sm" onclick="uncompleteTask('${t.id}')">↩ Reopen</button><button class="btn-sm d" onclick="deleteTask('${t.id}')">✕ Delete</button></div>`}</div></div>`;
-  }).join('') : empt('✅','No tasks');
+  const nbItems = nbTasksCache.filter(t=>!t.completed);
+  g('cnt-tasks').textContent = tasksCache.filter(t=>!t.done).length + nbItems.length;
+  let html = '';
+  if (tasksCache.length) {
+    html += tasksCache.map(t=>{
+      const over=!t.done&&t.due&&t.due<currentDate;
+      return `<div class="task-item"><div class="tcheck ${t.done?'done':''}" onclick="${t.done?`uncompleteTask('${t.id}')`:`openCompleteTask('${t.id}')`}" title="${t.done?'Click to reopen':'Click to complete'}">${t.done?'✓':''}</div><div class="tbody"><div class="tlabel ${t.done?'done':''}">${ypTagHtml(t.ypId)} ${t.name}${t.createdByName?` <span class="creator-tag">${t.createdByName}</span>`:''}</div>${t.desc?`<div class="tmeta">${t.desc}</div>`:''}${t.due?`<div class="tmeta tdue ${over?'over':''}">Due: ${fmtD(t.due)}${over?' ⚠️ Overdue':''}</div>`:''}${t.done&&t.cnote?`<div class="tcnote">✓ ${t.cnote}</div>`:''}${!t.done?`<div class="entry-actions"><button class="btn-sm" onclick="editTask('${t.id}')">✏ Edit</button><button class="btn-sm d" onclick="deleteTask('${t.id}')">✕ Delete</button></div>`:`<div class="entry-actions"><button class="btn-sm" onclick="uncompleteTask('${t.id}')">↩ Reopen</button><button class="btn-sm d" onclick="deleteTask('${t.id}')">✕ Delete</button></div>`}</div></div>`;
+    }).join('');
+  }
+  if (nbItems.length) {
+    if (tasksCache.length) html += `<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--text3);padding:8px 0 4px;border-top:1px solid var(--border);margin-top:6px">Notice Board</div>`;
+    html += nbItems.map(t=>{
+      const over=(t.targetDate||t.dueDate)&&(t.targetDate||t.dueDate)<currentDate;
+      return `<div class="task-item"><div class="tcheck" onclick="completeNBTask('${t.id}')" title="Click to complete"></div><div class="tbody"><div class="tlabel">${ypTagHtml(t.serviceUserId||null)} ${t.title||t.name||'Untitled'}${t.addedByName?` <span class="creator-tag">${t.addedByName}</span>`:''}</div>${t.description||t.desc?`<div class="tmeta">${t.description||t.desc}</div>`:''}${(t.targetDate||t.dueDate)?`<div class="tmeta tdue ${over?'over':''}">Target: ${fmtD(t.targetDate||t.dueDate)}${over?' ⚠️ Overdue':''}</div>`:''}<div class="entry-actions"><button class="btn-sm s" onclick="completeNBTask('${t.id}')">✓ Complete</button><button class="btn-sm" onclick="editNBTask('${t.id}')">✏ Edit</button><button class="btn-sm d" onclick="deleteNBTask('${t.id}')">✕ Delete</button></div></div></div>`;
+    }).join('');
+  }
+  if (!html) html = empt('✅','No tasks');
+  g('tasks-list').innerHTML = html;
 }
 
 function renderKW() {
@@ -1741,7 +1768,7 @@ function renderNoticeBoard() {
   g('nb-cnt-alerts').textContent = alerts.length;
   g('nb-alerts-list').innerHTML = alerts.length ? alerts.map(n=>{
     const ypIdx = n.ypId ? getYPColorIdx(n.ypId) : -1;
-    const ypTag = n.ypId ? `<span class="yp-tag" style="background:${ypColor(ypIdx)}">${getYPInit(n.ypId)}</span>` : '<span class="ecat">Unit-wide</span>';
+    const ypTag = n.ypId ? `<span class="yp-tag" style="background:${ypColor(ypIdx)}">${getYPInit(n.ypId)}</span>` : ypTagHtml(null);
     return `<div class="entry" style="border-left:3px solid var(--red);background:var(--red-bg)">
       <div class="eh">${ypTag}${n.until?`<span class="etime">until ${fmtD(n.until)}</span>`:''}${n.createdByName?`<span class="creator-tag">${n.createdByName}</span>`:''}</div>
       <div class="etext">${n.text}</div>
@@ -1760,7 +1787,7 @@ function renderNoticeBoard() {
   g('nb-cnt-reminders').textContent = reminders.length;
   g('nb-reminders-list').innerHTML = reminders.length ? reminders.map(n=>{
     const ypIdx = n.ypId ? getYPColorIdx(n.ypId) : -1;
-    const ypTag = n.ypId ? `<span class="yp-tag" style="background:${ypColor(ypIdx)}">${getYPInit(n.ypId)}</span>` : '<span class="ecat">Unit-wide</span>';
+    const ypTag = n.ypId ? `<span class="yp-tag" style="background:${ypColor(ypIdx)}">${getYPInit(n.ypId)}</span>` : ypTagHtml(null);
     const dateLabel = n.rtype==='today' ? 'Ongoing' : (n.rdate ? fmtD(n.rdate) : '');
     return `<div class="entry" style="border-left:3px solid var(--amber);background:var(--amber-bg)">
       <div class="eh">${ypTag}<span class="etime">${dateLabel}</span>${n.createdByName?`<span class="creator-tag">${n.createdByName}</span>`:''}</div>
@@ -1867,7 +1894,7 @@ async function saveNBNotice() {
     } else {
       await addDoc(collection(db,'unitNotices'), data);
     }
-    cm('m-nb-notice'); await loadNoticeBoardData(); renderNoticeBoard(); toast('Saved ✓');
+    cm('m-nb-notice'); await loadNoticeBoardData(); renderNoticeBoard(); renderHandover(); toast('Saved ✓');
   } catch { toast('Save failed','err'); }
 }
 
@@ -1895,7 +1922,7 @@ function editNBNotice(id) {
 async function resolveNBNotice(id) {
   try {
     await updateDoc(doc(db,'unitNotices',id),{done:true,resolvedBy:currentStaff?.name||'',resolvedAt:serverTimestamp()});
-    await loadNoticeBoardData(); renderNoticeBoard(); toast('Resolved ✓');
+    await loadNoticeBoardData(); renderNoticeBoard(); renderHandover(); toast('Resolved ✓');
   } catch { toast('Failed','err'); }
 }
 
@@ -1903,7 +1930,7 @@ async function deleteNBNotice(id) {
   if (!confirm('Delete this notice?')) return;
   try {
     await deleteDoc(doc(db,'unitNotices',id));
-    await loadNoticeBoardData(); renderNoticeBoard(); toast('Deleted');
+    await loadNoticeBoardData(); renderNoticeBoard(); renderHandover(); toast('Deleted');
   } catch { toast('Delete failed','err'); }
 }
 
@@ -1966,7 +1993,7 @@ async function saveNBTask() {
     }
     cm('m-nb-task');
     await loadNoticeBoardData();
-    renderNoticeBoard();
+    renderNoticeBoard(); renderHandover();
     toast('Task saved ✓');
   } catch { toast('Save failed','err'); }
 }
@@ -1996,14 +2023,14 @@ async function completeNBTask(id) {
       completed:true, completedBy:currentUser.uid,
       completedByName:currentStaff?.name||'', completedAt:serverTimestamp()
     });
-    await loadNoticeBoardData(); renderNoticeBoard(); toast('Task completed ✓');
+    await loadNoticeBoardData(); renderNoticeBoard(); renderHandover(); toast('Task completed ✓');
   } catch { toast('Failed','err'); }
 }
 
 async function uncompleteNBTask(id) {
   try {
     await updateDoc(doc(db,'adhocTasks',id),{completed:false,completedBy:null,completedByName:'',completedAt:null});
-    await loadNoticeBoardData(); renderNoticeBoard(); toast('Task reopened');
+    await loadNoticeBoardData(); renderNoticeBoard(); renderHandover(); toast('Task reopened');
   } catch { toast('Failed','err'); }
 }
 
@@ -2011,7 +2038,7 @@ async function deleteNBTask(id) {
   if (!confirm('Delete this task? It will also be removed from the Task Board.')) return;
   try {
     await deleteDoc(doc(db,'adhocTasks',id));
-    await loadNoticeBoardData(); renderNoticeBoard(); toast('Deleted');
+    await loadNoticeBoardData(); renderNoticeBoard(); renderHandover(); toast('Deleted');
   } catch { toast('Delete failed','err'); }
 }
 
