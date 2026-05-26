@@ -1163,7 +1163,11 @@ async function saveDocEdits() {
   let vals = {};
   const tmplForSave = templates.find(t => t.id === currentTmplId);
   if (tmplForSave && isRichTemplate(tmplForSave.htmlContent) && typeof iWin?.getAllData === 'function') {
-    vals = iWin.getAllData();
+    // JSON round-trip moves the object from the iframe's JS realm into the
+    // parent realm — without this Firestore rejects it as a "custom Object"
+    // because the iframe's Object.prototype differs from the parent's.
+    // Also converts undefined values to null (Firestore doesn't accept undefined).
+    vals = JSON.parse(JSON.stringify(iWin.getAllData()));
   } else {
     iDoc.querySelectorAll('[data-cs-field]').forEach(el => {
       const id = el.getAttribute('data-cs-field');
