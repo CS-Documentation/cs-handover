@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Placement Matching and Impact Tool – Connected Stars</title>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&family=Dancing+Script:wght@400;700&family=Caveat:wght@400;700&family=Satisfy&family=Great+Vibes&display=swap" rel="stylesheet">
+<style>
+:root{
+--primary:#1446a0;--primary-light:#1a5cc8;--accent:#e8913a;--bg:#f8f9fa;--white:#fff;
+--border:#d0d5dd;--text:#1a1a2e;--text-light:#667085;--green:#27ae60;--red:#e74c3c;
+--amber:#f39c12;--section-bg:#f0f4f8;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Roboto',sans-serif;background:var(--bg);color:var(--text);line-height:1.5;}
+
+.container{max-width:900px;margin:0 auto;padding:20px 20px 40px;}
+
+.doc-header-bar{background:var(--primary);border-radius:12px;padding:20px 30px;margin-bottom:25px;display:flex;align-items:center;justify-content:space-between;gap:20px;}
+.doc-header-bar img{height:60px;}
+.doc-header-bar h1{color:#fff;font-size:28px;font-weight:900;text-align:right;line-height:1.2;margin:0;letter-spacing:-0.5px;}
+
+.section{background:var(--white);border-radius:10px;padding:25px;margin-bottom:20px;box-shadow:0 1px 4px rgba(0,0,0,.06);}
+.section-title{font-size:18px;color:var(--primary);margin-bottom:18px;padding-bottom:10px;border-bottom:2px solid var(--accent);display:flex;align-items:center;gap:10px;}
+.section-number{background:var(--primary);color:#fff;width:28px;height:28px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0;}
+
+.form-row{display:grid;grid-template-columns:200px 1fr;gap:10px;margin-bottom:10px;align-items:start;}
+.form-row label{font-size:13px;font-weight:600;color:var(--text);padding-top:8px;}
+.form-row input,.form-row select,.form-row textarea{width:100%;padding:8px 12px;border:1px solid var(--border);border-radius:6px;font-size:13px;font-family:'Roboto',sans-serif;background:var(--white);transition:.2s;}
+.form-row input:focus,.form-row select:focus,.form-row textarea:focus{outline:none;border-color:var(--primary-light);box-shadow:0 0 0 3px rgba(20,70,160,.1);}
+.form-row textarea{min-height:50px;resize:none;overflow:hidden;}
+.form-row-full{margin-bottom:10px;}
+.form-row-full label{display:block;font-size:13px;font-weight:600;color:var(--text);margin-bottom:5px;}
+.form-row-full textarea{width:100%;padding:8px 12px;border:1px solid var(--border);border-radius:6px;font-size:13px;font-family:'Roboto',sans-serif;min-height:50px;resize:none;overflow:hidden;}
+.form-row-full textarea:focus{outline:none;border-color:var(--primary-light);box-shadow:0 0 0 3px rgba(20,70,160,.1);}
+
+.domain-block{background:var(--section-bg);border-radius:8px;padding:20px;margin-bottom:15px;border-left:4px solid var(--primary);}
+.domain-header{font-size:15px;font-weight:700;color:var(--primary);margin-bottom:4px;}
+.domain-desc{font-size:12px;color:var(--text-light);margin-bottom:15px;font-style:italic;}
+.step-label{font-size:12px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.5px;margin:15px 0 8px;}
+.step-label:first-of-type{margin-top:0;}
+.domain-ta{width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:12px;font-family:'Roboto',sans-serif;min-height:45px;resize:none;overflow:hidden;margin-top:4px;}
+.domain-ta:focus{outline:none;border-color:var(--primary-light);box-shadow:0 0 0 3px rgba(20,70,160,.1);}
+
+.rating-group,.impact-group{display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap;}
+.rating-btn,.impact-btn{padding:5px 14px;border:2px solid var(--border);border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;background:var(--white);transition:.2s;font-family:'Roboto',sans-serif;}
+.rating-btn:hover,.impact-btn:hover{border-color:var(--primary-light);}
+.selected-none{background:#e8edf2!important;border-color:#667085!important;color:#667085!important;}
+.selected-low{background:#d5f5e3!important;border-color:var(--green)!important;color:var(--green)!important;}
+.selected-medium{background:#fef3cd!important;border-color:var(--amber)!important;color:#b8860b!important;}
+.selected-high{background:#fadbd8!important;border-color:var(--red)!important;color:var(--red)!important;}
+.selected-minimal{background:#e8edf2!important;border-color:#667085!important;color:#667085!important;}
+.selected-unsuitable{background:#c0392b!important;border-color:#922b21!important;color:#fff!important;}
+
+.decision-options{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;}
+.decision-btn{padding:8px 20px;border:2px solid var(--border);border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;background:var(--white);transition:.2s;font-family:'Roboto',sans-serif;}
+.sel-accept{background:#d5f5e3!important;border-color:var(--green)!important;color:var(--green)!important;}
+.sel-conditions{background:#fef3cd!important;border-color:var(--amber)!important;color:#b8860b!important;}
+.sel-decline{background:#fadbd8!important;border-color:var(--red)!important;color:var(--red)!important;}
+
+.radar-container{display:flex;justify-content:center;padding:20px 0;}
+.radar-container canvas{max-width:550px;width:100%;aspect-ratio:1;}
+
+.consult-table{width:100%;border-collapse:collapse;font-size:13px;margin-top:10px;}
+.consult-table th{background:var(--primary);color:#fff;padding:8px 10px;text-align:left;font-size:12px;font-weight:600;}
+.consult-table td{padding:6px 8px;border-bottom:1px solid var(--border);vertical-align:top;}
+.consult-table tr:nth-child(even){background:var(--section-bg);}
+.consult-table input,.consult-table textarea{width:100%;padding:5px 8px;border:1px solid var(--border);border-radius:4px;font-size:12px;font-family:'Roboto',sans-serif;}
+.consult-table textarea{min-height:40px;resize:none;overflow:hidden;}
+.btn-add-row{display:inline-flex;align-items:center;gap:5px;padding:6px 14px;background:var(--primary);color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;margin-top:10px;font-family:'Roboto',sans-serif;}.btn-add-row:hover{background:var(--primary-light);}
+.btn-remove-row{background:none;border:none;color:var(--red);cursor:pointer;font-size:16px;font-weight:700;padding:2px 6px;border-radius:4px;}.btn-remove-row:hover{background:#fadbd8;}
+
+.sign-block{border:1px solid var(--border);border-radius:8px;padding:20px;margin-bottom:20px;}
+.sign-block-title{font-size:14px;font-weight:700;color:var(--primary);margin-bottom:12px;}
+.sign-name-date{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;}
+.sign-field label{display:block;font-size:11px;font-weight:600;color:var(--text-light);text-transform:uppercase;margin-bottom:4px;}
+.sign-field input{width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;font-size:13px;font-family:'Roboto',sans-serif;}
+.sig-method-tabs{display:flex;gap:4px;margin-bottom:10px;}
+.sig-tab{padding:5px 14px;border:1.5px solid var(--border);border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;background:var(--white);font-family:'Roboto',sans-serif;transition:.2s;}
+.sig-tab.active{background:var(--primary);color:#fff;border-color:var(--primary);}
+.sig-area{border:1px solid var(--border);border-radius:6px;min-height:80px;background:#fafbfc;position:relative;overflow:hidden;}
+.sig-type-area{padding:10px;display:flex;flex-direction:column;gap:8px;}
+.sig-type-input{width:100%;padding:8px;border:1px solid var(--border);border-radius:4px;font-size:14px;font-family:'Roboto',sans-serif;}
+.sig-font-options{display:flex;gap:6px;flex-wrap:wrap;}
+.sig-font-btn{padding:4px 12px;border:1.5px solid var(--border);border-radius:4px;cursor:pointer;background:#fff;font-size:16px;transition:.2s;}
+.sig-font-btn.active{border-color:var(--primary);background:#e8f0fe;}
+.sig-preview{font-size:28px;padding:10px;color:var(--primary);min-height:50px;display:flex;align-items:center;}
+.sig-draw-area{width:100%;height:120px;cursor:crosshair;touch-action:none;}
+.sig-upload-area{padding:15px;text-align:center;cursor:pointer;color:var(--text-light);font-size:12px;}
+.sig-upload-area img{max-height:80px;max-width:100%;object-fit:contain;}
+.sig-clear{position:absolute;top:5px;right:5px;background:rgba(0,0,0,.05);border:none;border-radius:4px;padding:2px 8px;font-size:10px;cursor:pointer;color:var(--text-light);}.sig-clear:hover{background:rgba(0,0,0,.1);}
+
+.instructions-box{background:#fff8e6;border:1px solid #f0d060;border-radius:8px;padding:15px;margin-bottom:20px;font-size:12px;line-height:1.6;}
+.instructions-box strong{color:var(--primary);}
+
+.doc-footer-bar{background:var(--primary);border-radius:12px;padding:12px 25px;margin-top:30px;display:flex;align-items:center;justify-content:space-between;}
+.doc-footer-bar img{height:24px;}
+.doc-footer-bar span{color:rgba(255,255,255,.6);font-size:11px;text-align:right;}
+
+@media print{
+@page{size:A4;margin:12mm 12mm 12mm 12mm;}
+body{background:#fff!important;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+.sig-method-tabs,.sig-font-options,.sig-type-input,.sig-upload-area,.sig-clear,.btn-add-row,.btn-remove-row{display:none!important;}
+.container{max-width:100%!important;padding:0!important;margin:0!important;}
+.section{box-shadow:none!important;border:1px solid #ddd;margin-bottom:10px;padding:16px;}
+.domain-block{break-inside:avoid;}
+.sig-area{border:none!important;background:transparent!important;min-height:auto!important;}
+.sig-type-area{padding:0!important;}
+.sig-preview{padding:5px 0!important;min-height:30px!important;}
+.doc-header-bar{border-radius:8px!important;}
+.doc-footer-bar{border-radius:8px!important;}
+.radar-container canvas{max-width:450px!important;max-height:450px!important;}
+}
+</style>
+</head>
+<body data-cs-template-type="rich">
+
+<div class="container" id="pdfContent">
+
+<div class="doc-header-bar">
+<img src="https://raw.githubusercontent.com/CS-Documentation/invoice/refs/heads/main/front%20page%20header.png" alt="Connected Stars" crossorigin="anonymous">
+<h1>Placement Matching<br>and Impact Tool</h1>
+</div>
+
+<div class="section">
+<div class="section-title"><span class="section-number">1</span> Document Information</div>
+<div class="form-row"><label>Property name</label><input type="text" data-field="doc_property" data-cs-field="doc_property" data-cs-label="Property Name"></div>
+<div class="form-row"><label>Property address</label><input type="text" data-field="doc_address" data-cs-field="doc_address" data-cs-label="Property Address"></div>
+<div class="form-row"><label>Assessment completed by</label><input type="text" data-field="doc_completed_by" data-cs-field="doc_completed_by" data-cs-label="Completed By"></div>
+<div class="form-row"><label>Role</label><input type="text" data-field="doc_role" data-cs-field="doc_role" data-cs-label="Role"></div>
+<div class="form-row"><label>Date of assessment</label><input type="date" data-field="doc_date" data-cs-field="doc_date" data-cs-label="Date of Assessment" data-cs-type="date"></div>
+<div class="form-row"><label>Referral received from</label><input type="text" data-field="doc_referral_from" data-cs-field="doc_referral_from" data-cs-label="Referral From"></div>
+<div class="form-row"><label>Referral date</label><input type="date" data-field="doc_referral_date" data-cs-field="doc_referral_date" data-cs-label="Referral Date" data-cs-type="date"></div>
+</div>
+
+<div class="section">
+<div class="section-title"><span class="section-number">2</span> New Young Person Summary</div>
+<div class="form-row"><label>Name</label><input type="text" data-field="yp_name" data-cs-field="yp_name" data-cs-label="Young Person Name"></div>
+<div class="form-row"><label>Date of birth</label><input type="date" data-field="yp_dob" data-cs-field="yp_dob" data-cs-label="Date of Birth" data-cs-type="date"></div>
+<div class="form-row"><label>Age</label><input type="text" data-field="yp_age" data-cs-field="yp_age" data-cs-label="Age"></div>
+<div class="form-row"><label>Gender</label><input type="text" data-field="yp_gender" data-cs-field="yp_gender" data-cs-label="Gender"></div>
+<div class="form-row"><label>Ethnicity</label><input type="text" data-field="yp_ethnicity" data-cs-field="yp_ethnicity" data-cs-label="Ethnicity"></div>
+<div class="form-row"><label>Religion / faith</label><input type="text" data-field="yp_religion" data-cs-field="yp_religion" data-cs-label="Religion / Faith"></div>
+<div class="form-row"><label>Placing local authority</label><input type="text" data-field="yp_la" data-cs-field="yp_la" data-cs-label="Placing Local Authority"></div>
+<div class="form-row"><label>Allocated social worker</label><input type="text" data-field="yp_sw" data-cs-field="yp_sw" data-cs-label="Social Worker"></div>
+<div class="form-row"><label>SW contact number</label><input type="text" data-field="yp_sw_phone" data-cs-field="yp_sw_phone" data-cs-label="SW Phone"></div>
+<div class="form-row"><label>Legal status</label><input type="text" data-field="yp_legal" data-cs-field="yp_legal" data-cs-label="Legal Status" placeholder="e.g. Looked After, Care Leaver, Section 17"></div>
+<div class="form-row"><label>Court orders / bail</label><input type="text" data-field="yp_court" data-cs-field="yp_court" data-cs-label="Court Orders / Bail"></div>
+<div class="form-row"><label>Previous placements</label><input type="text" data-field="yp_prev_placements" data-cs-field="yp_prev_placements" data-cs-label="Previous Placements" placeholder="Number and type"></div>
+<div class="form-row-full"><label>Reason for referral / why previous placement ended</label><textarea data-field="yp_referral_reason" data-cs-field="yp_referral_reason" data-cs-label="Referral Reason" data-cs-type="textarea"></textarea></div>
+<div class="form-row-full"><label>Key background information</label><textarea data-field="yp_background" data-cs-field="yp_background" data-cs-label="Background Information" data-cs-type="textarea" placeholder="Brief summary of the young person's background, current needs, and what support they are looking for."></textarea></div>
+</div>
+
+<div class="section">
+<div class="section-title"><span class="section-number">3</span> Risk Domain Assessment</div>
+<div class="instructions-box">
+<strong>How to complete this section:</strong><br><br>
+For each risk domain, work through the three steps in order. The goal is not simply to match two risk levels together, but to assess the <strong>real impact</strong> this placement would have on the household and on the new young person.<br><br>
+A high risk on both sides does not automatically mean the placement is unsuitable – it depends on what is already in place and whether the placement introduces something new or adds to something already being managed.<br><br>
+<strong>Individual risk ratings:</strong> None · Low · Medium · High<br>
+<strong>Net placement impact ratings:</strong> Minimal · Low · Medium · High · Unsuitable
+</div>
+<div id="domainsContainer"></div>
+</div>
+
+<div class="section">
+<div class="section-title"><span class="section-number">4</span> Location Considerations</div>
+<div class="form-row-full"><label>Is the property in an area that poses any risk to the new young person?</label><textarea data-field="prac_location_risk" data-cs-field="prac_location_risk" data-cs-label="Location Risk" data-cs-type="textarea" placeholder="e.g. rival postcodes, proximity to known associates"></textarea></div>
+<div class="form-row-full"><label>Does the young person need to be in this area for education, employment, or family?</label><textarea data-field="prac_location_need" data-cs-field="prac_location_need" data-cs-label="Location Need" data-cs-type="textarea"></textarea></div>
+<div class="form-row-full"><label>Any restrictions on where the young person can live?</label><textarea data-field="prac_location_restrict" data-cs-field="prac_location_restrict" data-cs-label="Location Restrictions" data-cs-type="textarea" placeholder="e.g. bail conditions, licence conditions"></textarea></div>
+</div>
+
+<div class="section">
+<div class="section-title"><span class="section-number">5</span> Overall Placement Impact Summary</div>
+<div class="radar-container"><canvas id="radarChart"></canvas></div>
+<h3 style="font-size:14px;color:var(--primary);margin:25px 0 12px;">Key Strengths of This Placement</h3>
+<div class="form-row-full"><label>What are the positive reasons for this placement? What could the young person gain?</label><textarea data-field="summary_strengths" data-cs-field="summary_strengths" data-cs-label="Placement Strengths" data-cs-type="textarea" style="min-height:100px;"></textarea></div>
+<h3 style="font-size:14px;color:var(--primary);margin:20px 0 12px;">Key Concerns About This Placement</h3>
+<div class="form-row-full"><label>What are the main worries? What could go wrong?</label><textarea data-field="summary_concerns" data-cs-field="summary_concerns" data-cs-label="Placement Concerns" data-cs-type="textarea" style="min-height:100px;"></textarea></div>
+</div>
+
+<div class="section">
+<div class="section-title"><span class="section-number">6</span> Professional Consultation</div>
+<p style="font-size:12px;color:var(--text-light);margin-bottom:10px;">Record any discussions held with professionals about this placement.</p>
+<table class="consult-table" id="consultTable">
+<thead><tr><th style="width:22%">Name</th><th style="width:20%">Professional Title</th><th style="width:13%">Date</th><th>Views Expressed</th><th style="width:36px"></th></tr></thead>
+<tbody id="consultBody"></tbody>
+</table>
+<button class="btn-add-row" onclick="addConsultRow()"><span style="font-size:16px;line-height:1;">+</span> Add Row</button>
+</div>
+
+<div class="section">
+<div class="section-title"><span class="section-number">7</span> Placement Decision</div>
+<label style="font-size:13px;font-weight:600;display:block;margin-bottom:8px;">Decision</label>
+<div class="decision-options" id="decisionGroup">
+<button class="decision-btn" onclick="selectDecision(this,'accept')">Accept</button>
+<button class="decision-btn" onclick="selectDecision(this,'conditions')">Accept with Conditions</button>
+<button class="decision-btn" onclick="selectDecision(this,'decline')">Decline</button>
+</div>
+<input type="hidden" data-field="decision_value" data-cs-field="decision_value" data-cs-label="Decision">
+<div class="form-row-full"><label>Reasoning and detail for decision</label><textarea data-field="decision_detail" data-cs-field="decision_detail" data-cs-label="Decision Detail" data-cs-type="textarea" style="min-height:120px;" placeholder="Explain the rationale for this decision, including any conditions or reasons for declining."></textarea></div>
+</div>
+
+<div class="section">
+<div class="section-title"><span class="section-number">8</span> Sign-Off</div>
+<div class="sign-block">
+<div class="sign-block-title">Completed By</div>
+<div class="sign-name-date">
+<div class="sign-field"><label>Full Name</label><input type="text" data-field="sign_completed_name" data-cs-field="sign_completed_name" data-cs-label="Completed By Name"></div>
+<div class="sign-field"><label>Date</label><input type="date" data-field="sign_completed_date" data-cs-field="sign_completed_date" data-cs-label="Completed Date" data-cs-type="date"></div>
+</div>
+<label style="font-size:11px;font-weight:600;color:var(--text-light);text-transform:uppercase;margin-bottom:6px;display:block;">Signature</label>
+<div class="sig-method-tabs">
+<div class="sig-tab active" onclick="switchSigTab('completed','type',this)">Type</div>
+<div class="sig-tab" onclick="switchSigTab('completed','draw',this)">Draw</div>
+<div class="sig-tab" onclick="switchSigTab('completed','upload',this)">Upload</div>
+</div>
+<div class="sig-area" id="sigArea_completed">
+<button class="sig-clear" onclick="clearSig('completed')">Clear</button>
+<div class="sig-type-area" id="sigType_completed">
+<input class="sig-type-input" type="text" placeholder="Type your name..." oninput="updateSigPreview('completed')" data-field="sig_completed_typed" data-cs-field="sig_completed_typed" data-cs-label="Completed By Signature (typed)">
+<div class="sig-font-options" id="sigFonts_completed">
+<div class="sig-font-btn" style="font-family:'Dancing Script'" onclick="selectSigFont('completed',this,'Dancing Script')">Signature</div>
+<div class="sig-font-btn" style="font-family:'Caveat'" onclick="selectSigFont('completed',this,'Caveat')">Signature</div>
+<div class="sig-font-btn" style="font-family:'Satisfy'" onclick="selectSigFont('completed',this,'Satisfy')">Signature</div>
+<div class="sig-font-btn" style="font-family:'Great Vibes'" onclick="selectSigFont('completed',this,'Great Vibes')">Signature</div>
+</div>
+<div class="sig-preview" id="sigPreview_completed" style="font-family:'Dancing Script'"></div>
+</div>
+<canvas class="sig-draw-area" id="sigDraw_completed" style="display:none;"></canvas>
+<div class="sig-upload-area" id="sigUpload_completed" style="display:none;" onclick="triggerSigUpload('completed')">
+<div id="sigUploadContent_completed">Click to upload signature image (PNG)</div>
+<input type="file" accept="image/png,image/jpeg" style="display:none;" id="sigFile_completed" onchange="handleSigUpload('completed',event)">
+</div>
+</div>
+<input type="hidden" data-field="sig_completed_data" data-cs-field="sig_completed_data" value=""><input type="hidden" data-field="sig_completed_font" data-cs-field="sig_completed_font" value="Dancing Script"><input type="hidden" data-field="sig_completed_method" data-cs-field="sig_completed_method" value="type">
+</div>
+<div class="sign-block">
+<div class="sign-block-title">Manager / Line Manager</div>
+<div class="sign-name-date">
+<div class="sign-field"><label>Full Name</label><input type="text" data-field="sign_manager_name" data-cs-field="sign_manager_name" data-cs-label="Manager Name"></div>
+<div class="sign-field"><label>Date</label><input type="date" data-field="sign_manager_date" data-cs-field="sign_manager_date" data-cs-label="Manager Date" data-cs-type="date"></div>
+</div>
+<label style="font-size:11px;font-weight:600;color:var(--text-light);text-transform:uppercase;margin-bottom:6px;display:block;">Signature</label>
+<div class="sig-method-tabs">
+<div class="sig-tab active" onclick="switchSigTab('manager','type',this)">Type</div>
+<div class="sig-tab" onclick="switchSigTab('manager','draw',this)">Draw</div>
+<div class="sig-tab" onclick="switchSigTab('manager','upload',this)">Upload</div>
+</div>
+<div class="sig-area" id="sigArea_manager">
+<button class="sig-clear" onclick="clearSig('manager')">Clear</button>
+<div class="sig-type-area" id="sigType_manager">
+<input class="sig-type-input" type="text" placeholder="Type your name..." oninput="updateSigPreview('manager')" data-field="sig_manager_typed" data-cs-field="sig_manager_typed" data-cs-label="Manager Signature (typed)">
+<div class="sig-font-options" id="sigFonts_manager">
+<div class="sig-font-btn" style="font-family:'Dancing Script'" onclick="selectSigFont('manager',this,'Dancing Script')">Signature</div>
+<div class="sig-font-btn" style="font-family:'Caveat'" onclick="selectSigFont('manager',this,'Caveat')">Signature</div>
+<div class="sig-font-btn" style="font-family:'Satisfy'" onclick="selectSigFont('manager',this,'Satisfy')">Signature</div>
+<div class="sig-font-btn" style="font-family:'Great Vibes'" onclick="selectSigFont('manager',this,'Great Vibes')">Signature</div>
+</div>
+<div class="sig-preview" id="sigPreview_manager" style="font-family:'Dancing Script'"></div>
+</div>
+<canvas class="sig-draw-area" id="sigDraw_manager" style="display:none;"></canvas>
+<div class="sig-upload-area" id="sigUpload_manager" style="display:none;" onclick="triggerSigUpload('manager')">
+<div id="sigUploadContent_manager">Click to upload signature image (PNG)</div>
+<input type="file" accept="image/png,image/jpeg" style="display:none;" id="sigFile_manager" onchange="handleSigUpload('manager',event)">
+</div>
+</div>
+<input type="hidden" data-field="sig_manager_data" data-cs-field="sig_manager_data" value=""><input type="hidden" data-field="sig_manager_font" data-cs-field="sig_manager_font" value="Dancing Script"><input type="hidden" data-field="sig_manager_method" data-cs-field="sig_manager_method" value="type">
+</div>
+</div>
+
+<div class="doc-footer-bar">
+<img src="https://raw.githubusercontent.com/CS-Documentation/invoice/refs/heads/main/straight%20footer%20white.png" alt="Connected Stars" style="height:24px;" crossorigin="anonymous">
+<span>Connected Stars – Placement Matching and Impact Tool</span>
+</div>
+</div>
+
+<script>
+const DOMAINS=[
+  {id:1,n:"Substance Use",d:"Includes cannabis, alcohol, vaping, NPS/NOS, solvents, harder drugs and prescription drug misuse. Consider type, frequency and impact on behaviour."},
+  {id:2,n:"Criminal & Gang Exploitation",d:"Includes county lines involvement, criminal exploitation, gang affiliation, postcode conflicts and territorial risks. Consider known associates and active risks."},
+  {id:3,n:"Child Sexual Exploitation (CSE) & Harmful Sexual Behaviour",d:"Includes external CSE risk (exploitation by others) and the young person's own harmful sexual behaviour. Consider mixed-gender household implications and safeguarding of other residents."},
+  {id:4,n:"Violence & Aggression",d:"Includes physical aggression, use or carrying of weapons, intimidation, bullying and threats. Also consider any history of property damage or fire setting as indicators of destructive behaviour."},
+  {id:5,n:"Self-Harm & Mental Health",d:"Includes diagnosed and undiagnosed mental health conditions, emotional dysregulation, trauma responses, attachment difficulties, suicidal ideation and self-harm (current or historic). Consider emotional contagion risk to other residents."},
+  {id:6,n:"Absconding & Going Missing",d:"Includes frequency and pattern of going missing, links to exploitation when missing, impact on other residents and staff resource implications."},
+  {id:7,n:"Radicalisation & Extremism",d:"Includes exposure to extremist ideologies, online radicalisation, links to extremist groups or individuals and risk of influencing other residents."},
+  {id:8,n:"Cultural, Identity & Discrimination",d:"Includes risk of prejudice or tensions based on race, religion, gender identity, sexuality or disability – either from or towards the young person. Consider cultural compatibility within the household."},
+  {id:9,n:"Financial Exploitation",d:"Includes risk of the young person's finances being controlled or exploited, debt traps, cuckooing, and financial grooming by associates."},
+  {id:10,n:"Visitors, Associates & Community Links",d:"Includes family members, friends, partners and associates who may visit the property. Consider the risk those individuals pose to the household and other residents."}
+];
+const RATINGS=["None","Low","Medium","High"];
+const IMPACTS=["Minimal","Low","Medium","High","Unsuitable"];
+const IMPACT_VAL={minimal:1,low:2,medium:3,high:4,unsuitable:5};
+
+function buildDomains(){
+  const c=document.getElementById('domainsContainer');
+  let h='';
+  DOMAINS.forEach(function(d){
+    h+='<div class="domain-block">';
+    h+='<div class="domain-header">Domain '+d.id+': '+d.n+'</div>';
+    if(d.d)h+='<div class="domain-desc">'+d.d+'</div>';
+    h+='<div class="step-label">Step 1 – New young person\'s risk</div>';
+    h+='<div class="rating-group" data-rgroup="d'+d.id+'_yp_risk">';
+    RATINGS.forEach(function(r){h+='<button class="rating-btn" onclick="selectRating(this,\''+r.toLowerCase()+'\')">'+r+'</button>';});
+    h+='</div>';
+    h+='<input type="hidden" data-field="d'+d.id+'_yp_risk" data-cs-field="d'+d.id+'_yp_risk" data-cs-label="Domain '+d.id+' YP Risk">';
+    h+='<textarea class="domain-ta" data-field="d'+d.id+'_yp_detail" data-cs-field="d'+d.id+'_yp_detail" data-cs-label="Domain '+d.id+' YP Detail" data-cs-type="textarea" placeholder="Detail the young person\'s known risk in this area based on the referral information..."></textarea>';
+    h+='<div class="step-label">Step 2 – Existing household risk</div>';
+    h+='<div class="rating-group" data-rgroup="d'+d.id+'_house_risk">';
+    RATINGS.forEach(function(r){h+='<button class="rating-btn" onclick="selectRating(this,\''+r.toLowerCase()+'\')">'+r+'</button>';});
+    h+='</div>';
+    h+='<input type="hidden" data-field="d'+d.id+'_house_risk" data-cs-field="d'+d.id+'_house_risk" data-cs-label="Domain '+d.id+' Household Risk">';
+    h+='<textarea class="domain-ta" data-field="d'+d.id+'_house_detail" data-cs-field="d'+d.id+'_house_detail" data-cs-label="Domain '+d.id+' Household Detail" data-cs-type="textarea" placeholder="Detail what is already present in the household and what is being done to manage it..."></textarea>';
+    h+='<div class="step-label">Step 3 – Net placement impact</div>';
+    h+='<div class="impact-group" data-igroup="d'+d.id+'_impact">';
+    IMPACTS.forEach(function(r){h+='<button class="impact-btn" onclick="selectImpact(this,\''+r.toLowerCase()+'\')">'+r+'</button>';});
+    h+='</div>';
+    h+='<input type="hidden" data-field="d'+d.id+'_impact" data-cs-field="d'+d.id+'_impact" data-cs-label="Domain '+d.id+' Impact">';
+    h+='<div style="font-size:12px;font-weight:600;color:var(--text);margin-top:8px;">Reasoning</div>';
+    h+='<textarea class="domain-ta" data-field="d'+d.id+'_reasoning" data-cs-field="d'+d.id+'_reasoning" data-cs-label="Domain '+d.id+' Reasoning" data-cs-type="textarea" placeholder="Explain how you have reached this impact rating. What factors did you weigh up?" style="margin-top:4px;"></textarea>';
+    h+='<div style="font-size:12px;font-weight:600;color:var(--text);margin-top:8px;">Mitigation Measures</div>';
+    h+='<textarea class="domain-ta" data-field="d'+d.id+'_mitigation" data-cs-field="d'+d.id+'_mitigation" data-cs-label="Domain '+d.id+' Mitigation" data-cs-type="textarea" placeholder="What measures would need to be in place to manage this risk if the placement goes ahead?" style="margin-top:4px;"></textarea>';
+    h+='</div>';
+  });
+  c.innerHTML=h;
+}
+
+function autoResize(el){el.style.height='auto';el.style.height=el.scrollHeight+'px';}
+document.addEventListener('input',function(e){if(e.target.tagName==='TEXTAREA')autoResize(e.target);});
+
+function selectRating(btn,val){
+  var g=btn.parentElement;
+  g.querySelectorAll('.rating-btn').forEach(function(b){b.className='rating-btn';});
+  btn.classList.add('selected-'+val);
+  var f=g.nextElementSibling;
+  if(f&&f.dataset.field)f.value=val;
+  drawRadar();
+}
+
+function selectImpact(btn,val){
+  var g=btn.parentElement;
+  g.querySelectorAll('.impact-btn').forEach(function(b){b.className='impact-btn';});
+  btn.classList.add('selected-'+val);
+  var f=g.nextElementSibling;
+  if(f&&f.dataset.field)f.value=val;
+  drawRadar();
+}
+
+function selectDecision(btn,val){
+  document.querySelectorAll('#decisionGroup .decision-btn').forEach(function(b){b.className='decision-btn';});
+  btn.classList.add('sel-'+val);
+  document.querySelector('[data-field="decision_value"]').value=val;
+}
+
+function drawRadar(){
+  var canvas=document.getElementById('radarChart');
+  if(!canvas)return;
+  var ctx=canvas.getContext('2d');
+  var dpr=window.devicePixelRatio||1;
+  var size=Math.min(canvas.parentElement.clientWidth,550);
+  canvas.style.width=size+'px';canvas.style.height=size+'px';
+  canvas.width=size*dpr;canvas.height=size*dpr;
+  ctx.scale(dpr,dpr);ctx.clearRect(0,0,size,size);
+  var cx=size/2,cy=size/2,r=size*0.30,n=DOMAINS.length,as=(Math.PI*2)/n,sa=-Math.PI/2;
+  var vals=DOMAINS.map(function(d){var v=getField('d'+d.id+'_impact');return IMPACT_VAL[v]||0;});
+  for(var l=1;l<=5;l++){
+    ctx.beginPath();
+    for(var i=0;i<=n;i++){var a=sa+as*i,lr=r*(l/5),x=cx+lr*Math.cos(a),y=cy+lr*Math.sin(a);i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);}
+    ctx.strokeStyle=l===5?'#bbb':'#e0e0e0';ctx.lineWidth=.8;ctx.stroke();
+  }
+  for(var i=0;i<n;i++){var a=sa+as*i;ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(cx+r*Math.cos(a),cy+r*Math.sin(a));ctx.strokeStyle='#ddd';ctx.lineWidth=.8;ctx.stroke();}
+  ctx.beginPath();
+  for(var i=0;i<=n;i++){var idx=i%n,a=sa+as*idx,vr=vals[idx]?r*(vals[idx]/5):0;var x=cx+vr*Math.cos(a),y=cy+vr*Math.sin(a);i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);}
+  ctx.fillStyle='rgba(20,70,160,0.12)';ctx.fill();ctx.strokeStyle='#1446a0';ctx.lineWidth=2.5;ctx.stroke();
+  var cols=['','#667085','#27ae60','#f39c12','#e74c3c','#c0392b'];
+  for(var i=0;i<n;i++){if(!vals[i])continue;var a=sa+as*i,vr=r*(vals[i]/5);ctx.beginPath();ctx.arc(cx+vr*Math.cos(a),cy+vr*Math.sin(a),4,0,Math.PI*2);ctx.fillStyle=cols[vals[i]];ctx.fill();ctx.strokeStyle='#fff';ctx.lineWidth=2;ctx.stroke();}
+  ctx.fillStyle='#444';
+  for(var i=0;i<n;i++){
+    var a=sa+as*i,lr=r+52,x=cx+lr*Math.cos(a),y=cy+lr*Math.sin(a),ca=Math.cos(a);
+    ctx.textAlign=ca<-0.2?'right':ca>0.2?'left':'center';ctx.textBaseline='middle';
+    var words=DOMAINS[i].n.split(/[\s&\/]+/),lines=[],line='';
+    words.forEach(function(w){if(!w)return;var t=line?line+' '+w:w;if(t.length>14&&line){lines.push(line);line=w;}else line=t;});
+    if(line)lines.push(line);
+    ctx.font='600 9px Roboto,sans-serif';
+    var lh=11,sy=y-((lines.length-1)*lh)/2;
+    lines.forEach(function(l,li){ctx.fillText(l,x,sy+li*lh);});
+  }
+  ctx.font='400 8px Roboto,sans-serif';ctx.fillStyle='#aaa';ctx.textAlign='left';
+  ['','Min','Low','Med','High','Unsui.'].forEach(function(l,i){if(i)ctx.fillText(l,cx+3,cy-r*(i/5)+3);});
+}
+
+var consultCount=0;
+function addConsultRow(){
+  consultCount++;
+  var i=consultCount;
+  var tb=document.getElementById('consultBody');
+  var tr=document.createElement('tr');
+  tr.id='consult_row_'+i;
+  tr.innerHTML='<td><input type="text" data-field="con_'+i+'_name" data-cs-field="con_'+i+'_name" data-cs-label="Consultant '+i+' Name" placeholder="Full name"></td>'
+    +'<td><input type="text" data-field="con_'+i+'_title" data-cs-field="con_'+i+'_title" data-cs-label="Consultant '+i+' Title" placeholder="e.g. Social Worker"></td>'
+    +'<td><input type="date" data-field="con_'+i+'_date" data-cs-field="con_'+i+'_date" data-cs-label="Consultant '+i+' Date" data-cs-type="date"></td>'
+    +'<td><textarea data-field="con_'+i+'_views" data-cs-field="con_'+i+'_views" data-cs-label="Consultant '+i+' Views" data-cs-type="textarea" placeholder="Views expressed"></textarea></td>'
+    +'<td style="text-align:center;"><button class="btn-remove-row" onclick="removeConsultRow('+i+')">×</button></td>';
+  tb.appendChild(tr);
+  tr.querySelectorAll('textarea').forEach(function(ta){ta.addEventListener('input',function(){autoResize(ta);});});
+}
+function removeConsultRow(i){var r=document.getElementById('consult_row_'+i);if(r)r.remove();}
+
+var sigState={completed:{method:'type',font:'Dancing Script',drawData:null,uploadData:null},manager:{method:'type',font:'Dancing Script',drawData:null,uploadData:null}};
+function switchSigTab(w,m,tab){tab.parentElement.querySelectorAll('.sig-tab').forEach(function(t){t.classList.remove('active');});tab.classList.add('active');sigState[w].method=m;document.querySelector('[data-field="sig_'+w+'_method"]').value=m;document.getElementById('sigType_'+w).style.display=m==='type'?'flex':'none';document.getElementById('sigDraw_'+w).style.display=m==='draw'?'block':'none';document.getElementById('sigUpload_'+w).style.display=m==='upload'?'block':'none';if(m==='draw')initDrawCanvas(w);}
+function selectSigFont(w,btn,f){btn.parentElement.querySelectorAll('.sig-font-btn').forEach(function(b){b.classList.remove('active');});btn.classList.add('active');sigState[w].font=f;document.getElementById('sigPreview_'+w).style.fontFamily=f;document.querySelector('[data-field="sig_'+w+'_font"]').value=f;}
+function updateSigPreview(w){document.getElementById('sigPreview_'+w).textContent=document.querySelector('[data-field="sig_'+w+'_typed"]').value;}
+function clearSig(w){document.querySelector('[data-field="sig_'+w+'_typed"]').value='';document.getElementById('sigPreview_'+w).textContent='';sigState[w].drawData=null;sigState[w].uploadData=null;document.querySelector('[data-field="sig_'+w+'_data"]').value='';var c=document.getElementById('sigDraw_'+w);c.getContext('2d').clearRect(0,0,c.width,c.height);document.getElementById('sigUploadContent_'+w).innerHTML='Click to upload signature image (PNG)';}
+function initDrawCanvas(w){var c=document.getElementById('sigDraw_'+w);var rect=c.parentElement.getBoundingClientRect();c.width=rect.width-2;c.height=120;var ctx=c.getContext('2d');ctx.lineWidth=2.5;ctx.lineCap='round';ctx.strokeStyle='#1446a0';if(sigState[w].drawData){var img=new Image();img.onload=function(){ctx.drawImage(img,0,0);};img.src=sigState[w].drawData;}var d=false;function gp(e){var r=c.getBoundingClientRect();var t=e.touches?e.touches[0]:e;return{x:t.clientX-r.left,y:t.clientY-r.top};}c.onmousedown=c.ontouchstart=function(e){e.preventDefault();d=true;var p=gp(e);ctx.beginPath();ctx.moveTo(p.x,p.y);};c.onmousemove=c.ontouchmove=function(e){if(!d)return;e.preventDefault();var p=gp(e);ctx.lineTo(p.x,p.y);ctx.stroke();};c.onmouseup=c.ontouchend=c.onmouseleave=function(){if(d){d=false;sigState[w].drawData=c.toDataURL();document.querySelector('[data-field="sig_'+w+'_data"]').value=c.toDataURL();}};}
+function triggerSigUpload(w){document.getElementById('sigFile_'+w).click();}
+function handleSigUpload(w,e){var f=e.target.files[0];if(!f)return;var r=new FileReader();r.onload=function(ev){sigState[w].uploadData=ev.target.result;document.querySelector('[data-field="sig_'+w+'_data"]').value=ev.target.result;document.getElementById('sigUploadContent_'+w).innerHTML='<img src="'+ev.target.result+'" alt="Signature">';};r.readAsDataURL(f);}
+
+function getField(n){var el=document.querySelector('[data-field="'+n+'"]');return el?el.value:'';}
+
+function getAllData(){
+  var data={};
+  document.querySelectorAll('[data-field]').forEach(function(el){data[el.dataset.field]=el.value;});
+  data._consultCount=consultCount;
+  data._sigState=JSON.parse(JSON.stringify(sigState));
+  return data;
+}
+
+function loadData(data){
+  if(!data)return;
+  if(data._consultCount){
+    var ex=document.querySelectorAll('#consultBody tr').length;
+    for(var i=ex;i<data._consultCount;i++)addConsultRow();
+  }
+  Object.keys(data).forEach(function(key){
+    if(key.startsWith('_'))return;
+    var el=document.querySelector('[data-field="'+key+'"]');
+    if(el){
+      el.value=data[key];
+      var rg=document.querySelector('[data-rgroup="'+key+'"]');
+      if(rg&&data[key])rg.querySelectorAll('.rating-btn').forEach(function(b){if(b.textContent.toLowerCase()===data[key])b.classList.add('selected-'+data[key]);});
+      var ig=document.querySelector('[data-igroup="'+key+'"]');
+      if(ig&&data[key])ig.querySelectorAll('.impact-btn').forEach(function(b){if(b.textContent.toLowerCase()===data[key])b.classList.add('selected-'+data[key]);});
+      if(key==='decision_value'&&data[key])document.querySelectorAll('#decisionGroup .decision-btn').forEach(function(b){var v=b.textContent.toLowerCase().includes('condition')?'conditions':(b.textContent.toLowerCase()==='decline'?'decline':'accept');if(v===data[key])b.classList.add('sel-'+data[key]);});
+    }
+  });
+  if(data._sigState){['completed','manager'].forEach(function(w){var s=data._sigState[w];if(!s)return;sigState[w]=s;if(s.font){document.getElementById('sigPreview_'+w).style.fontFamily=s.font;document.getElementById('sigFonts_'+w).querySelectorAll('.sig-font-btn').forEach(function(b){b.classList.remove('active');if(b.style.fontFamily.replace(/'/g,'')===s.font)b.classList.add('active');});}if(s.uploadData)document.getElementById('sigUploadContent_'+w).innerHTML='<img src="'+s.uploadData+'" alt="Signature">';});}
+  document.querySelectorAll('textarea').forEach(autoResize);
+  drawRadar();
+}
+
+function printDoc(){
+  var ypName=getField('yp_name')||'Assessment';
+  var assessDate=getField('doc_date');
+  var dateStr='';
+  if(assessDate){var d=new Date(assessDate);dateStr=String(d.getDate()).padStart(2,'0')+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+d.getFullYear();}
+  else{var d=new Date();dateStr=String(d.getDate()).padStart(2,'0')+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+d.getFullYear();}
+  var safeName=ypName.replace(/[^a-zA-Z0-9\s]/g,'').replace(/\s+/g,'-');
+  var origTitle=document.title;
+  document.title='Placement-Matching-Impact-Tool-'+safeName+'-'+dateStr;
+  window.print();
+  setTimeout(function(){document.title=origTitle;},2000);
+}
+
+buildDomains();
+addConsultRow();
+addConsultRow();
+drawRadar();
+window.addEventListener('resize',drawRadar);
+if(window.__SAVED_DATA__)loadData(window.__SAVED_DATA__);
+if(window.__CS_PRINT_ON_LOAD__)window.addEventListener('load',function(){setTimeout(printDoc,400);});
+</script>
+</body></html>

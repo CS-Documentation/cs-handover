@@ -1102,14 +1102,21 @@ function toggleEditMode() {
 
 async function saveDocEdits() {
   const frame  = document.getElementById('docFrame');
-  const iDoc   = frame.contentDocument || frame.contentWindow?.document;
+  const iWin   = frame.contentWindow;
+  const iDoc   = frame.contentDocument || iWin?.document;
   if (!iDoc) { toast('Could not read document fields', 'error'); return; }
 
-  const vals = {};
-  iDoc.querySelectorAll('[data-cs-field]').forEach(el => {
-    const id = el.getAttribute('data-cs-field');
-    vals[id] = el.tagName === 'TEXTAREA' || el.tagName === 'INPUT' ? el.value : el.textContent;
-  });
+  // Rich templates expose getAllData() which collects every data-field value
+  let vals = {};
+  const tmplForSave = templates.find(t => t.id === currentTmplId);
+  if (tmplForSave && isRichTemplate(tmplForSave.htmlContent) && typeof iWin?.getAllData === 'function') {
+    vals = iWin.getAllData();
+  } else {
+    iDoc.querySelectorAll('[data-cs-field]').forEach(el => {
+      const id = el.getAttribute('data-cs-field');
+      vals[id] = el.tagName === 'TEXTAREA' || el.tagName === 'INPUT' ? el.value : el.textContent;
+    });
+  }
 
   const saveBtn = document.getElementById('docSaveBtn');
   saveBtn.innerHTML = '<span class="spinner"></span>';
@@ -1167,6 +1174,10 @@ function printCurrentDoc() {
   const vals = currentDocData?.fieldValues || {};
   if (!tmpl) return;
 
+  if (isRichTemplate(tmpl.htmlContent)) {
+    const iWin = document.getElementById('docFrame').contentWindow;
+    if (typeof iWin?.printDoc === 'function') { iWin.printDoc(); return; }
+  }
   const html = buildViewHTML(tmpl.htmlContent, vals, yp, true /* for print */);
   const win  = window.open('', '_blank');
   win.document.write(html);
@@ -1181,6 +1192,13 @@ function quickPrint(docId) {
   const yp   = serviceUsers.find(y => y.id === selectedYPId);
   if (!tmpl) { toast('Template not found', 'error'); return; }
 
+  if (isRichTemplate(tmpl.htmlContent)) {
+    const html = buildRichPrintHTML(tmpl.htmlContent, docData.fieldValues || {});
+    const win  = window.open('', '_blank');
+    win.document.write(html);
+    win.document.close();
+    return;
+  }
   const html = buildViewHTML(tmpl.htmlContent, docData.fieldValues || {}, yp, true);
   const win  = window.open('', '_blank');
   win.document.write(html);
@@ -1243,18 +1261,19 @@ function renderTemplateGrid() {
     const cls = catClass(t.category || 'General');
     const icon = catIcon(t.category || 'General');
     const fieldCount = t.fields?.length || 0;
-    const isAdmin = userProfile?.role === 'admin';
+    const rich = isRichTemplate(t.htmlContent || '');
+    const fieldLabel = rich ? '⚡ Rich interactive template' : `${fieldCount} fillable field${fieldCount!==1?'s':''}`;
     return `<div class="template-card">
       <div class="template-card-actions">
         <button class="btn-icon primary" title="Preview" onclick="previewTemplate('${t.id}')">👁️</button>
-        ${isAdmin ? `<button class="btn-icon danger" title="Delete template" onclick="confirmDeleteTemplate('${t.id}')">🗑️</button>` : ''}
+        <button class="btn-icon danger" title="Delete template" onclick="confirmDeleteTemplate('${t.id}')">🗑️</button>
       </div>
       <div class="template-card-icon">${icon}</div>
       <span class="category-tag ${cls}">${t.category || 'General'}</span>
       <div class="template-card-name">${t.name}</div>
       <div class="template-card-desc">${t.description || 'No description'}</div>
       <div class="template-card-footer">
-        <span class="template-field-count">${fieldCount} fillable field${fieldCount!==1?'s':''}</span>
+        <span class="template-field-count">${fieldLabel}</span>
       </div>
     </div>`;
   }).join('');
@@ -1265,7 +1284,10 @@ function previewTemplate(templateId) {
   if (!tmpl) return;
   document.getElementById('previewTitle').textContent = tmpl.name + ' — Preview';
   const frame = document.getElementById('previewFrame');
-  frame.srcdoc = buildPreviewHTML(tmpl.htmlContent);
+  // Rich templates: render live with empty data so all JS (domains, radar, etc.) runs
+  frame.srcdoc = isRichTemplate(tmpl.htmlContent)
+    ? buildRichEditHTML(tmpl.htmlContent, {})
+    : buildPreviewHTML(tmpl.htmlContent);
   document.getElementById('templatePreviewModal').style.display = 'flex';
 }
 
@@ -1385,6 +1407,48 @@ async function saveUploadedTemplate() {
   }
 }
 
+// ── RICH TEMPLATE HELPERS ────────────────────────────────────────────────────
+function isRichTemplate(html) {
+  return html.includes('data-cs-template-type="rich"');
+}
+
+function buildRichEditHTML(templateHTML, fieldValues) {
+  // Strip any previously embedded __SAVED_DATA__
+  let html = templateHTML.replace(/<script>\s*window\.__SAVED_DATA__\s*=[\s\S]*?<\/script>\s*/g, '');
+  // Inject saved field values so the template's own loadData() populates everything
+  const injection = '<script>window.__SAVED_DATA__=' + JSON.stringify(fieldValues || {}) + ';</script>';
+  html = html.replace('</head>', injection + '</head>');
+  return html;
+}
+
+function buildRichViewHTML(templateHTML, fieldValues) {
+  let html = buildRichEditHTML(templateHTML, fieldValues);
+  // Disable all interactive controls so this is truly read-only
+  const viewScript = `<script>
+  document.addEventListener('DOMContentLoaded',function(){
+    document.querySelectorAll('input:not([type=hidden]),textarea,select').forEach(function(e){
+      e.readOnly=true; e.style.background='#f0f4fb'; e.style.cursor='default';
+    });
+    document.querySelectorAll('button,.rating-btn,.impact-btn,.decision-btn,.sig-tab,.sig-font-btn,.btn-add-row,.btn-remove-row,.sig-clear').forEach(function(e){
+      e.disabled=true; e.style.opacity='.45'; e.style.pointerEvents='none';
+    });
+    document.querySelectorAll('canvas').forEach(function(c){c.style.pointerEvents='none';});
+  });
+  </script>`;
+  html = html.replace('</body>', viewScript + '</body>');
+  return html;
+}
+
+function buildRichPrintHTML(templateHTML, fieldValues) {
+  let html = buildRichEditHTML(templateHTML, fieldValues);
+  // Auto-print once the template has loaded and rendered
+  const printScript = `<script>
+  window.__CS_PRINT_ON_LOAD__=true;
+  </script>`;
+  html = html.replace('</head>', printScript + '</head>');
+  return html;
+}
+
 // ── HTML BUILDERS ─────────────────────────────────────────────────────────────
 const AUTO_FILL_KEYS = ['yp_name','yp_dob','date_today','date_created','staff_name','staff_initials'];
 
@@ -1400,6 +1464,7 @@ function getAutoFills(yp) {
 }
 
 function buildEditHTML(templateHTML, fieldValues, yp, staff) {
+  if (isRichTemplate(templateHTML)) return buildRichEditHTML(templateHTML, fieldValues);
   const parser  = new DOMParser();
   const d       = parser.parseFromString(templateHTML, 'text/html');
   const autoFill = getAutoFills(yp);
@@ -1445,6 +1510,7 @@ function buildEditHTML(templateHTML, fieldValues, yp, staff) {
 }
 
 function buildViewHTML(templateHTML, fieldValues, yp, forPrint) {
+  if (isRichTemplate(templateHTML)) return forPrint ? buildRichPrintHTML(templateHTML, fieldValues) : buildRichViewHTML(templateHTML, fieldValues);
   const parser   = new DOMParser();
   const d        = parser.parseFromString(templateHTML, 'text/html');
   const autoFill = getAutoFills(yp);
