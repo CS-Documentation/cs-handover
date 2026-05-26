@@ -826,7 +826,12 @@ onAuthStateChanged(auth, async user => {
     document.getElementById('loginScreen').style.display = 'none';
     document.getElementById('app').style.display = 'flex';
 
-    await Promise.all([loadServiceUsers(), loadTemplates()]);
+    try {
+      await Promise.all([loadServiceUsers(), loadTemplates()]);
+    } catch(e) {
+      console.error('Data load error:', e);
+      toast('Some data failed to load — check Firestore permissions', 'error');
+    }
     renderYPList();
   } catch(e) {
     console.error(e);
@@ -936,7 +941,13 @@ async function selectYP(ypId) {
   renderYPList();
   const panel = document.getElementById('docPanel');
   panel.innerHTML = '<div style="padding:24px;color:var(--text3);font-size:14px;">Loading documents…</div>';
-  await loadYPDocuments(ypId);
+  try {
+    await loadYPDocuments(ypId);
+  } catch(e) {
+    console.error('loadYPDocuments error:', e);
+    toast('Could not load documents — check Firestore permissions', 'error');
+    ypDocs = [];
+  }
   renderDocPanel();
 }
 
@@ -1288,13 +1299,14 @@ function renderTemplateGrid() {
 
 function previewTemplate(templateId) {
   const tmpl = templates.find(t => t.id === templateId);
-  if (!tmpl) return;
+  if (!tmpl) { toast('Template not found', 'error'); return; }
+  const html = tmpl.htmlContent || '';
   document.getElementById('previewTitle').textContent = tmpl.name + ' — Preview';
   const frame = document.getElementById('previewFrame');
   // Rich templates: render live with empty data so all JS (domains, radar, etc.) runs
-  frame.srcdoc = isRichTemplate(tmpl.htmlContent)
-    ? buildRichEditHTML(tmpl.htmlContent, {})
-    : buildPreviewHTML(tmpl.htmlContent);
+  frame.srcdoc = isRichTemplate(html)
+    ? buildRichEditHTML(html, {})
+    : buildPreviewHTML(html);
   document.getElementById('templatePreviewModal').style.display = 'flex';
 }
 
@@ -1416,7 +1428,7 @@ async function saveUploadedTemplate() {
 
 // ── RICH TEMPLATE HELPERS ────────────────────────────────────────────────────
 function isRichTemplate(html) {
-  return html.includes('data-cs-template-type="rich"');
+  return !!(html && html.includes('data-cs-template-type="rich"'));
 }
 
 function buildRichEditHTML(templateHTML, fieldValues) {
