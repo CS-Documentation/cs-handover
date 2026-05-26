@@ -927,13 +927,16 @@ function renderYPList() {
   list.innerHTML = filtered.map(yp => {
     const initials = yp.name.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
     const active   = yp.id === selectedYPId;
-    return `<div class="yp-item${active?' active':''}" onclick="selectYP('${yp.id}')">
+    return `<div class="yp-item${active?' active':''}" data-ypid="${yp.id}">
       <div class="yp-avatar">${initials}</div>
       <div class="yp-info">
         <div class="yp-name">${yp.name}</div>
       </div>
     </div>`;
   }).join('');
+  list.querySelectorAll('.yp-item[data-ypid]').forEach(el => {
+    el.addEventListener('click', () => selectYP(el.dataset.ypid));
+  });
 }
 
 async function selectYP(ypId) {
@@ -961,7 +964,7 @@ function renderDocPanel() {
       <div class="doc-panel-title">${yp.name}</div>
       <div class="doc-panel-sub">${ypDocs.length} document${ypDocs.length!==1?'s':''}</div>
     </div>
-    <button class="btn-add" onclick="openTemplatePicker()">+ Add Document</button>
+    <button class="btn-add" id="addDocBtn">+ Add Document</button>
   </div>`;
 
   if (!ypDocs.length) {
@@ -971,14 +974,14 @@ function renderDocPanel() {
         <p>No documents yet for ${yp.name}.<br>Click <strong>Add Document</strong> to add one from a template.</p>
       </div>
     </div>`;
+    panel.querySelector('#addDocBtn').addEventListener('click', openTemplatePicker);
     return;
   }
 
   const docsHtml = ypDocs.map(doc => {
-    const tmpl = templates.find(t => t.id === doc.templateId);
     const icon = catIcon(doc.templateCategory || 'General');
     const cls  = catClass(doc.templateCategory || 'General');
-    return `<div class="doc-card">
+    return `<div class="doc-card" data-docid="${doc.id}">
       <div class="doc-card-icon">${icon}</div>
       <div class="doc-card-body">
         <span class="category-tag ${cls}">${doc.templateCategory || 'General'}</span>
@@ -990,13 +993,19 @@ function renderDocPanel() {
         </div>
       </div>
       <div class="doc-card-actions">
-        <button class="btn-icon primary" title="View / Edit" onclick="openDocument('${doc.id}')">📄</button>
-        <button class="btn-icon primary" title="Print" onclick="quickPrint('${doc.id}')">🖨️</button>
+        <button class="btn-icon primary doc-open-btn" title="View / Edit">📄</button>
+        <button class="btn-icon primary doc-print-btn" title="Print">🖨️</button>
       </div>
     </div>`;
   }).join('');
 
   panel.innerHTML = headerHtml + `<div class="doc-list">${docsHtml}</div>`;
+  panel.querySelector('#addDocBtn').addEventListener('click', openTemplatePicker);
+  panel.querySelectorAll('.doc-card[data-docid]').forEach(card => {
+    const docId = card.dataset.docid;
+    card.querySelector('.doc-open-btn').addEventListener('click', () => openDocument(docId));
+    card.querySelector('.doc-print-btn').addEventListener('click', () => quickPrint(docId));
+  });
 }
 
 // ── TEMPLATE PICKER ──────────────────────────────────────────────────────────
@@ -1018,7 +1027,7 @@ function renderPickerList(search) {
     return;
   }
   list.innerHTML = filtered.map(t => `
-    <div class="picker-item" onclick="startDocFromTemplate('${t.id}')">
+    <div class="picker-item" data-tmplid="${t.id}">
       <div class="picker-icon">${catIcon(t.category||'General')}</div>
       <div class="picker-info">
         <div class="picker-name">${t.name}</div>
@@ -1026,6 +1035,9 @@ function renderPickerList(search) {
       </div>
       <div class="picker-arrow">›</div>
     </div>`).join('');
+  list.querySelectorAll('.picker-item[data-tmplid]').forEach(el => {
+    el.addEventListener('click', () => startDocFromTemplate(el.dataset.tmplid));
+  });
 }
 
 async function startDocFromTemplate(templateId) {
@@ -1281,10 +1293,10 @@ function renderTemplateGrid() {
     const fieldCount = t.fields?.length || 0;
     const rich = isRichTemplate(t.htmlContent || '');
     const fieldLabel = rich ? '⚡ Rich interactive template' : `${fieldCount} fillable field${fieldCount!==1?'s':''}`;
-    return `<div class="template-card">
+    return `<div class="template-card" data-tmplid="${t.id}">
       <div class="template-card-actions">
-        <button class="btn-icon primary" title="Preview" onclick="previewTemplate('${t.id}')">👁️</button>
-        <button class="btn-icon danger" title="Delete template" onclick="confirmDeleteTemplate('${t.id}')">🗑️</button>
+        <button class="btn-icon primary tmpl-preview-btn" title="Preview">👁️</button>
+        <button class="btn-icon danger tmpl-delete-btn" title="Delete template">🗑️</button>
       </div>
       <div class="template-card-icon">${icon}</div>
       <span class="category-tag ${cls}">${t.category || 'General'}</span>
@@ -1295,6 +1307,11 @@ function renderTemplateGrid() {
       </div>
     </div>`;
   }).join('');
+  grid.querySelectorAll('.template-card[data-tmplid]').forEach(card => {
+    const tmplId = card.dataset.tmplid;
+    card.querySelector('.tmpl-preview-btn').addEventListener('click', (e) => { e.stopPropagation(); previewTemplate(tmplId); });
+    card.querySelector('.tmpl-delete-btn').addEventListener('click', (e) => { e.stopPropagation(); confirmDeleteTemplate(tmplId); });
+  });
 }
 
 function previewTemplate(templateId) {
