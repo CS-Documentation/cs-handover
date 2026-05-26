@@ -1,0 +1,1499 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Connected Stars — Documents</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --brand:       #1446a0;
+  --brand-dark:  #0d3278;
+  --brand-mid:   #2d5bbf;
+  --brand-light: #e8eef8;
+  --bg:          #f4f6fb;
+  --surface:     #fff;
+  --text:        #1a1a2e;
+  --text2:       #4a5568;
+  --text3:       #6b7280;
+  --border:      #dde3ef;
+  --border2:     #b8c5e0;
+  --green:       #27ae60;
+  --amber:       #e67e22;
+  --red:         #c0392b;
+  --purple:      #7b2d8b;
+  --teal:        #0e7490;
+  --r:           10px;
+  --rs:          8px;
+  --sh:          0 1px 4px rgba(20,70,160,.08);
+  --sh-md:       0 4px 16px rgba(20,70,160,.12);
+  --sh-lg:       0 8px 32px rgba(20,70,160,.18);
+}
+
+html, body { height: 100%; }
+body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+/* ── LOGIN ── */
+#loginScreen {
+  display: flex; align-items: center; justify-content: center;
+  min-height: 100vh; padding: 20px;
+  background: linear-gradient(135deg, var(--brand-dark) 0%, var(--brand) 55%, var(--brand-mid) 100%);
+}
+.login-card {
+  background: var(--surface); border-radius: 16px; padding: 44px 40px 40px;
+  width: 100%; max-width: 400px; box-shadow: var(--sh-lg);
+}
+.login-logo { display: flex; align-items: center; gap: 12px; margin-bottom: 32px; }
+.login-logo-icon {
+  width: 48px; height: 48px; border-radius: 13px; flex-shrink: 0;
+  background: linear-gradient(135deg, var(--brand), var(--brand-mid));
+  display: flex; align-items: center; justify-content: center; font-size: 24px;
+}
+.login-logo-text strong { display: block; font-size: 18px; font-weight: 800; color: var(--brand); }
+.login-logo-text span   { font-size: 12px; color: var(--text3); }
+.login-card h2 { font-size: 22px; font-weight: 800; margin-bottom: 6px; }
+.login-card p  { font-size: 14px; color: var(--text2); margin-bottom: 28px; }
+.form-group { margin-bottom: 16px; }
+.form-group label { display: block; font-size: 13px; font-weight: 600; color: var(--text2); margin-bottom: 6px; }
+.form-group input {
+  width: 100%; padding: 11px 14px; border: 1.5px solid var(--border);
+  border-radius: var(--rs); font-size: 15px; font-family: inherit;
+  transition: border-color .15s, box-shadow .15s; outline: none; color: var(--text);
+}
+.form-group input:focus { border-color: var(--brand); box-shadow: 0 0 0 3px rgba(20,70,160,.1); }
+.btn-primary {
+  width: 100%; padding: 12px; background: var(--brand); color: #fff; border: none;
+  border-radius: var(--rs); font-size: 15px; font-weight: 700; cursor: pointer;
+  font-family: inherit; transition: background .15s; margin-top: 4px;
+}
+.btn-primary:hover { background: var(--brand-dark); }
+.login-error { color: var(--red); font-size: 13px; margin-top: 12px; min-height: 20px; text-align: center; }
+
+/* ── APP SHELL ── */
+#app { display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+
+/* ── HEADER ── */
+.app-header {
+  background: var(--surface); border-bottom: 1.5px solid var(--border);
+  padding: 0 24px; display: flex; align-items: center; gap: 16px;
+  height: 58px; flex-shrink: 0; box-shadow: var(--sh);
+}
+.header-logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+.header-logo-icon {
+  width: 34px; height: 34px; border-radius: 9px;
+  background: linear-gradient(135deg, var(--brand), var(--brand-mid));
+  display: flex; align-items: center; justify-content: center; font-size: 16px;
+}
+.header-logo-text { font-size: 15px; font-weight: 800; color: var(--brand); }
+.header-divider { width: 1px; height: 24px; background: var(--border); }
+.header-title { font-size: 14px; font-weight: 700; color: var(--text2); }
+
+.header-tabs { display: flex; gap: 2px; margin-left: 8px; }
+.header-tab {
+  padding: 6px 16px; border-radius: 7px; font-size: 13px; font-weight: 600;
+  cursor: pointer; border: none; background: transparent; color: var(--text2);
+  font-family: inherit; transition: all .15s;
+}
+.header-tab:hover { background: var(--bg); color: var(--text); }
+.header-tab.active { background: var(--brand-light); color: var(--brand); }
+
+.header-right { margin-left: auto; display: flex; align-items: center; gap: 12px; }
+.user-badge {
+  display: flex; align-items: center; gap: 8px;
+  background: var(--bg); border: 1.5px solid var(--border);
+  border-radius: 99px; padding: 4px 12px 4px 6px; font-size: 13px;
+}
+.user-avatar {
+  width: 26px; height: 26px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--brand), var(--brand-mid));
+  color: #fff; font-size: 10px; font-weight: 800;
+  display: flex; align-items: center; justify-content: center;
+}
+.user-name { font-weight: 600; color: var(--text); }
+.btn-logout {
+  padding: 6px 14px; border: 1.5px solid var(--border); border-radius: var(--rs);
+  font-size: 13px; font-weight: 600; cursor: pointer; background: var(--surface);
+  color: var(--text2); font-family: inherit; transition: all .15s;
+}
+.btn-logout:hover { border-color: var(--red); color: var(--red); }
+
+/* ── MAIN CONTENT ── */
+.app-body { flex: 1; overflow: hidden; display: flex; flex-direction: column; }
+
+/* ── FILES TAB ── */
+#filesTab { flex: 1; display: flex; overflow: hidden; }
+
+.yp-sidebar {
+  width: 260px; flex-shrink: 0; border-right: 1.5px solid var(--border);
+  background: var(--surface); display: flex; flex-direction: column; overflow: hidden;
+}
+.sidebar-header {
+  padding: 16px 16px 12px; border-bottom: 1px solid var(--border); flex-shrink: 0;
+}
+.sidebar-title { font-size: 12px; font-weight: 800; color: var(--text3); text-transform: uppercase; letter-spacing: .7px; margin-bottom: 10px; }
+.search-box {
+  display: flex; align-items: center; gap: 8px;
+  background: var(--bg); border: 1.5px solid var(--border); border-radius: var(--rs);
+  padding: 7px 10px;
+}
+.search-box input {
+  flex: 1; border: none; background: transparent; font-size: 13px;
+  font-family: inherit; outline: none; color: var(--text);
+}
+.search-box span { font-size: 15px; color: var(--text3); }
+.yp-list { flex: 1; overflow-y: auto; padding: 8px; }
+.yp-item {
+  padding: 10px 12px; border-radius: var(--rs); cursor: pointer;
+  transition: background .12s; margin-bottom: 2px; display: flex; align-items: center; gap: 10px;
+}
+.yp-item:hover { background: var(--bg); }
+.yp-item.active { background: var(--brand-light); }
+.yp-avatar {
+  width: 34px; height: 34px; border-radius: 50%; flex-shrink: 0;
+  background: linear-gradient(135deg, var(--brand-mid), var(--teal));
+  color: #fff; font-size: 13px; font-weight: 800;
+  display: flex; align-items: center; justify-content: center;
+}
+.yp-item.active .yp-avatar { background: linear-gradient(135deg, var(--brand), var(--brand-dark)); }
+.yp-info { min-width: 0; }
+.yp-name { font-size: 14px; font-weight: 700; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.yp-item.active .yp-name { color: var(--brand); }
+.yp-unit { font-size: 11px; color: var(--text3); }
+.yp-doc-count {
+  margin-left: auto; font-size: 11px; font-weight: 700;
+  background: var(--brand-light); color: var(--brand);
+  padding: 2px 7px; border-radius: 99px; flex-shrink: 0;
+}
+
+/* ── DOCUMENT PANEL ── */
+.doc-panel { flex: 1; display: flex; flex-direction: column; overflow: hidden; background: var(--bg); }
+.doc-panel-header {
+  padding: 16px 24px; background: var(--surface); border-bottom: 1.5px solid var(--border);
+  display: flex; align-items: center; gap: 16px; flex-shrink: 0;
+}
+.doc-panel-title { font-size: 17px; font-weight: 800; }
+.doc-panel-sub { font-size: 13px; color: var(--text3); }
+.btn-add {
+  margin-left: auto; padding: 8px 18px;
+  background: var(--brand); color: #fff; border: none;
+  border-radius: var(--rs); font-size: 13px; font-weight: 700;
+  cursor: pointer; font-family: inherit; transition: background .15s;
+  display: flex; align-items: center; gap: 6px;
+}
+.btn-add:hover { background: var(--brand-dark); }
+
+.doc-list { flex: 1; overflow-y: auto; padding: 20px 24px; }
+.doc-list-empty {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  height: 100%; color: var(--text3); text-align: center; gap: 12px;
+}
+.doc-list-empty .empty-icon { font-size: 48px; opacity: .4; }
+.doc-list-empty p { font-size: 14px; }
+
+.doc-card {
+  background: var(--surface); border: 1.5px solid var(--border); border-radius: var(--r);
+  padding: 16px 18px; margin-bottom: 12px; transition: box-shadow .15s, border-color .15s;
+  display: flex; align-items: flex-start; gap: 14px;
+}
+.doc-card:hover { box-shadow: var(--sh-md); border-color: var(--border2); }
+.doc-card-icon {
+  width: 40px; height: 40px; border-radius: var(--rs); flex-shrink: 0;
+  background: var(--brand-light); color: var(--brand);
+  display: flex; align-items: center; justify-content: center; font-size: 18px;
+}
+.doc-card-body { flex: 1; min-width: 0; }
+.doc-card-name { font-size: 15px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+.doc-card-meta { font-size: 12px; color: var(--text3); display: flex; gap: 12px; flex-wrap: wrap; }
+.doc-card-meta span::before { content: '• '; }
+.doc-card-meta span:first-child::before { content: ''; }
+.doc-card-actions { display: flex; gap: 6px; align-items: center; }
+.btn-icon {
+  width: 32px; height: 32px; border-radius: var(--rs);
+  border: 1.5px solid var(--border); background: var(--surface);
+  cursor: pointer; font-size: 14px; display: flex; align-items: center;
+  justify-content: center; transition: all .12s;
+}
+.btn-icon:hover { background: var(--bg); border-color: var(--border2); }
+.btn-icon.danger:hover { border-color: var(--red); color: var(--red); background: #fdf2f2; }
+.btn-icon.primary:hover { border-color: var(--brand); color: var(--brand); background: var(--brand-light); }
+.category-tag {
+  display: inline-flex; align-items: center; font-size: 11px; font-weight: 700;
+  padding: 2px 8px; border-radius: 99px; margin-bottom: 6px;
+}
+.cat-care    { background: #e8f5e9; color: #27ae60; }
+.cat-risk    { background: #fff3e0; color: #e67e22; }
+.cat-consent { background: #f3e5f5; color: #7b2d8b; }
+.cat-meeting { background: #e3f2fd; color: #1446a0; }
+.cat-incident{ background: #ffebee; color: #c0392b; }
+.cat-general { background: #f0f0f0; color: #555; }
+
+/* ── TEMPLATES TAB ── */
+#templatesTab { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+.templates-header {
+  padding: 16px 24px; background: var(--surface); border-bottom: 1.5px solid var(--border);
+  display: flex; align-items: center; gap: 14px; flex-shrink: 0;
+}
+.templates-title { font-size: 17px; font-weight: 800; }
+.templates-desc { font-size: 13px; color: var(--text3); }
+.cat-filter { display: flex; gap: 6px; margin-left: 8px; flex-wrap: wrap; }
+.cat-btn {
+  padding: 4px 12px; border-radius: 99px; border: 1.5px solid var(--border);
+  font-size: 12px; font-weight: 600; cursor: pointer; background: var(--surface);
+  color: var(--text2); font-family: inherit; transition: all .12s;
+}
+.cat-btn:hover { background: var(--bg); }
+.cat-btn.active { background: var(--brand); color: #fff; border-color: var(--brand); }
+.templates-grid { flex: 1; overflow-y: auto; padding: 20px 24px; display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; align-content: start; }
+.template-card {
+  background: var(--surface); border: 1.5px solid var(--border); border-radius: var(--r);
+  padding: 18px; cursor: pointer; transition: box-shadow .15s, border-color .15s; position: relative;
+}
+.template-card:hover { box-shadow: var(--sh-md); border-color: var(--border2); }
+.template-card-icon { font-size: 28px; margin-bottom: 10px; }
+.template-card-name { font-size: 15px; font-weight: 800; color: var(--text); margin-bottom: 4px; }
+.template-card-desc { font-size: 13px; color: var(--text2); margin-bottom: 10px; line-height: 1.5; }
+.template-card-footer { display: flex; align-items: center; gap: 8px; }
+.template-field-count { font-size: 12px; color: var(--text3); }
+.template-card-actions { position: absolute; top: 12px; right: 12px; display: flex; gap: 4px; }
+.templates-empty {
+  grid-column: 1 / -1; display: flex; flex-direction: column; align-items: center;
+  justify-content: center; padding: 60px; color: var(--text3); text-align: center; gap: 12px;
+}
+.templates-empty .empty-icon { font-size: 48px; opacity: .4; }
+.btn-upload {
+  margin-left: auto; padding: 8px 18px;
+  background: var(--surface); color: var(--brand);
+  border: 1.5px solid var(--brand); border-radius: var(--rs);
+  font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit;
+  transition: all .15s; display: flex; align-items: center; gap: 6px;
+}
+.btn-upload:hover { background: var(--brand-light); }
+
+/* ── MODALS ── */
+.modal-overlay {
+  position: fixed; inset: 0; background: rgba(15,20,50,.45);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 1000; padding: 20px; backdrop-filter: blur(2px);
+}
+.modal {
+  background: var(--surface); border-radius: 16px; box-shadow: var(--sh-lg);
+  width: 100%; max-width: 560px; max-height: 90vh; display: flex; flex-direction: column;
+}
+.modal-lg { max-width: 780px; }
+.modal-xl {
+  max-width: 960px; width: 96vw; max-height: 94vh; height: 94vh;
+}
+.modal-header {
+  padding: 20px 24px 16px; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: 12px; flex-shrink: 0;
+}
+.modal-header h3 { font-size: 17px; font-weight: 800; flex: 1; }
+.modal-close {
+  width: 30px; height: 30px; border-radius: var(--rs); border: 1.5px solid var(--border);
+  background: var(--surface); cursor: pointer; font-size: 16px;
+  display: flex; align-items: center; justify-content: center; transition: all .12s;
+}
+.modal-close:hover { background: var(--bg); }
+.modal-body { padding: 20px 24px; overflow-y: auto; flex: 1; }
+.modal-footer {
+  padding: 14px 24px; border-top: 1px solid var(--border);
+  display: flex; align-items: center; gap: 10px; flex-shrink: 0;
+}
+.btn-secondary {
+  padding: 9px 18px; border: 1.5px solid var(--border); border-radius: var(--rs);
+  font-size: 13px; font-weight: 600; cursor: pointer; background: var(--surface);
+  color: var(--text2); font-family: inherit; transition: all .15s;
+}
+.btn-secondary:hover { background: var(--bg); border-color: var(--border2); }
+.btn-save {
+  padding: 9px 20px; background: var(--brand); color: #fff; border: none;
+  border-radius: var(--rs); font-size: 13px; font-weight: 700;
+  cursor: pointer; font-family: inherit; transition: background .15s;
+}
+.btn-save:hover { background: var(--brand-dark); }
+.btn-print {
+  padding: 9px 18px; background: var(--green); color: #fff; border: none;
+  border-radius: var(--rs); font-size: 13px; font-weight: 700;
+  cursor: pointer; font-family: inherit; transition: background .15s;
+  display: flex; align-items: center; gap: 6px;
+}
+.btn-print:hover { background: #219a52; }
+.btn-edit-toggle {
+  padding: 9px 18px; border: 1.5px solid var(--amber); border-radius: var(--rs);
+  font-size: 13px; font-weight: 700; cursor: pointer;
+  background: #fff8f0; color: var(--amber); font-family: inherit;
+  transition: all .15s; display: flex; align-items: center; gap: 6px;
+}
+.btn-edit-toggle:hover { background: #ffefd6; }
+.btn-danger {
+  padding: 9px 18px; background: var(--red); color: #fff; border: none;
+  border-radius: var(--rs); font-size: 13px; font-weight: 700;
+  cursor: pointer; font-family: inherit; transition: background .15s;
+}
+.btn-danger:hover { background: #a93226; }
+
+/* ── TEMPLATE PICKER ── */
+.picker-search {
+  display: flex; align-items: center; gap: 8px;
+  background: var(--bg); border: 1.5px solid var(--border); border-radius: var(--rs);
+  padding: 9px 12px; margin-bottom: 14px;
+}
+.picker-search input {
+  flex: 1; border: none; background: transparent; font-size: 14px;
+  font-family: inherit; outline: none; color: var(--text);
+}
+.picker-list { display: flex; flex-direction: column; gap: 8px; }
+.picker-item {
+  padding: 14px 16px; border: 1.5px solid var(--border); border-radius: var(--rs);
+  cursor: pointer; transition: all .12s; display: flex; align-items: center; gap: 14px;
+}
+.picker-item:hover { border-color: var(--brand); background: var(--brand-light); }
+.picker-icon { font-size: 24px; }
+.picker-info { flex: 1; }
+.picker-name { font-size: 14px; font-weight: 700; color: var(--text); }
+.picker-desc { font-size: 12px; color: var(--text3); }
+.picker-arrow { color: var(--text3); font-size: 16px; }
+.picker-empty { text-align: center; color: var(--text3); padding: 32px; }
+
+/* ── UPLOAD MODAL ── */
+.upload-zone {
+  border: 2px dashed var(--border2); border-radius: var(--r);
+  padding: 32px; text-align: center; cursor: pointer;
+  transition: all .15s; margin-bottom: 16px;
+}
+.upload-zone:hover, .upload-zone.drag-over { border-color: var(--brand); background: var(--brand-light); }
+.upload-zone-icon { font-size: 40px; margin-bottom: 12px; }
+.upload-zone-text { font-size: 14px; font-weight: 600; color: var(--text2); margin-bottom: 4px; }
+.upload-zone-sub { font-size: 12px; color: var(--text3); }
+.upload-file-name {
+  padding: 10px 14px; background: var(--bg); border-radius: var(--rs);
+  font-size: 13px; color: var(--text2); margin-bottom: 14px;
+  border: 1.5px solid var(--border); display: flex; align-items: center; gap: 8px;
+}
+.upload-fields-preview {
+  background: var(--bg); border-radius: var(--rs); padding: 12px 14px; margin-bottom: 14px;
+}
+.upload-fields-title { font-size: 12px; font-weight: 700; color: var(--text3); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 8px; }
+.field-chip {
+  display: inline-flex; align-items: center; gap: 4px; margin: 3px;
+  padding: 3px 10px; border-radius: 99px; font-size: 12px; font-weight: 600;
+  background: var(--brand-light); color: var(--brand);
+}
+.form-row { margin-bottom: 14px; }
+.form-row label { display: block; font-size: 13px; font-weight: 600; color: var(--text2); margin-bottom: 6px; }
+.form-row input, .form-row select, .form-row textarea {
+  width: 100%; padding: 9px 12px; border: 1.5px solid var(--border);
+  border-radius: var(--rs); font-size: 14px; font-family: inherit;
+  outline: none; color: var(--text); background: var(--surface);
+  transition: border-color .15s;
+}
+.form-row input:focus, .form-row select:focus, .form-row textarea:focus { border-color: var(--brand); }
+
+/* ── DOCUMENT VIEWER/EDITOR ── */
+.doc-viewer-header {
+  display: flex; align-items: center; gap: 12px; flex-shrink: 0;
+  padding: 16px 24px; border-bottom: 1px solid var(--border);
+}
+.doc-viewer-title { font-size: 17px; font-weight: 800; flex: 1; }
+.doc-viewer-meta { font-size: 12px; color: var(--text3); font-weight: 500; }
+.doc-frame-wrap {
+  flex: 1; overflow: hidden; position: relative;
+  background: #e8ecf5;
+}
+.doc-frame-wrap iframe {
+  width: 100%; height: 100%; border: none;
+  background: var(--surface);
+}
+.doc-edit-badge {
+  position: absolute; top: 12px; right: 12px; z-index: 10;
+  background: var(--amber); color: #fff; padding: 4px 12px;
+  border-radius: 99px; font-size: 12px; font-weight: 700;
+  display: flex; align-items: center; gap: 6px;
+}
+.doc-view-badge {
+  position: absolute; top: 12px; right: 12px; z-index: 10;
+  background: var(--green); color: #fff; padding: 4px 12px;
+  border-radius: 99px; font-size: 12px; font-weight: 700;
+}
+.edit-hint {
+  position: absolute; top: 12px; left: 12px; z-index: 10;
+  background: rgba(20,70,160,.08); color: var(--brand); padding: 4px 12px;
+  border-radius: 99px; font-size: 11px; font-weight: 600;
+}
+
+/* ── TOAST ── */
+#toast {
+  position: fixed; bottom: 24px; left: 50%;
+  transform: translateX(-50%) translateY(80px);
+  background: var(--text); color: #fff; padding: 10px 22px;
+  border-radius: 99px; font-size: 13px; font-weight: 600;
+  box-shadow: var(--sh-lg); z-index: 9999;
+  transition: transform .25s ease; pointer-events: none; white-space: nowrap;
+}
+#toast.show { transform: translateX(-50%) translateY(0); }
+#toast.success { background: var(--green); }
+#toast.error   { background: var(--red); }
+
+/* ── MISC ── */
+.spinner {
+  display: inline-block; width: 18px; height: 18px;
+  border: 2px solid rgba(255,255,255,.4); border-top-color: #fff;
+  border-radius: 50%; animation: spin .6s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.badge-admin { display: inline-block; padding: 2px 8px; border-radius: 99px; font-size: 11px; font-weight: 700; background: #fef3c7; color: #92400e; }
+.no-yp-selected {
+  display: flex; flex-direction: column; align-items: center;
+  justify-content: center; height: 100%; color: var(--text3); text-align: center; gap: 12px;
+}
+.no-yp-selected .icon { font-size: 52px; opacity: .3; }
+.no-yp-selected p { font-size: 15px; }
+hr.modal-sep { border: none; border-top: 1px solid var(--border); margin: 16px 0; }
+.template-guide {
+  background: var(--bg); border-radius: var(--rs); padding: 14px;
+  border-left: 3px solid var(--brand); font-size: 12px; color: var(--text2);
+  line-height: 1.6; margin-top: 12px;
+}
+.template-guide code { font-family: 'DM Mono', monospace; background: rgba(20,70,160,.08); padding: 1px 4px; border-radius: 3px; font-size: 11px; }
+.template-guide summary { font-weight: 700; cursor: pointer; color: var(--brand); font-size: 13px; }
+.confirm-text { font-size: 15px; color: var(--text); line-height: 1.6; }
+.confirm-sub { font-size: 13px; color: var(--text3); margin-top: 6px; }
+</style>
+</head>
+<body>
+
+<!-- ══ LOGIN SCREEN ══ -->
+<div id="loginScreen">
+  <div class="login-card">
+    <div class="login-logo">
+      <div class="login-logo-icon">📄</div>
+      <div class="login-logo-text">
+        <strong>Connected Stars</strong>
+        <span>Documents</span>
+      </div>
+    </div>
+    <h2>Sign in</h2>
+    <p>Use your Connected Stars account to access documents.</p>
+    <div class="form-group">
+      <label for="emailIn">Email address</label>
+      <input type="email" id="emailIn" placeholder="you@example.com" autocomplete="email">
+    </div>
+    <div class="form-group">
+      <label for="passIn">Password</label>
+      <input type="password" id="passIn" placeholder="••••••••" autocomplete="current-password">
+    </div>
+    <button class="btn-primary" id="loginBtn">Sign in</button>
+    <div class="login-error" id="loginErr"></div>
+  </div>
+</div>
+
+<!-- ══ MAIN APP ══ -->
+<div id="app" style="display:none; height:100vh; flex-direction:column;">
+  <!-- Header -->
+  <header class="app-header">
+    <a href="index.html" class="header-logo" title="Dashboard">
+      <div class="header-logo-icon">⭐</div>
+    </a>
+    <div class="header-logo-text" style="font-size:15px;font-weight:800;color:var(--brand);">Connected Stars</div>
+    <div class="header-divider"></div>
+    <span class="header-title">📄 Documents</span>
+
+    <div class="header-tabs">
+      <button class="header-tab active" id="tabFiles"   onclick="showTab('files')">👤 Young People</button>
+      <button class="header-tab"       id="tabTemplates" onclick="showTab('templates')">📋 Templates</button>
+    </div>
+
+    <div class="header-right">
+      <div class="user-badge">
+        <div class="user-avatar" id="userAvatar">?</div>
+        <span class="user-name" id="userName">Loading…</span>
+        <span id="adminBadge" class="badge-admin" style="display:none">Admin</span>
+      </div>
+      <button class="btn-logout" onclick="logout()">Sign out</button>
+    </div>
+  </header>
+
+  <!-- Body -->
+  <div class="app-body" style="display:flex;flex-direction:column;flex:1;overflow:hidden;">
+
+    <!-- ── FILES TAB ── -->
+    <div id="filesTab" style="display:flex;flex:1;overflow:hidden;">
+      <!-- Left: YP sidebar -->
+      <div class="yp-sidebar">
+        <div class="sidebar-header">
+          <div class="sidebar-title">Young People</div>
+          <div class="search-box">
+            <span>🔍</span>
+            <input type="text" id="ypSearch" placeholder="Search…" oninput="filterYPList(this.value)">
+          </div>
+        </div>
+        <div class="yp-list" id="ypList">
+          <div style="padding:20px;text-align:center;color:var(--text3);font-size:13px;">Loading…</div>
+        </div>
+      </div>
+
+      <!-- Right: Document panel -->
+      <div class="doc-panel" id="docPanel">
+        <div class="no-yp-selected">
+          <div class="icon">📂</div>
+          <p>Select a young person<br>to view their documents</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── TEMPLATES TAB ── -->
+    <div id="templatesTab" style="display:none;flex:1;flex-direction:column;overflow:hidden;">
+      <div class="templates-header">
+        <div>
+          <div class="templates-title">Template Library</div>
+          <div class="templates-desc">Document templates available for young people's files</div>
+        </div>
+        <div class="cat-filter" id="catFilter">
+          <button class="cat-btn active" onclick="filterTemplates('')" data-cat="">All</button>
+          <button class="cat-btn" onclick="filterTemplates('Care Plans')" data-cat="Care Plans">Care Plans</button>
+          <button class="cat-btn" onclick="filterTemplates('Risk Assessments')" data-cat="Risk Assessments">Risk</button>
+          <button class="cat-btn" onclick="filterTemplates('Consent')" data-cat="Consent">Consent</button>
+          <button class="cat-btn" onclick="filterTemplates('Meeting Notes')" data-cat="Meeting Notes">Meetings</button>
+          <button class="cat-btn" onclick="filterTemplates('General')" data-cat="General">General</button>
+        </div>
+        <button class="btn-upload" onclick="openTemplateUpload()">📤 Upload Template</button>
+      </div>
+      <div class="templates-grid" id="templatesGrid">
+        <div style="grid-column:1/-1;text-align:center;color:var(--text3);padding:40px;">Loading templates…</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══ MODALS ══ -->
+
+<!-- Template Picker Modal -->
+<div class="modal-overlay" id="templatePickerModal" style="display:none" onclick="if(event.target===this)closeModal('templatePickerModal')">
+  <div class="modal modal-lg">
+    <div class="modal-header">
+      <span style="font-size:20px;">📋</span>
+      <h3>Add Document</h3>
+      <button class="modal-close" onclick="closeModal('templatePickerModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="picker-search">
+        <span>🔍</span>
+        <input type="text" id="pickerSearch" placeholder="Search templates…" oninput="filterPicker(this.value)">
+      </div>
+      <div class="picker-list" id="pickerList">Loading…</div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="closeModal('templatePickerModal')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- Template Upload Modal -->
+<div class="modal-overlay" id="templateUploadModal" style="display:none" onclick="if(event.target===this)closeModal('templateUploadModal')">
+  <div class="modal modal-lg">
+    <div class="modal-header">
+      <span style="font-size:20px;">📤</span>
+      <h3>Upload Template</h3>
+      <button class="modal-close" onclick="closeModal('templateUploadModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <!-- Upload zone -->
+      <div class="upload-zone" id="uploadZone" onclick="document.getElementById('templateFileInput').click()"
+           ondrop="handleFileDrop(event)" ondragover="event.preventDefault();this.classList.add('drag-over')"
+           ondragleave="this.classList.remove('drag-over')">
+        <div class="upload-zone-icon">📄</div>
+        <div class="upload-zone-text">Click to choose an HTML file</div>
+        <div class="upload-zone-sub">or drag and drop here</div>
+      </div>
+      <input type="file" id="templateFileInput" accept=".html,.htm" style="display:none" onchange="handleFileSelect(event)">
+      <div id="uploadFileInfo" style="display:none">
+        <div class="upload-file-name">
+          <span>📄</span>
+          <span id="uploadFileName">file.html</span>
+        </div>
+        <div class="upload-fields-preview" id="uploadFieldsPreview" style="display:none">
+          <div class="upload-fields-title">Detected fillable fields</div>
+          <div id="uploadFieldsList"></div>
+        </div>
+      </div>
+      <div class="form-row">
+        <label>Template Name <span style="color:var(--red)">*</span></label>
+        <input type="text" id="uploadName" placeholder="e.g. Monthly Care Plan Review">
+      </div>
+      <div class="form-row">
+        <label>Category</label>
+        <select id="uploadCategory">
+          <option value="General">General</option>
+          <option value="Care Plans">Care Plans</option>
+          <option value="Risk Assessments">Risk Assessments</option>
+          <option value="Consent">Consent</option>
+          <option value="Meeting Notes">Meeting Notes</option>
+          <option value="Incident Reports">Incident Reports</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <label>Description</label>
+        <input type="text" id="uploadDesc" placeholder="Brief description of this template">
+      </div>
+      <details class="template-guide">
+        <summary>📖 Template format guide</summary>
+        <br>
+        Mark fillable areas in your HTML using the <code>data-cs-field</code> attribute:<br><br>
+        <code>&lt;span data-cs-field="field_id" data-cs-label="Label" data-cs-type="text"&gt;Placeholder&lt;/span&gt;</code><br><br>
+        <strong>Types:</strong> <code>text</code> (default), <code>textarea</code>, <code>date</code>, <code>number</code><br><br>
+        <strong>Auto-fill fields</strong> (populated automatically):<br>
+        <code>yp_name</code> · <code>yp_dob</code> · <code>date_today</code> · <code>staff_name</code> · <code>staff_initials</code>
+      </details>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="closeModal('templateUploadModal')">Cancel</button>
+      <button class="btn-save" id="uploadSaveBtn" onclick="saveUploadedTemplate()">Save Template</button>
+    </div>
+  </div>
+</div>
+
+<!-- Document Viewer / Editor Modal -->
+<div class="modal-overlay" id="docViewerModal" style="display:none" onclick="if(event.target===this&&!isEditing)closeDocModal()">
+  <div class="modal modal-xl" style="display:flex;flex-direction:column;">
+    <div class="doc-viewer-header">
+      <span id="docViewerIcon" style="font-size:20px;">📄</span>
+      <div style="flex:1;min-width:0;">
+        <div class="doc-viewer-title" id="docViewerTitle">Document</div>
+        <div class="doc-viewer-meta" id="docViewerMeta"></div>
+      </div>
+      <button class="btn-edit-toggle" id="docToggleEdit" onclick="toggleEditMode()">✏️ Edit</button>
+      <button class="btn-print" onclick="printCurrentDoc()">🖨️ Print</button>
+      <button class="btn-save" id="docSaveBtn" style="display:none" onclick="saveDocEdits()">💾 Save</button>
+      <button class="modal-close" onclick="closeDocModal()">✕</button>
+    </div>
+    <div class="doc-frame-wrap" style="flex:1;">
+      <iframe id="docFrame" title="Document"></iframe>
+      <div class="doc-edit-badge" id="editBadge" style="display:none">✏️ Editing</div>
+      <div class="doc-view-badge" id="viewBadge">👁️ Read only</div>
+      <div class="edit-hint" id="editHint" style="display:none">Click Save when done</div>
+    </div>
+    <div class="modal-footer" style="justify-content:space-between;">
+      <button class="btn-danger" id="docDeleteBtn" onclick="confirmDeleteDoc()">🗑️ Delete document</button>
+      <button class="btn-secondary" onclick="closeDocModal()">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- Template Preview Modal -->
+<div class="modal-overlay" id="templatePreviewModal" style="display:none" onclick="if(event.target===this)closeModal('templatePreviewModal')">
+  <div class="modal modal-xl" style="display:flex;flex-direction:column;">
+    <div class="modal-header">
+      <span style="font-size:20px;">👁️</span>
+      <h3 id="previewTitle">Template Preview</h3>
+      <button class="modal-close" onclick="closeModal('templatePreviewModal')">✕</button>
+    </div>
+    <div class="doc-frame-wrap" style="flex:1;">
+      <iframe id="previewFrame" title="Template preview"></iframe>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="closeModal('templatePreviewModal')">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- Confirm Delete Modal -->
+<div class="modal-overlay" id="confirmModal" style="display:none">
+  <div class="modal" style="max-width:420px;">
+    <div class="modal-header">
+      <span style="font-size:20px;">⚠️</span>
+      <h3 id="confirmTitle">Confirm</h3>
+      <button class="modal-close" onclick="closeModal('confirmModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <p class="confirm-text" id="confirmText"></p>
+      <p class="confirm-sub" id="confirmSub"></p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="closeModal('confirmModal')">Cancel</button>
+      <button class="btn-danger" id="confirmBtn">Delete</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div id="toast"></div>
+
+<script type="module">
+import { initializeApp }                                from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAuth, signInWithEmailAndPassword,
+         onAuthStateChanged, signOut as fbSignOut }     from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getFirestore, collection, doc,
+         getDocs, getDoc, addDoc, updateDoc,
+         query, where, orderBy,
+         serverTimestamp }                              from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey:            "AIzaSyCwHzZFibrc9SNP8vAV6Jr_NmQr4fVCEto",
+  authDomain:        "connected-stars-handover.firebaseapp.com",
+  projectId:         "connected-stars-handover",
+  storageBucket:     "connected-stars-handover.firebasestorage.app",
+  messagingSenderId: "606134396217",
+  appId:             "1:606134396217:web:6636e2fbe9b73b7723b4e8"
+};
+
+const app  = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db   = getFirestore(app);
+
+// ── STATE ────────────────────────────────────────────────────────────────────
+let userProfile    = null;
+let serviceUsers   = [];
+let templates      = [];
+let ypDocs         = [];
+let selectedYPId   = null;
+let currentDocId   = null;
+let currentDocData = null;
+let currentTmplId  = null;
+let isEditing      = false;
+let currentTab     = 'files';
+let ypFilter       = '';
+let tmplCatFilter  = '';
+let uploadedHTML   = '';
+let uploadedFields = [];
+let pendingConfirm = null;
+
+// Expose globals needed by inline onclick handlers
+window.logout          = logout;
+window.showTab         = showTab;
+window.filterYPList    = filterYPList;
+window.filterTemplates = filterTemplates;
+window.filterPicker    = filterPicker;
+window.closeModal      = closeModal;
+window.openTemplateUpload   = openTemplateUpload;
+window.handleFileDrop       = handleFileDrop;
+window.handleFileSelect     = handleFileSelect;
+window.saveUploadedTemplate = saveUploadedTemplate;
+window.toggleEditMode       = toggleEditMode;
+window.printCurrentDoc      = printCurrentDoc;
+window.saveDocEdits         = saveDocEdits;
+window.closeDocModal        = closeDocModal;
+window.confirmDeleteDoc     = confirmDeleteDoc;
+window.isEditing            = false;
+
+// ── AUTH ─────────────────────────────────────────────────────────────────────
+document.getElementById('loginBtn').addEventListener('click', login);
+['emailIn','passIn'].forEach(id => document.getElementById(id).addEventListener('keydown', e => { if(e.key==='Enter') login(); }));
+
+async function login() {
+  const email = document.getElementById('emailIn').value.trim();
+  const pass  = document.getElementById('passIn').value;
+  document.getElementById('loginErr').textContent = '';
+  document.getElementById('loginBtn').innerHTML = '<span class="spinner"></span>';
+  try {
+    await signInWithEmailAndPassword(auth, email, pass);
+  } catch(e) {
+    document.getElementById('loginErr').textContent = 'Incorrect email or password.';
+    document.getElementById('loginBtn').textContent = 'Sign in';
+  }
+}
+
+async function logout() {
+  await fbSignOut(auth);
+}
+
+onAuthStateChanged(auth, async user => {
+  if (!user) {
+    document.getElementById('loginScreen').style.display = 'flex';
+    document.getElementById('app').style.display = 'none';
+    document.getElementById('loginBtn').textContent = 'Sign in';
+    return;
+  }
+  try {
+    const snap = await getDoc(doc(db, 'staffProfiles', user.uid));
+    if (!snap.exists()) { await fbSignOut(auth); return; }
+    userProfile = snap.data();
+    if (userProfile.status === 'archived') { await fbSignOut(auth); return; }
+
+    document.getElementById('userAvatar').textContent = userProfile.initials || '?';
+    document.getElementById('userName').textContent   = userProfile.name || user.email;
+    if (userProfile.role === 'admin') document.getElementById('adminBadge').style.display = '';
+
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('app').style.display = 'flex';
+
+    await Promise.all([loadServiceUsers(), loadTemplates()]);
+    renderYPList();
+  } catch(e) {
+    console.error(e);
+    document.getElementById('loginErr').textContent = 'Failed to load profile. Try again.';
+  }
+});
+
+// ── DATA LOADING ──────────────────────────────────────────────────────────────
+async function loadServiceUsers() {
+  const snap = await getDocs(query(collection(db,'serviceUsers'), where('status','==','active')));
+  serviceUsers = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  serviceUsers.sort((a,b) => a.name.localeCompare(b.name));
+}
+
+async function loadTemplates() {
+  const snap = await getDocs(query(collection(db,'documentTemplates'), where('status','==','active')));
+  templates = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  templates.sort((a,b) => a.name.localeCompare(b.name));
+}
+
+async function loadYPDocuments(ypId) {
+  const snap = await getDocs(query(
+    collection(db,'serviceUserDocuments'),
+    where('serviceUserId','==',ypId),
+    where('status','==','active'),
+    orderBy('createdAt','desc')
+  ));
+  ypDocs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+}
+
+// ── HELPERS ───────────────────────────────────────────────────────────────────
+function fmtDate(str) {
+  if (!str) return '';
+  const d = new Date(str + 'T00:00:00');
+  return d.toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric' });
+}
+function fmtTs(ts) {
+  if (!ts) return '';
+  const d = ts.toDate ? ts.toDate() : new Date(ts);
+  return d.toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' });
+}
+function today() { return new Date().toISOString().slice(0,10); }
+
+let _toastTimer = null;
+function toast(msg, type='') {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'show' + (type ? ' '+type : '');
+  clearTimeout(_toastTimer);
+  _toastTimer = setTimeout(() => { el.className = ''; }, 3000);
+}
+
+function closeModal(id) {
+  document.getElementById(id).style.display = 'none';
+}
+
+function catClass(cat) {
+  const map = { 'Care Plans':'cat-care', 'Risk Assessments':'cat-risk',
+    'Consent':'cat-consent', 'Meeting Notes':'cat-meeting',
+    'Incident Reports':'cat-incident', 'General':'cat-general' };
+  return map[cat] || 'cat-general';
+}
+
+function catIcon(cat) {
+  const map = { 'Care Plans':'🤝', 'Risk Assessments':'⚠️', 'Consent':'✍️',
+    'Meeting Notes':'🗒️', 'Incident Reports':'🔴', 'General':'📄' };
+  return map[cat] || '📄';
+}
+
+// ── TAB SWITCHING ──────────────────────────────────────────────────────────────
+function showTab(tab) {
+  currentTab = tab;
+  document.getElementById('tabFiles').classList.toggle('active', tab==='files');
+  document.getElementById('tabTemplates').classList.toggle('active', tab==='templates');
+  document.getElementById('filesTab').style.display     = tab==='files' ? 'flex' : 'none';
+  document.getElementById('templatesTab').style.display = tab==='templates' ? 'flex' : 'none';
+  if (tab === 'templates') renderTemplateGrid();
+}
+
+// ── YP LIST ───────────────────────────────────────────────────────────────────
+function filterYPList(v) {
+  ypFilter = v.toLowerCase();
+  renderYPList();
+}
+
+function renderYPList() {
+  const list = document.getElementById('ypList');
+  const filtered = serviceUsers.filter(yp => yp.name.toLowerCase().includes(ypFilter));
+  if (!filtered.length) {
+    list.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text3);font-size:13px;">No matching young people</div>';
+    return;
+  }
+  list.innerHTML = filtered.map(yp => {
+    const initials = yp.name.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
+    const active   = yp.id === selectedYPId;
+    return `<div class="yp-item${active?' active':''}" onclick="selectYP('${yp.id}')">
+      <div class="yp-avatar">${initials}</div>
+      <div class="yp-info">
+        <div class="yp-name">${yp.name}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function selectYP(ypId) {
+  selectedYPId = ypId;
+  renderYPList();
+  const panel = document.getElementById('docPanel');
+  panel.innerHTML = '<div style="padding:24px;color:var(--text3);font-size:14px;">Loading documents…</div>';
+  await loadYPDocuments(ypId);
+  renderDocPanel();
+}
+
+function renderDocPanel() {
+  const yp     = serviceUsers.find(y => y.id === selectedYPId);
+  const panel  = document.getElementById('docPanel');
+  if (!yp) return;
+
+  const headerHtml = `<div class="doc-panel-header">
+    <div>
+      <div class="doc-panel-title">${yp.name}</div>
+      <div class="doc-panel-sub">${ypDocs.length} document${ypDocs.length!==1?'s':''}</div>
+    </div>
+    <button class="btn-add" onclick="openTemplatePicker()">+ Add Document</button>
+  </div>`;
+
+  if (!ypDocs.length) {
+    panel.innerHTML = headerHtml + `<div class="doc-list">
+      <div class="doc-list-empty">
+        <div class="empty-icon">📂</div>
+        <p>No documents yet for ${yp.name}.<br>Click <strong>Add Document</strong> to add one from a template.</p>
+      </div>
+    </div>`;
+    return;
+  }
+
+  const docsHtml = ypDocs.map(doc => {
+    const tmpl = templates.find(t => t.id === doc.templateId);
+    const icon = catIcon(doc.templateCategory || 'General');
+    const cls  = catClass(doc.templateCategory || 'General');
+    return `<div class="doc-card">
+      <div class="doc-card-icon">${icon}</div>
+      <div class="doc-card-body">
+        <span class="category-tag ${cls}">${doc.templateCategory || 'General'}</span>
+        <div class="doc-card-name">${doc.templateName}</div>
+        <div class="doc-card-meta">
+          <span>Added ${fmtTs(doc.createdAt)}</span>
+          <span>by ${doc.createdBy}</span>
+          ${doc.updatedBy ? `<span>Edited ${fmtTs(doc.updatedAt)} by ${doc.updatedBy}</span>` : ''}
+        </div>
+      </div>
+      <div class="doc-card-actions">
+        <button class="btn-icon primary" title="View / Edit" onclick="openDocument('${doc.id}')">📄</button>
+        <button class="btn-icon primary" title="Print" onclick="quickPrint('${doc.id}')">🖨️</button>
+      </div>
+    </div>`;
+  }).join('');
+
+  panel.innerHTML = headerHtml + `<div class="doc-list">${docsHtml}</div>`;
+}
+
+// ── TEMPLATE PICKER ──────────────────────────────────────────────────────────
+function openTemplatePicker() {
+  if (!selectedYPId) return;
+  document.getElementById('pickerSearch').value = '';
+  renderPickerList('');
+  document.getElementById('templatePickerModal').style.display = 'flex';
+}
+
+function filterPicker(v) { renderPickerList(v); }
+
+function renderPickerList(search) {
+  const list = document.getElementById('pickerList');
+  const q    = search.toLowerCase();
+  const filtered = templates.filter(t => t.name.toLowerCase().includes(q) || (t.description||'').toLowerCase().includes(q));
+  if (!filtered.length) {
+    list.innerHTML = '<div class="picker-empty">No templates found. Upload some in the Templates tab.</div>';
+    return;
+  }
+  list.innerHTML = filtered.map(t => `
+    <div class="picker-item" onclick="startDocFromTemplate('${t.id}')">
+      <div class="picker-icon">${catIcon(t.category||'General')}</div>
+      <div class="picker-info">
+        <div class="picker-name">${t.name}</div>
+        <div class="picker-desc">${t.description||''} ${t.fields?.length ? '· '+t.fields.length+' fields' : ''}</div>
+      </div>
+      <div class="picker-arrow">›</div>
+    </div>`).join('');
+}
+
+async function startDocFromTemplate(templateId) {
+  closeModal('templatePickerModal');
+  const tmpl = templates.find(t => t.id === templateId);
+  if (!tmpl) return;
+  const yp = serviceUsers.find(y => y.id === selectedYPId);
+
+  // Create new doc record with empty values
+  currentDocId   = null;
+  currentDocData = {
+    serviceUserId:    selectedYPId,
+    templateId:       templateId,
+    templateName:     tmpl.name,
+    templateCategory: tmpl.category || 'General',
+    fieldValues:      {},
+    status:           'active'
+  };
+  currentTmplId = templateId;
+  isEditing     = true;
+  window.isEditing = true;
+
+  openDocViewer(null, tmpl, yp, {}, true);
+}
+
+// ── DOCUMENT VIEWER ───────────────────────────────────────────────────────────
+async function openDocument(docId) {
+  const docData = ypDocs.find(d => d.id === docId);
+  if (!docData) return;
+  const tmpl = templates.find(t => t.id === docData.templateId);
+  const yp   = serviceUsers.find(y => y.id === selectedYPId);
+
+  currentDocId   = docId;
+  currentDocData = docData;
+  currentTmplId  = docData.templateId;
+  isEditing      = false;
+  window.isEditing = false;
+
+  openDocViewer(docId, tmpl, yp, docData.fieldValues || {}, false);
+}
+
+function openDocViewer(docId, tmpl, yp, fieldValues, editMode) {
+  if (!tmpl) { toast('Template no longer exists — document may be outdated', 'error'); return; }
+
+  document.getElementById('docViewerTitle').textContent = tmpl.name;
+  document.getElementById('docViewerMeta').textContent  = yp ? yp.name : '';
+  document.getElementById('docViewerIcon').textContent  = catIcon(tmpl.category || 'General');
+
+  setDocMode(editMode, tmpl, yp, fieldValues);
+  document.getElementById('docViewerModal').style.display = 'flex';
+}
+
+function setDocMode(edit, tmpl, yp, fieldValues) {
+  isEditing = edit;
+  window.isEditing = edit;
+
+  const tmplObj  = tmpl || templates.find(t => t.id === currentTmplId);
+  const ypObj    = yp   || serviceUsers.find(y => y.id === selectedYPId);
+  const vals     = fieldValues !== undefined ? fieldValues : (currentDocData?.fieldValues || {});
+
+  const frame    = document.getElementById('docFrame');
+  const editBadge = document.getElementById('editBadge');
+  const viewBadge = document.getElementById('viewBadge');
+  const editHint  = document.getElementById('editHint');
+  const saveBtn   = document.getElementById('docSaveBtn');
+  const editBtn   = document.getElementById('docToggleEdit');
+
+  if (edit) {
+    frame.srcdoc   = buildEditHTML(tmplObj.htmlContent, vals, ypObj, userProfile);
+    editBadge.style.display = '';
+    viewBadge.style.display = 'none';
+    editHint.style.display  = '';
+    saveBtn.style.display   = '';
+    editBtn.style.display   = 'none';
+  } else {
+    frame.srcdoc   = buildViewHTML(tmplObj.htmlContent, vals, ypObj);
+    editBadge.style.display = 'none';
+    viewBadge.style.display = '';
+    editHint.style.display  = 'none';
+    saveBtn.style.display   = 'none';
+    editBtn.style.display   = '';
+  }
+}
+
+function toggleEditMode() {
+  const tmpl = templates.find(t => t.id === currentTmplId);
+  const yp   = serviceUsers.find(y => y.id === selectedYPId);
+  if (!isEditing) {
+    setDocMode(true, tmpl, yp, currentDocData?.fieldValues || {});
+  }
+}
+
+async function saveDocEdits() {
+  const frame  = document.getElementById('docFrame');
+  const iDoc   = frame.contentDocument || frame.contentWindow?.document;
+  if (!iDoc) { toast('Could not read document fields', 'error'); return; }
+
+  const vals = {};
+  iDoc.querySelectorAll('[data-cs-field]').forEach(el => {
+    const id = el.getAttribute('data-cs-field');
+    vals[id] = el.tagName === 'TEXTAREA' || el.tagName === 'INPUT' ? el.value : el.textContent;
+  });
+
+  const saveBtn = document.getElementById('docSaveBtn');
+  saveBtn.innerHTML = '<span class="spinner"></span>';
+  saveBtn.disabled  = true;
+
+  try {
+    const tmpl = templates.find(t => t.id === currentTmplId);
+    if (currentDocId) {
+      // Update existing
+      await updateDoc(doc(db,'serviceUserDocuments',currentDocId), {
+        fieldValues: vals,
+        updatedAt:   serverTimestamp(),
+        updatedBy:   userProfile.initials
+      });
+      // Update local
+      const idx = ypDocs.findIndex(d => d.id === currentDocId);
+      if (idx >= 0) { ypDocs[idx].fieldValues = vals; ypDocs[idx].updatedBy = userProfile.initials; }
+      if (currentDocData) currentDocData.fieldValues = vals;
+      toast('Document saved', 'success');
+    } else {
+      // New document
+      const newRef = await addDoc(collection(db,'serviceUserDocuments'), {
+        ...currentDocData,
+        fieldValues:  vals,
+        createdAt:    serverTimestamp(),
+        createdBy:    userProfile.initials,
+        updatedAt:    serverTimestamp(),
+        updatedBy:    userProfile.initials
+      });
+      currentDocId = newRef.id;
+      const newDoc = {
+        id: newRef.id, ...currentDocData,
+        fieldValues: vals, createdBy: userProfile.initials, updatedBy: userProfile.initials
+      };
+      ypDocs.unshift(newDoc);
+      currentDocData = newDoc;
+      toast('Document created', 'success');
+    }
+
+    // Switch to view mode
+    setDocMode(false, tmpl, serviceUsers.find(y=>y.id===selectedYPId), vals);
+    renderDocPanel();
+  } catch(e) {
+    console.error(e);
+    toast('Failed to save document', 'error');
+  } finally {
+    saveBtn.innerHTML = '💾 Save';
+    saveBtn.disabled  = false;
+  }
+}
+
+function printCurrentDoc() {
+  const tmpl = templates.find(t => t.id === currentTmplId);
+  const yp   = serviceUsers.find(y => y.id === selectedYPId);
+  const vals = currentDocData?.fieldValues || {};
+  if (!tmpl) return;
+
+  const html = buildViewHTML(tmpl.htmlContent, vals, yp, true /* for print */);
+  const win  = window.open('', '_blank');
+  win.document.write(html);
+  win.document.close();
+  win.onload = () => { win.focus(); win.print(); };
+}
+
+function quickPrint(docId) {
+  const docData = ypDocs.find(d => d.id === docId);
+  if (!docData) return;
+  const tmpl = templates.find(t => t.id === docData.templateId);
+  const yp   = serviceUsers.find(y => y.id === selectedYPId);
+  if (!tmpl) { toast('Template not found', 'error'); return; }
+
+  const html = buildViewHTML(tmpl.htmlContent, docData.fieldValues || {}, yp, true);
+  const win  = window.open('', '_blank');
+  win.document.write(html);
+  win.document.close();
+  win.onload = () => { win.focus(); win.print(); };
+}
+
+function closeDocModal() {
+  if (isEditing && currentDocId === null) {
+    // Unsaved new doc — ask to confirm leaving
+    if (!confirm('You have unsaved changes. Close without saving?')) return;
+  }
+  document.getElementById('docViewerModal').style.display = 'none';
+  isEditing = false; window.isEditing = false;
+}
+
+function confirmDeleteDoc() {
+  if (!currentDocId) {
+    closeDocModal();
+    return;
+  }
+  const docData = ypDocs.find(d => d.id === currentDocId);
+  document.getElementById('confirmTitle').textContent = 'Delete document?';
+  document.getElementById('confirmText').textContent  = `Remove "${docData?.templateName}" from this young person's file?`;
+  document.getElementById('confirmSub').textContent   = 'This action cannot be undone.';
+  document.getElementById('confirmBtn').onclick = async () => {
+    await updateDoc(doc(db,'serviceUserDocuments',currentDocId), { status: 'archived' });
+    ypDocs = ypDocs.filter(d => d.id !== currentDocId);
+    closeModal('confirmModal');
+    document.getElementById('docViewerModal').style.display = 'none';
+    renderDocPanel();
+    toast('Document deleted');
+  };
+  document.getElementById('confirmModal').style.display = 'flex';
+}
+
+// ── TEMPLATE GRID ─────────────────────────────────────────────────────────────
+function filterTemplates(cat) {
+  tmplCatFilter = cat;
+  document.querySelectorAll('#catFilter .cat-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.cat === cat);
+  });
+  renderTemplateGrid();
+}
+
+function renderTemplateGrid() {
+  const grid = document.getElementById('templatesGrid');
+  const list = tmplCatFilter ? templates.filter(t => t.category === tmplCatFilter) : templates;
+
+  if (!list.length) {
+    grid.innerHTML = `<div class="templates-empty">
+      <div class="empty-icon">📋</div>
+      <p>${tmplCatFilter ? 'No templates in this category.' : 'No templates yet.'}<br>
+         Upload a template to get started.</p>
+    </div>`;
+    return;
+  }
+
+  grid.innerHTML = list.map(t => {
+    const cls = catClass(t.category || 'General');
+    const icon = catIcon(t.category || 'General');
+    const fieldCount = t.fields?.length || 0;
+    const isAdmin = userProfile?.role === 'admin';
+    return `<div class="template-card">
+      <div class="template-card-actions">
+        <button class="btn-icon primary" title="Preview" onclick="previewTemplate('${t.id}')">👁️</button>
+        ${isAdmin ? `<button class="btn-icon danger" title="Delete template" onclick="confirmDeleteTemplate('${t.id}')">🗑️</button>` : ''}
+      </div>
+      <div class="template-card-icon">${icon}</div>
+      <span class="category-tag ${cls}">${t.category || 'General'}</span>
+      <div class="template-card-name">${t.name}</div>
+      <div class="template-card-desc">${t.description || 'No description'}</div>
+      <div class="template-card-footer">
+        <span class="template-field-count">${fieldCount} fillable field${fieldCount!==1?'s':''}</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function previewTemplate(templateId) {
+  const tmpl = templates.find(t => t.id === templateId);
+  if (!tmpl) return;
+  document.getElementById('previewTitle').textContent = tmpl.name + ' — Preview';
+  const frame = document.getElementById('previewFrame');
+  frame.srcdoc = buildPreviewHTML(tmpl.htmlContent);
+  document.getElementById('templatePreviewModal').style.display = 'flex';
+}
+
+function confirmDeleteTemplate(templateId) {
+  const tmpl = templates.find(t => t.id === templateId);
+  document.getElementById('confirmTitle').textContent = 'Delete template?';
+  document.getElementById('confirmText').textContent  = `Remove "${tmpl?.name}" from the template library?`;
+  document.getElementById('confirmSub').textContent   = 'Existing documents based on this template will not be affected.';
+  document.getElementById('confirmBtn').onclick = async () => {
+    await updateDoc(doc(db,'documentTemplates',templateId), { status: 'archived' });
+    templates = templates.filter(t => t.id !== templateId);
+    closeModal('confirmModal');
+    renderTemplateGrid();
+    toast('Template deleted');
+  };
+  document.getElementById('confirmModal').style.display = 'flex';
+}
+
+// ── TEMPLATE UPLOAD ───────────────────────────────────────────────────────────
+function openTemplateUpload() {
+  uploadedHTML   = '';
+  uploadedFields = [];
+  document.getElementById('uploadName').value     = '';
+  document.getElementById('uploadDesc').value     = '';
+  document.getElementById('uploadCategory').value = 'General';
+  document.getElementById('uploadFileInfo').style.display = 'none';
+  document.getElementById('uploadFieldsPreview').style.display = 'none';
+  document.getElementById('templateFileInput').value = '';
+  document.getElementById('templateUploadModal').style.display = 'flex';
+}
+
+function handleFileDrop(e) {
+  e.preventDefault();
+  document.getElementById('uploadZone').classList.remove('drag-over');
+  const file = e.dataTransfer.files[0];
+  if (file) processUploadFile(file);
+}
+
+function handleFileSelect(e) {
+  const file = e.target.files[0];
+  if (file) processUploadFile(file);
+}
+
+function processUploadFile(file) {
+  if (!file.name.match(/\.html?$/i)) { toast('Please upload an HTML file', 'error'); return; }
+  const reader = new FileReader();
+  reader.onload = e => {
+    uploadedHTML   = e.target.result;
+    uploadedFields = parseTemplateFields(uploadedHTML);
+
+    document.getElementById('uploadFileName').textContent = file.name;
+    document.getElementById('uploadFileInfo').style.display = '';
+
+    if (!document.getElementById('uploadName').value) {
+      document.getElementById('uploadName').value = file.name.replace(/\.html?$/i,'').replace(/[-_]/g,' ');
+    }
+
+    if (uploadedFields.length) {
+      document.getElementById('uploadFieldsList').innerHTML = uploadedFields.map(f =>
+        `<span class="field-chip">✏️ ${f.label}</span>`
+      ).join('');
+      document.getElementById('uploadFieldsPreview').style.display = '';
+    } else {
+      document.getElementById('uploadFieldsPreview').style.display = 'none';
+    }
+  };
+  reader.readAsText(file);
+}
+
+function parseTemplateFields(html) {
+  const parser = new DOMParser();
+  const d      = parser.parseFromString(html, 'text/html');
+  const fields = [];
+  d.querySelectorAll('[data-cs-field]').forEach(el => {
+    fields.push({
+      id:    el.getAttribute('data-cs-field'),
+      label: el.getAttribute('data-cs-label') || el.getAttribute('data-cs-field'),
+      type:  el.getAttribute('data-cs-type')  || 'text'
+    });
+  });
+  return fields;
+}
+
+async function saveUploadedTemplate() {
+  if (!uploadedHTML) { toast('Please select an HTML file first', 'error'); return; }
+  const name = document.getElementById('uploadName').value.trim();
+  if (!name) { toast('Please enter a template name', 'error'); return; }
+
+  const btn = document.getElementById('uploadSaveBtn');
+  btn.innerHTML = '<span class="spinner"></span>';
+  btn.disabled  = true;
+
+  try {
+    const ref = await addDoc(collection(db,'documentTemplates'), {
+      name:        name,
+      description: document.getElementById('uploadDesc').value.trim(),
+      category:    document.getElementById('uploadCategory').value,
+      htmlContent: uploadedHTML,
+      fields:      uploadedFields,
+      createdAt:   serverTimestamp(),
+      createdBy:   userProfile.initials,
+      status:      'active'
+    });
+    templates.push({ id: ref.id, name, description: document.getElementById('uploadDesc').value.trim(),
+      category: document.getElementById('uploadCategory').value,
+      htmlContent: uploadedHTML, fields: uploadedFields, status: 'active' });
+    templates.sort((a,b) => a.name.localeCompare(b.name));
+    closeModal('templateUploadModal');
+    renderTemplateGrid();
+    toast('Template saved', 'success');
+  } catch(e) {
+    console.error(e);
+    toast('Failed to save template', 'error');
+  } finally {
+    btn.innerHTML = 'Save Template';
+    btn.disabled  = false;
+  }
+}
+
+// ── HTML BUILDERS ─────────────────────────────────────────────────────────────
+const AUTO_FILL_KEYS = ['yp_name','yp_dob','date_today','date_created','staff_name','staff_initials'];
+
+function getAutoFills(yp) {
+  return {
+    yp_name:        yp?.name   || '',
+    yp_dob:         yp?.dob    || '',
+    date_today:     today(),
+    date_created:   today(),
+    staff_name:     userProfile?.name     || '',
+    staff_initials: userProfile?.initials || ''
+  };
+}
+
+function buildEditHTML(templateHTML, fieldValues, yp, staff) {
+  const parser  = new DOMParser();
+  const d       = parser.parseFromString(templateHTML, 'text/html');
+  const autoFill = getAutoFills(yp);
+
+  d.querySelectorAll('[data-cs-field]').forEach(el => {
+    const fieldId = el.getAttribute('data-cs-field');
+    const label   = el.getAttribute('data-cs-label') || fieldId;
+    const type    = el.getAttribute('data-cs-type')  || 'text';
+    const value   = fieldValues[fieldId] ?? autoFill[fieldId] ?? '';
+    const isAuto  = AUTO_FILL_KEYS.includes(fieldId);
+
+    let input;
+    if (type === 'textarea') {
+      input = d.createElement('textarea');
+      input.textContent = value;
+    } else {
+      input = d.createElement('input');
+      input.type  = type === 'date' ? 'date' : type === 'number' ? 'number' : 'text';
+      input.value = value;
+    }
+    input.setAttribute('data-cs-field', fieldId);
+    input.name        = fieldId;
+    input.placeholder = label;
+    if (isAuto) { input.readOnly = true; input.setAttribute('data-auto','1'); }
+    el.replaceWith(input);
+  });
+
+  const style = d.createElement('style');
+  style.textContent = `
+    body { font-family: 'DM Sans', sans-serif; padding: 28px 32px; line-height: 1.7; color: #1a1a2e; }
+    input[data-cs-field], textarea[data-cs-field] {
+      border: 1.5px solid #1446a0; border-radius: 5px; padding: 4px 8px;
+      font-size: inherit; font-family: inherit; background: #e8eef8; color: #1a1a2e;
+      transition: border-color .15s; outline: none;
+    }
+    input[data-cs-field]:focus, textarea[data-cs-field]:focus { border-color: #0d3278; box-shadow: 0 0 0 3px rgba(20,70,160,.12); }
+    input[data-auto], textarea[data-auto] { background: #f0f4fb; border-color: #b8c5e0; color: #4a5568; cursor: default; }
+    textarea[data-cs-field] { display: block; width: 100%; min-height: 90px; resize: vertical; }
+    @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap');
+  `;
+  d.head.appendChild(style);
+  return '<!DOCTYPE html>' + d.documentElement.outerHTML;
+}
+
+function buildViewHTML(templateHTML, fieldValues, yp, forPrint) {
+  const parser   = new DOMParser();
+  const d        = parser.parseFromString(templateHTML, 'text/html');
+  const autoFill = getAutoFills(yp);
+
+  d.querySelectorAll('[data-cs-field]').forEach(el => {
+    const fieldId = el.getAttribute('data-cs-field');
+    const value   = fieldValues[fieldId] ?? autoFill[fieldId] ?? '';
+    const span    = d.createElement('span');
+    span.setAttribute('data-cs-field', fieldId);
+    span.textContent = value || '—';
+    el.replaceWith(span);
+  });
+
+  const style = d.createElement('style');
+  style.textContent = `
+    body { font-family: 'DM Sans', sans-serif; padding: 28px 32px; line-height: 1.7; color: #1a1a2e; }
+    span[data-cs-field] { border-bottom: 1.5px solid #1446a0; padding: 0 3px; color: #1446a0; font-weight: 600; }
+    ${forPrint ? '@media print { body { padding: 20mm; } span[data-cs-field] { border-bottom: 1px solid #555; color: #000; } }' : ''}
+    @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap');
+  `;
+  d.head.appendChild(style);
+  if (forPrint) {
+    const script = d.createElement('script');
+    script.textContent = 'window.onload=function(){window.print();}';
+    d.body.appendChild(script);
+  }
+  return '<!DOCTYPE html>' + d.documentElement.outerHTML;
+}
+
+function buildPreviewHTML(templateHTML) {
+  const parser = new DOMParser();
+  const d      = parser.parseFromString(templateHTML, 'text/html');
+  d.querySelectorAll('[data-cs-field]').forEach(el => {
+    const label = el.getAttribute('data-cs-label') || el.getAttribute('data-cs-field');
+    const span  = d.createElement('span');
+    span.setAttribute('data-cs-field', '');
+    span.textContent = '[' + label + ']';
+    el.replaceWith(span);
+  });
+  const style = d.createElement('style');
+  style.textContent = `
+    body { font-family: 'DM Sans', sans-serif; padding: 28px 32px; line-height: 1.7; color: #1a1a2e; }
+    span[data-cs-field] { background: #e8eef8; border: 1px dashed #1446a0; border-radius: 3px; padding: 1px 6px; color: #1446a0; font-size: .9em; font-style: italic; }
+    @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap');
+  `;
+  d.head.appendChild(style);
+  return '<!DOCTYPE html>' + d.documentElement.outerHTML;
+}
+
+</script>
+</body>
+</html>

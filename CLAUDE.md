@@ -16,11 +16,12 @@ Connected Stars care management system — a suite of single-page HTML applicati
 
 ## File Structure
 ```
-index.html         — Dashboard / login portal (20 KB)
-cs-handover.html   — CS care handover tool (153 KB)
-o-handover.html    — Overnight/operational handover (114 KB)
-super-admin.html   — Admin management panel (58 KB)
-task-board.html    — Kanban task manager (104 KB)
+index.html           — Dashboard / login portal (20 KB)
+cs-handover.html     — CS care handover tool (153 KB)
+o-handover.html      — Overnight/operational handover (114 KB)
+super-admin.html     — Admin management panel (58 KB)
+task-board.html      — Kanban task manager (104 KB)
+cs-documents.html    — Document template manager (new)
 ```
 
 ## Tool Documentation
@@ -29,6 +30,7 @@ Read these instead of the full HTML files:
 - [o-handover.md](o-handover.md) — O Handover tool
 - [super-admin.md](super-admin.md) — Super Admin panel
 - [task-board.md](task-board.md) — Task Board
+- [cs-documents.md](cs-documents.md) — Documents tool
 
 ## Shared Firestore Collections
 These collections are read/written by multiple tools:
@@ -40,6 +42,8 @@ These collections are read/written by multiple tools:
 | `serviceUsers` | super-admin | cs-handover, o-handover, task-board |
 | `regulatoryBodies` | super-admin | super-admin (dropdown source) |
 | `adhocTasks` | cs-handover | task-board (reads/writes same collection) |
+| `documentTemplates` | cs-documents | cs-documents only |
+| `serviceUserDocuments` | cs-documents | cs-documents only |
 
 ### `staffProfiles` schema
 ```js
