@@ -1415,36 +1415,29 @@ function isRichTemplate(html) {
 function buildRichEditHTML(templateHTML, fieldValues) {
   // Strip any previously embedded __SAVED_DATA__
   let html = templateHTML.replace(/<script>\s*window\.__SAVED_DATA__\s*=[\s\S]*?<\/script>\s*/g, '');
-  // Inject saved field values so the template's own loadData() populates everything
-  const injection = '<script>window.__SAVED_DATA__=' + JSON.stringify(fieldValues || {}) + ';</script>';
+  // Use '<' + '/script>' split so the outer HTML parser doesn't terminate this module early
+  const injection = '<script>window.__SAVED_DATA__=' + JSON.stringify(fieldValues || {}) + ';<' + '/script>';
   html = html.replace('</head>', injection + '</head>');
   return html;
 }
 
 function buildRichViewHTML(templateHTML, fieldValues) {
   let html = buildRichEditHTML(templateHTML, fieldValues);
-  // Disable all interactive controls so this is truly read-only
-  const viewScript = `<script>
-  document.addEventListener('DOMContentLoaded',function(){
-    document.querySelectorAll('input:not([type=hidden]),textarea,select').forEach(function(e){
-      e.readOnly=true; e.style.background='#f0f4fb'; e.style.cursor='default';
-    });
-    document.querySelectorAll('button,.rating-btn,.impact-btn,.decision-btn,.sig-tab,.sig-font-btn,.btn-add-row,.btn-remove-row,.sig-clear').forEach(function(e){
-      e.disabled=true; e.style.opacity='.45'; e.style.pointerEvents='none';
-    });
-    document.querySelectorAll('canvas').forEach(function(c){c.style.pointerEvents='none';});
-  });
-  </script>`;
-  html = html.replace('</body>', viewScript + '</body>');
+  // CSS-only approach: no <script> injection that could affect the parent page
+  const viewStyle = '<style>'
+    + 'body,body *{pointer-events:none!important;user-select:none!important;cursor:default!important;}'
+    + 'input,textarea,select{background:#f0f4fb!important;color:#4a5568!important;}'
+    + 'button,.rating-btn,.impact-btn,.decision-btn,.sig-tab,.sig-font-btn,'
+    + '.btn-add-row,.btn-remove-row,.sig-clear{opacity:.45!important;}'
+    + '</style>';
+  html = html.replace('</head>', viewStyle + '</head>');
   return html;
 }
 
 function buildRichPrintHTML(templateHTML, fieldValues) {
   let html = buildRichEditHTML(templateHTML, fieldValues);
-  // Auto-print once the template has loaded and rendered
-  const printScript = `<script>
-  window.__CS_PRINT_ON_LOAD__=true;
-  </script>`;
+  // Use '<' + '/script>' split so the outer HTML parser doesn't terminate this module early
+  const printScript = '<script>window.__CS_PRINT_ON_LOAD__=true;<' + '/script>';
   html = html.replace('</head>', printScript + '</head>');
   return html;
 }
